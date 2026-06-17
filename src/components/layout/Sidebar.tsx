@@ -125,11 +125,22 @@ export default function Sidebar() {
   return (
     <aside className={styles.sidebar}>
       {/* Brand */}
-      <div className={styles.brand}>
-        <div className={styles.brandIcon}>
-          <i className="hgi-stroke hgi-shield-01"></i>
-        </div>
-        <span className={styles.brandName}>PMS Global</span>
+      <div className={styles.brand} style={{ padding: '24px 20px', display: 'flex', alignItems: 'center' }}>
+        <span 
+          style={{ 
+            fontFamily: "'Cinzel', 'Orbitron', serif",
+            fontWeight: 900,
+            fontSize: '1.25rem',
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            background: 'linear-gradient(135deg, #ffe066 0%, #ff7a00 40%, #ff5500 75%, #cc2200 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            filter: 'drop-shadow(0px 2px 4px rgba(255, 85, 0, 0.15))'
+          }}
+        >
+          ANVAYA360
+        </span>
       </div>
 
       {/* Navigation */}

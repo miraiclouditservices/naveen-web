@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PMS Security | Office security, simplified",
-  description: "Manage buildings, watchmen and visitors from one beautiful dashboard.",
+  title: "Estatly | Property Management, simplified",
+  description: "Manage buildings, floors, units and tenants from one beautiful dashboard.",
 };
 
 export default function RootLayout({

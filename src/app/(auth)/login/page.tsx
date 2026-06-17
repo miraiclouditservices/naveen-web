@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api } from "@/utils/api";
@@ -11,38 +11,12 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [activeSlide, setActiveSlide] = useState(0);
   const router = useRouter();
-
-  const slides = [
-    {
-      image: "/mirai_dashboard_illustration.png",
-      title: "Connect with every property.",
-      description: "Everything you need in an easily customizable and unified management dashboard."
-    },
-    {
-      image: "/mirai_property_image.png",
-      title: "Manage properties seamlessly.",
-      description: "Track and organize your commercial and residential spaces from a single location."
-    },
-    {
-      image: "/mirai_office_image.png",
-      title: "Optimize your office operations.",
-      description: "Streamline workflows, rent tracking, payments, and staff roles with modern, secure controls."
-    }
-  ];
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     if (!email || !password) {
       setError("Please enter your email and password.");
       return;
@@ -51,11 +25,11 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const response = await api.post('/auth/login', { 
-        email, 
+      const response = await api.post('/auth/login', {
+        email,
         password
       });
-      
+
       if (response.success) {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
@@ -69,94 +43,126 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "#f8fafc" }}>
-      
-      {/* Left Side: Login Form Container */}
-      <div className="col-12 col-md-6 col-lg-5 d-flex flex-column p-4 p-md-5 position-relative h-100 overflow-y-auto">
-        
-        {/* Brand Logo */}
-        <div className="mb-auto pb-4">
-          <div className="d-flex align-items-center gap-2.5">
-            <div 
-              className="d-flex align-items-center justify-content-center text-white fw-bold shadow-sm" 
-              style={{ 
-                width: '36px', 
-                height: '36px', 
-                fontSize: '1.05rem',
-                backgroundColor: '#1e293b', 
-                borderRadius: '8px',
-                fontFamily: 'Inter, sans-serif'
-              }}
-            >
-              N
-            </div>
-            <span className="fw-bold fs-5 text-dark" style={{ letterSpacing: '-0.03em', color: '#1e293b' }}>Naveen</span>
+    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
+
+      {/* Left Panel: Brand & Info with Full Background Image */}
+      <div
+        className="col-12 col-md-6 d-none d-md-flex flex-column justify-content-between p-5 right-panel text-white h-100 position-relative"
+        style={{
+          backgroundImage: "url('/mirai_property_image.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center'
+        }}
+      >
+        {/* Light overlay for high contrast text readability */}
+        <div
+          className="position-absolute top-0 start-0 w-100 h-100"
+          style={{
+            background: 'linear-gradient(180deg, rgba(11, 15, 25, 0.3) 0%, rgba(11, 15, 25, 0.6) 100%)',
+            zIndex: 1
+          }}
+        ></div>
+
+        {/* Brand Header */}
+        <div className="d-flex align-items-center gap-2.5 position-relative" style={{ zIndex: 2 }}>
+          <div>
+            <span className="brand-text-kalki" style={{ fontSize: '1.3rem', display: 'block' }}>PMS GLOBAL</span>
+            <div className="brand-subtitle text-white-50" style={{ fontSize: '0.55rem', letterSpacing: '0.05em', fontWeight: 700 }}>PROPERTY MANAGEMENT SYSTEM</div>
           </div>
         </div>
 
-        {/* Login Form Card */}
-        <div 
-          className="w-100 mx-auto my-auto bg-white border p-4 p-sm-5 shadow-sm" 
-          style={{ maxWidth: '440px', borderRadius: '16px', borderColor: '#e2e8f0' }}
-        >
-          <h2 className="fw-bold text-dark mb-1" style={{ fontSize: '1.65rem', letterSpacing: '-0.03em' }}>Log in to your Account</h2>
-          <p className="text-muted mb-4" style={{ fontSize: '0.88rem' }}>Welcome back! Enter your details to log in:</p>
+        {/* Center Title */}
+        <div className="my-auto position-relative" style={{ zIndex: 2 }}>
+          <h1 className="fw-bold mb-3" style={{ fontSize: '2.8rem', lineHeight: '1.2', letterSpacing: '-0.02em' }}>
+            Smart Property <br />
+            Management <br />
+            <span style={{ background: 'linear-gradient(135deg, #ffe066 0%, #cc2200 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 800 }}>Made Simple</span>
+          </h1>
+          <p className="text-white-50 mb-5 small" style={{ maxWidth: '440px', lineHeight: '1.6' }}>
+            Manage your properties, tenants, payments, maintenance, and more from a single powerful platform.
+          </p>
+
+          {/* Floating Glassmorphic Badges Row */}
+          <div className="glass-features-panel p-3 d-flex justify-content-between text-center mt-5">
+            <div className="flex-grow-1">
+              <div className="feature-circle bg-blue"><i className="bi bi-building"></i></div>
+              <div className="feature-text">Manage Properties</div>
+            </div>
+            <div className="flex-grow-1">
+              <div className="feature-circle bg-green"><i className="bi bi-people"></i></div>
+              <div className="feature-text">Happy Tenants</div>
+            </div>
+            <div className="flex-grow-1">
+              <div className="feature-circle bg-orange"><i className="bi bi-credit-card"></i></div>
+              <div className="feature-text">Secure Payments</div>
+            </div>
+            <div className="flex-grow-1">
+              <div className="feature-circle bg-purple"><i className="bi bi-bar-chart"></i></div>
+              <div className="feature-text">Real-time Analytics</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer info */}
+        <div className="position-relative text-white-50 small opacity-55" style={{ zIndex: 2 }}>
+          © 2026 PMS GLOBAL Enterprise OS
+        </div>
+      </div>
+
+      {/* Right Panel: Login Form (mockup match) */}
+      <div className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 p-md-5 h-100 overflow-y-auto">
+        <div className="w-100 mx-auto" style={{ maxWidth: '420px' }}>
+
+          <h2 className="fw-bold text-dark mb-1" style={{ fontSize: '1.8rem', letterSpacing: '-0.02em' }}>Welcome Back!</h2>
+          <p className="text-muted mb-4" style={{ fontSize: '0.88rem' }}>Login to your account to continue</p>
 
           <form onSubmit={handleLogin}>
-            
+
             {/* Email Field */}
-            <div className="mb-3">
-              <div className="input-group custom-input-group rounded-3 bg-white">
-                <span className="input-group-text bg-white border-end-0 px-3 text-muted">
-                  <i className="bi bi-envelope" style={{ fontSize: '0.9rem' }}></i>
-                </span>
-                <input 
-                  type="email" 
-                  className="form-control bg-white border-start-0 ps-0 shadow-none text-dark clean-input" 
-                  placeholder="Email" 
+            <div className="mb-3 text-start">
+              <label className="form-label-custom mb-1.5">Email Address</label>
+              <div className="custom-input-group d-flex align-items-center rounded-3 bg-white">
+                <i className="bi bi-envelope text-muted px-3" style={{ fontSize: '0.9rem' }}></i>
+                <input
+                  type="email"
+                  className="form-control border-0 bg-transparent ps-0 shadow-none text-dark"
+                  placeholder="Enter your email address"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   style={{ fontSize: '0.9rem', height: '44px' }}
-                  required 
+                  required
                 />
               </div>
             </div>
 
             {/* Password Field */}
-            <div className="mb-3">
-              <div className="input-group custom-input-group rounded-3 bg-white">
-                <span className="input-group-text bg-white border-end-0 px-3 text-muted">
-                  <i className="bi bi-lock" style={{ fontSize: '0.9rem' }}></i>
-                </span>
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  className="form-control bg-white border-start-0 border-end-0 px-0 shadow-none text-dark clean-input" 
-                  placeholder="Password (6 digits)" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  style={{ fontSize: '0.9rem', height: '44px' }}
-                  maxLength={6}
-                  required 
-                />
-                <span 
-                  className="input-group-text bg-white border-start-0 px-3 text-muted" 
-                  style={{ cursor: 'pointer' }}
+            <div className="mb-3 text-start">
+              <label className="form-label-custom mb-1.5">Password</label>
+              <div className="custom-input-group d-flex align-items-center rounded-3 bg-white justify-content-between">
+                <div className="d-flex align-items-center flex-grow-1">
+                  <i className="bi bi-lock text-muted px-3" style={{ fontSize: '0.9rem' }}></i>
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-control border-0 bg-transparent ps-0 shadow-none text-dark"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    style={{ fontSize: '0.9rem', height: '44px' }}
+                    maxLength={6}
+                    required
+                  />
+                </div>
+                <i
+                  className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"} text-muted px-3 cursor-pointer`}
+                  style={{ fontSize: '0.9rem' }}
                   onClick={() => setShowPassword(!showPassword)}
-                >
-                  <i className={showPassword ? "bi bi-eye-slash" : "bi bi-eye"} style={{ fontSize: '0.9rem' }}></i>
-                </span>
+                ></i>
               </div>
             </div>
 
-            {/* Remember Me & Forgot Password */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <div className="form-check d-flex align-items-center gap-2 mb-0">
-                <input className="form-check-input mt-0 custom-checkbox shadow-none" type="checkbox" id="rememberMe" />
-                <label className="form-check-label text-muted" htmlFor="rememberMe" style={{ fontSize: '0.82rem' }}>
-                  Remember me
-                </label>
-              </div>
-              <a href="#" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ fontSize: '0.82rem', color: '#0266e8' }}>
+            {/* Forgot Password */}
+            <div className="d-flex justify-content-end mb-4">
+              <a href="#" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ fontSize: '0.82rem', color: '#ff6f00' }}>
                 Forgot Password?
               </a>
             </div>
@@ -169,109 +175,46 @@ export default function LoginPage() {
             )}
 
             {/* Submit Button */}
-            <button 
-              type="submit" 
-              className="btn btn-primary w-100 fw-bold transition-all submit-btn rounded-3"
-              style={{ height: '44px', fontSize: '0.9rem', backgroundColor: '#0266e8', borderColor: '#0266e8' }}
+            <button
+              type="submit"
+              className="btn btn-orange-auth w-100 fw-bold transition-all rounded-3"
+              style={{ height: '44px', fontSize: '0.9rem' }}
               disabled={isLoading}
             >
               {isLoading ? (
                 <span className="spinner-border spinner-border-sm" role="status"></span>
               ) : (
-                "Log in"
+                "Login"
               )}
             </button>
           </form>
 
-          {/* Footer Text */}
+          {/* Register Redirect */}
           <div className="text-center mt-4">
             <p className="text-muted mb-0" style={{ fontSize: '0.82rem' }}>
-              Don't have an account? <Link href="/register" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ color: '#0266e8' }}>Create an account</Link>
+              Don't have an account? <Link href="/register" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ color: '#ff6f00' }}>Sign Up</Link>
             </p>
           </div>
-        </div>
 
-        <div className="mt-auto pt-4"></div>
+        </div>
       </div>
 
-      {/* Right Side: Hero Graphic with Carousel */}
-      <div 
-        className="col-12 col-md-6 col-lg-7 d-none d-md-flex flex-column align-items-center justify-content-center p-4 p-md-5 h-100 right-panel" 
-        style={{ background: 'linear-gradient(135deg, #0266e8 0%, #091e42 100%)' }}
-      >
-        
-        <div className="w-100 position-relative d-flex flex-column align-items-center justify-content-center mb-4 px-3" style={{ height: '55vh', minHeight: '350px' }}>
-          {slides.map((slide, idx) => (
-            <div
-              key={idx}
-              className="w-100 h-100 d-flex justify-content-center align-items-center position-absolute start-0 top-0 px-3"
-              style={{ 
-                opacity: idx === activeSlide ? 1 : 0,
-                zIndex: idx === activeSlide ? 2 : 1,
-                transition: 'opacity 0.8s ease-in-out'
-              }}
-            >
-              <img 
-                src={slide.image} 
-                alt={slide.title} 
-                className="img-fluid"
-                style={{ 
-                  maxWidth: '90%', 
-                  maxHeight: '100%', 
-                  objectFit: 'contain'
-                }} 
-              />
-            </div>
-          ))}
-        </div>
-
-        {/* Hero Text */}
-        <div className="text-center text-white mt-3 z-3 position-relative w-100" style={{ minHeight: '120px' }}>
-          {slides.map((slide, idx) => (
-            <div
-              key={idx}
-              className="w-100 px-3"
-              style={{ 
-                opacity: idx === activeSlide ? 1 : 0,
-                position: idx === activeSlide ? 'relative' : 'absolute',
-                top: 0,
-                left: 0,
-                transition: 'opacity 0.8s ease-in-out'
-              }}
-            >
-              <h3 className="fw-bold mb-3" style={{ fontSize: 'clamp(1.25rem, 2.5vw, 1.75rem)' }}>{slide.title}</h3>
-              <p className="text-white-50 mx-auto mb-0" style={{ maxWidth: '400px', fontSize: '0.95rem', lineHeight: '1.5' }}>
-                {slide.description}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* Carousel Dots */}
-        <div className="d-flex gap-2 mt-4 mb-2 z-3 position-relative">
-          {slides.map((_, idx) => (
-            <div 
-              key={idx}
-              onClick={() => setActiveSlide(idx)}
-              className="rounded-circle bg-white cursor-pointer" 
-              style={{ 
-                width: '8px', 
-                height: '8px', 
-                opacity: idx === activeSlide ? 1 : 0.5,
-                transform: idx === activeSlide ? 'scale(1.2)' : 'scale(1)',
-                transition: 'all 0.3s ease-in-out'
-              }}
-            ></div>
-          ))}
-        </div>
-
-      </div>
-
-      <style dangerouslySetInnerHTML={{__html: `
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      <style jsx global>{`
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@900&family=Orbitron:wght@700;900&display=swap');
         
         .font-sans {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .brand-text-kalki {
+          font-family: 'Cinzel', 'Orbitron', serif;
+          font-weight: 900;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #ffe066 0%, #ff7a00 40%, #ff5500 75%, #cc2200 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          filter: drop-shadow(0px 2px 4px rgba(255, 85, 0, 0.2));
         }
         
         .right-panel {
@@ -282,21 +225,12 @@ export default function LoginPage() {
         .custom-input-group {
           border: 1px solid #cbd5e1;
           transition: all 0.2s ease-in-out;
-          background-color: #fff !important;
+          background-color: #ffffff;
         }
 
         .custom-input-group:focus-within {
-          border-color: #0266e8;
-          box-shadow: 0 0 0 4px rgba(2, 102, 232, 0.08);
-        }
-
-        .clean-input {
-          background-color: #fff !important;
-        }
-
-        .custom-input-group .form-control:focus {
-          border-color: transparent;
-          box-shadow: none;
+          border-color: #ff6f00;
+          box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.12);
         }
 
         .custom-checkbox {
@@ -308,43 +242,87 @@ export default function LoginPage() {
         }
         
         .custom-checkbox:checked {
-          background-color: #0266e8;
-          border-color: #0266e8;
+          background-color: #ff6f00;
+          border-color: #ff6f00;
         }
 
-        .submit-btn {
-          background-color: #0266e8;
-          border-color: #0266e8;
+        .btn-orange-auth {
+          background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%) !important;
+          border: none !important;
+          color: #ffffff !important;
+          box-shadow: 0 8px 15px -3px rgba(255, 111, 0, 0.3);
         }
 
-        .submit-btn:hover {
-          background-color: #0052cc;
-          border-color: #0052cc;
+        .btn-orange-auth:hover {
+          background: linear-gradient(135deg, #ff8c00 0%, #ff6f00 100%) !important;
+          transform: translateY(-1px);
+          box-shadow: 0 12px 20px -3px rgba(255, 111, 0, 0.4);
+        }
+
+        .btn-outline-sso {
+          border: 1px solid #cbd5e1;
+          background: #ffffff;
+          border-radius: 8px;
+          color: #334155;
+          font-size: 0.8rem;
+          font-weight: 600;
+          transition: all 0.2s ease;
+        }
+
+        .btn-outline-sso:hover {
+          background: #f8fafc;
+          border-color: #94a3b8;
+        }
+
+        .form-label-custom {
+          font-size: 0.72rem;
+          font-weight: 700;
+          color: #475569;
+          text-transform: uppercase;
+          letter-spacing: 0.02em;
         }
 
         .hover-opacity:hover {
           opacity: 0.8;
         }
 
-        .form-control::placeholder {
-          color: #94a3b8;
-          opacity: 1;
+        .mb-1.5 { margin-bottom: 6px; }
+        .mb-4.5 { margin-bottom: 24px; }
+
+        /* Glassmorphic Features Panel */
+        .glass-features-panel {
+          background: rgba(255, 255, 255, 0.05);
+          backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 20px;
+        }
+        .feature-circle {
+          width: 36px;
+          height: 36px;
+          border-radius: 50%;
+          margin: 0 auto 8px auto;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          color: #ffffff;
+          font-size: 0.95rem;
+        }
+        .feature-circle.bg-blue { background: #2563eb; }
+        .feature-circle.bg-green { background: #10b981; }
+        .feature-circle.bg-orange { background: #ff6f00; }
+        .feature-circle.bg-purple { background: #8b5cf6; }
+        .feature-text {
+          font-size: 0.62rem;
+          color: #ffffff;
+          font-weight: 600;
         }
 
-        input:-webkit-autofill,
-        input:-webkit-autofill:hover, 
-        input:-webkit-autofill:focus, 
-        input:-webkit-autofill:active {
-            -webkit-box-shadow: 0 0 0 30px white inset !important;
-            transition: background-color 5000s ease-in-out 0s;
-        }
-
-        /* Hide scrollbar for cleaner look if content ever overflows */
+        /* Hide scrollbar */
         .overflow-y-auto::-webkit-scrollbar {
           width: 0;
           background: transparent;
         }
-      `}} />
+      `}</style>
     </div>
   );
 }
