@@ -19,7 +19,7 @@ const STATUS_OPTIONS  = ["Checked-In", "Checked-Out"];
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; icon: string; msg: string }> = {
   "Checked-In":  { bg: "#dbeafe", color: "#1e40af",  icon: "bi-door-open-fill",    msg: "Visitor is currently inside the building." },
-  "Checked-Out": { bg: "#f1f5f9", color: "#475569",  icon: "bi-door-closed-fill",  msg: "Visitor has checked out." },
+  "Checked-Out": { bg: "var(--border-color)", color: "var(--text-primary)",  icon: "bi-door-closed-fill",  msg: "Visitor has checked out." },
 };
 
 // ── Approval level config ─────────────────────────────────────────────────────
@@ -166,24 +166,24 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
       <style>{`
         @keyframes vmFadeIn  { from{opacity:0}              to{opacity:1} }
         @keyframes vmSlideUp { from{transform:translateY(28px);opacity:0} to{transform:translateY(0);opacity:1} }
-        .vm-label   { font-size:0.7rem;  font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; display:block; }
-        .vm-ctrl    { font-size:0.85rem; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; padding:7px 11px; width:100%; outline:none; transition:border-color 0.15s,box-shadow 0.15s; }
-        .vm-ctrl:focus     { border-color:#014aad; background:#fff; box-shadow:0 0 0 3px #014aad18; }
-        .vm-ctrl:disabled  { opacity:0.6; cursor:not-allowed; background:#f1f5f9; }
-        .vm-section { font-size:0.68rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; padding:10px 0 6px; border-top:1px solid #f1f5f9; margin-top:8px; }
+        .vm-label   { font-size:0.7rem;  font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px; display:block; }
+        .vm-ctrl    { font-size:0.85rem; border-radius:8px; border:1.5px solid var(--border-color); background:var(--bg-app); padding:7px 11px; width:100%; outline:none; transition:border-color 0.15s,box-shadow 0.15s; }
+        .vm-ctrl:focus     { border-color:var(--dark-section); background:var(--bg-card); box-shadow:0 0 0 3px var(--dark-section)18; }
+        .vm-ctrl:disabled  { opacity:0.6; cursor:not-allowed; background:var(--border-color); }
+        .vm-section { font-size:0.68rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); padding:10px 0 6px; border-top:1px solid var(--border-color); margin-top:8px; }
       `}</style>
 
       <div style={{ width: "100%", maxWidth: "860px", margin: "0 16px", animation: "vmSlideUp 0.32s cubic-bezier(0.4,0,0.2,1)" }}>
-        <div style={{ background: "#fff", borderRadius: "16px", boxShadow: "0 25px 60px -12px rgba(0,0,0,0.4)", overflow: "hidden" }}>
+        <div style={{ background: "var(--bg-card)", borderRadius: "16px", boxShadow: "0 25px 60px -12px rgba(0,0,0,0.4)", overflow: "hidden" }}>
 
           {/* ── Header ───────────────────────────────────────────────────────── */}
           <div style={{ background: "#1e293b", padding: "20px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h5 style={{ color: "#fff", fontWeight: 700, margin: 0, fontSize: "1.05rem" }}>
+              <h5 style={{ color: "var(--bg-card)", fontWeight: 700, margin: 0, fontSize: "1.05rem" }}>
                 <i className="bi bi-person-badge me-2" style={{ color: "#60a5fa" }} />
                 {mode === "create" ? "Register New Visitor" : mode === "edit" ? "Edit Visitor" : "Visitor Details"}
               </h5>
-              <p style={{ color: "#94a3b8", margin: "3px 0 0", fontSize: "0.75rem" }}>
+              <p style={{ color: "var(--text-muted)", margin: "3px 0 0", fontSize: "0.75rem" }}>
                 Hierarchical building access control with approval routing
               </p>
             </div>
@@ -193,7 +193,7 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                   <i className={`bi ${ss.icon} me-1`} />{formData.status}
                 </span>
               )}
-              <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "8px", color: "#fff", width: "32px", height: "32px", cursor: "pointer", fontSize: "1.1rem" }}>×</button>
+              <button onClick={onClose} style={{ background: "rgba(255,255,255,0.1)", border: "none", borderRadius: "8px", color: "var(--bg-card)", width: "32px", height: "32px", cursor: "pointer", fontSize: "1.1rem" }}>×</button>
             </div>
           </div>
 
@@ -219,7 +219,7 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                       {approvalLevel === "Office Level"   && "Visitor request notification → Office Owner"}
                     </div>
                   </div>
-                  <span style={{ background: apc.color, color: "#fff", borderRadius: "20px", padding: "3px 12px", fontSize: "0.68rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                  <span style={{ background: apc.color, color: "var(--bg-card)", borderRadius: "20px", padding: "3px 12px", fontSize: "0.68rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                     {approvalLevel}
                   </span>
                 </div>
@@ -254,7 +254,7 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                     value={formData.idNumber} onChange={e => set("idNumber", e.target.value)} />
                 </div>
                 <div>
-                  <label className="vm-label">Vehicle No <span style={{ color: "#94a3b8", fontWeight: 500, textTransform: "none" }}>(optional)</span></label>
+                  <label className="vm-label">Vehicle No <span style={{ color: "var(--text-muted)", fontWeight: 500, textTransform: "none" }}>(optional)</span></label>
                   <input className="vm-ctrl" disabled={isRO} placeholder="e.g. TS09AB1234"
                     value={formData.vehicleNumber} onChange={e => set("vehicleNumber", e.target.value)} />
                 </div>
@@ -264,22 +264,22 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
               {!isOwner && (
                 <>
                   <div className="vm-section">Visiting Location</div>
-                  <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px", padding: "16px", marginBottom: "8px" }}>
+                  <div style={{ background: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "16px", marginBottom: "8px" }}>
 
                     {/* Property */}
                     <div style={{ marginBottom: "14px" }}>
                       <label className="vm-label">
                         <i className="bi bi-building me-1" style={{ color: "#1d4ed8" }} />
                         Property <span style={{ color: "#dc2626" }}>*</span>
-                        <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "#94a3b8", fontWeight: 500, textTransform: "none" }}>— mandatory</span>
+                        <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 500, textTransform: "none" }}>— mandatory</span>
                       </label>
                       <select className="vm-ctrl" required disabled={isRO} value={selProp} onChange={e => handlePropertyChange(e.target.value)}>
                         <option value="">Select Property</option>
                         {properties.map(p => <option key={p._id} value={p._id}>{p.propertyName}</option>)}
                       </select>
                       {selPropObj && (
-                        <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px" }}>
-                          <i className="bi bi-geo-alt me-1" style={{ color: "#014aad" }} />{selPropObj.propertyAddress} · {selPropObj.propertyType}
+                        <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                          <i className="bi bi-geo-alt me-1" style={{ color: "var(--dark-section)" }} />{selPropObj.propertyAddress} · {selPropObj.propertyType}
                         </div>
                       )}
                     </div>
@@ -290,14 +290,14 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                         <label className="vm-label">
                           <i className="bi bi-layers me-1" style={{ color: "#15803d" }} />
                           Floor
-                          <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "#94a3b8", fontWeight: 500, textTransform: "none" }}>— optional (blank = Property-level approval)</span>
+                          <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 500, textTransform: "none" }}>— optional (blank = Property-level approval)</span>
                         </label>
                         <select className="vm-ctrl" disabled={isRO} value={selFloor} onChange={e => handleFloorChange(e.target.value)}>
                           <option value="">Select Floor (optional)</option>
                           {floors.map(f => <option key={f._id} value={f._id}>Floor {f.floorNumber}{f.floorName ? ` — ${f.floorName}` : ""}</option>)}
                         </select>
                         {selFloorObj && (
-                          <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px" }}>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
                             <i className="bi bi-info-circle me-1" />{selFloorObj.totalUnits} units · {selFloorObj.totalSft} sqft
                           </div>
                         )}
@@ -310,14 +310,14 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                         <label className="vm-label">
                           <i className="bi bi-door-open me-1" style={{ color: "#7e22ce" }} />
                           Office / Unit
-                          <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "#94a3b8", fontWeight: 500, textTransform: "none" }}>— optional (blank = Floor-level approval)</span>
+                          <span style={{ marginLeft: "6px", fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 500, textTransform: "none" }}>— optional (blank = Floor-level approval)</span>
                         </label>
                         <select className="vm-ctrl" disabled={isRO} value={selUnit} onChange={e => setSelUnit(e.target.value)}>
                           <option value="">Select Office / Unit (optional)</option>
                           {units.map(u => <option key={u._id} value={u._id}>Unit {u.unitNumber}{u.ownerName ? ` — ${u.ownerName}` : ""} ({u.unitStatus})</option>)}
                         </select>
                         {selUnitObj && (
-                          <div style={{ fontSize: "0.7rem", color: "#64748b", marginTop: "4px" }}>
+                          <div style={{ fontSize: "0.7rem", color: "var(--text-muted)", marginTop: "4px" }}>
                             <i className="bi bi-person me-1" />{selUnitObj.ownerName || "No owner"} · {selUnitObj.unitType} · {selUnitObj.sqft} sqft
                           </div>
                         )}
@@ -352,7 +352,7 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
                     value={formData.inTime} onChange={e => set("inTime", e.target.value)} />
                 </div>
                 <div>
-                  <label className="vm-label">Out-Time <span style={{ color: "#94a3b8", fontWeight: 500, textTransform: "none" }}>(optional)</span></label>
+                  <label className="vm-label">Out-Time <span style={{ color: "var(--text-muted)", fontWeight: 500, textTransform: "none" }}>(optional)</span></label>
                   <input className="vm-ctrl" type="time" disabled={isRO}
                     value={formData.outTime || ""} onChange={e => set("outTime", e.target.value)} />
                 </div>
@@ -384,7 +384,7 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
             </div>
 
             {/* ── Footer ───────────────────────────────────────────────────────── */}
-            <div style={{ background: "#f8fafc", borderTop: "1px solid #e2e8f0", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ background: "var(--bg-app)", borderTop: "1px solid var(--border-color)", padding: "16px 24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                 <i className={`bi ${apc.icon}`} style={{ color: apc.color, fontSize: "0.9rem" }} />
                 <span style={{ fontSize: "0.75rem", fontWeight: 700, color: apc.color }}>
@@ -393,13 +393,13 @@ export default function VisitorModal({ isOpen, onClose, onSave, editData, mode }
               </div>
               <div style={{ display: "flex", gap: "10px" }}>
                 <button type="button" onClick={onClose} disabled={isSubmitting}
-                  style={{ padding: "8px 20px", borderRadius: "8px", border: "1.5px solid #e2e8f0", background: "#fff", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", color: "#64748b" }}>
+                  style={{ padding: "8px 20px", borderRadius: "8px", border: "1.5px solid var(--border-color)", background: "var(--bg-card)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", color: "var(--text-muted)" }}>
                   {isRO ? "Close" : "Cancel"}
                 </button>
 
                 {!isRO && (
                   <button type="submit" disabled={isSubmitting}
-                    style={{ padding: "8px 24px", borderRadius: "8px", border: "none", background: "#014aad", color: "#fff", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
+                    style={{ padding: "8px 24px", borderRadius: "8px", border: "none", background: "var(--dark-section)", color: "var(--bg-card)", fontWeight: 700, fontSize: "0.85rem", cursor: "pointer", display: "flex", alignItems: "center", gap: "8px" }}>
                     {isSubmitting && <span className="spinner-border spinner-border-sm" role="status" />}
                     <i className="bi bi-send-fill" />
                     {mode === "create" ? "Register Visitor" : "Update Visitor"}

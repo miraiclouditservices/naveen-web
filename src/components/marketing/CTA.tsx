@@ -41,7 +41,7 @@ export default function CTA() {
 
       <style jsx global>{`
         .cta-card {
-          background-color: #0f172a;
+          background-color: var(--text-main);
           border-radius: 24px;
           padding: 60px 40px;
           box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.3);

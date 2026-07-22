@@ -20,7 +20,7 @@ export default function ComingSoon({ title, description, icon }: ComingSoonProps
                    width: '100px', 
                    height: '100px', 
                    borderRadius: '50%', 
-                   border: '1px solid #f1f5f9',
+                   border: '1px solid var(--border-color)',
                    position: 'relative'
                  }}>
               <i className={`bi ${icon} text-primary`} style={{ 
@@ -42,7 +42,7 @@ export default function ComingSoon({ title, description, icon }: ComingSoonProps
             {description}
           </p>
           <div className="d-inline-flex align-items-center gap-2 text-muted fw-bold text-uppercase" style={{ letterSpacing: '0.1em', fontSize: '0.55rem', opacity: 0.5 }}>
-            <span className="dot" style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: '#014aad' }}></span>
+            <span className="dot" style={{ width: '4px', height: '4px', borderRadius: '50%', backgroundColor: 'var(--dark-section)' }}></span>
             Module Under Construction
           </div>
         </div>
@@ -56,8 +56,8 @@ export default function ComingSoon({ title, description, icon }: ComingSoonProps
           .animate-float {
             animation: float 4s ease-in-out infinite;
           }
-          .text-primary { color: #014aad !important; }
-          .bg-emerald { background-color: #014aad !important; }
+          .text-primary { color: var(--dark-section) !important; }
+          .bg-emerald { background-color: var(--dark-section) !important; }
         `}</style>
       </div>
     </div>

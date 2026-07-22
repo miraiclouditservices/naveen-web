@@ -149,7 +149,7 @@ export default function LeasedParticularsPage() {
           {userRole !== 'viewer' && (
             <button 
               className="btn btn-primary btn-sm rounded-pill px-3 shadow-sm fw-bold text-white border-0" 
-              style={{ backgroundColor: '#014aad', fontSize: '0.75rem' }}
+              style={{ backgroundColor: 'var(--dark-section)', fontSize: '0.75rem' }}
               onClick={() => handleOpenModal('create')}
             >
               <i className="bi bi-plus-lg me-1"></i> Add New Lease
@@ -301,7 +301,7 @@ export default function LeasedParticularsPage() {
           </span>
           <div className="d-flex gap-1">
             <button className="btn btn-sm btn-white border px-2 shadow-none" disabled><i className="bi bi-chevron-left"></i></button>
-            <button className="btn btn-sm btn-primary border-0 px-3 shadow-none" style={{ backgroundColor: '#014aad' }}>1</button>
+            <button className="btn btn-sm btn-primary border-0 px-3 shadow-none" style={{ backgroundColor: 'var(--dark-section)' }}>1</button>
             <button className="btn btn-sm btn-white border px-3 shadow-none">2</button>
             <button className="btn btn-sm btn-white border px-3 shadow-none">3</button>
             <span className="px-2 align-self-center text-muted">...</span>
@@ -313,8 +313,8 @@ export default function LeasedParticularsPage() {
 
       <style jsx global>{`
         .hover-lift:hover { transform: translateY(-3px); }
-        .text-primary { color: #014aad !important; }
-        .bg-emerald { background-color: #014aad !important; }
+        .text-primary { color: var(--dark-section) !important; }
+        .bg-emerald { background-color: var(--dark-section) !important; }
         .rounded-xl { border-radius: 1rem !important; }
         .hover-bg-light:hover { background-color: rgba(0,0,0,0.02) !important; }
       `}</style>

@@ -70,9 +70,9 @@ export default function FloorAdminDashboard({ user }: { user: any }) {
     return `${propName} • ${monthName} ${yearVal}`;
   };
 
-  if (loading) return <div className="d-flex align-items-center justify-content-center" style={{ height: "50vh" }}><div className="spinner-border" style={{ color: "#014aad" }} /></div>;
+  if (loading) return <div className="d-flex align-items-center justify-content-center" style={{ height: "50vh" }}><div className="spinner-border" style={{ color: "var(--dark-section)" }} /></div>;
 
-  const C = { blue: "#014aad", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", teal: "#0891b2" };
+  const C = { blue: "var(--dark-section)", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", teal: "#0891b2" };
 
   return (
     <div style={{ padding: "0 20px 40px", overflowX: "hidden" }}>
@@ -81,12 +81,12 @@ export default function FloorAdminDashboard({ user }: { user: any }) {
 
 
       {/* ── Filter Controls ── */}
-      <div className="panel mb-4" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
+      <div className="panel mb-4" style={{ backgroundColor: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "12px" }}>
         <div className="panel-body" style={{ padding: "10px 14px" }}>
-          <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "#014aad", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+          <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--dark-section)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
             Property Analytics Dashboard
           </div>
-          <div style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748b", marginBottom: "8px" }}>
+          <div style={{ fontSize: "0.78rem", fontWeight: 500, color: "var(--text-muted)", marginBottom: "8px" }}>
             Filter by Property, Month, Year, and Status
           </div>
           <div className="row g-2">
@@ -209,20 +209,20 @@ export default function FloorAdminDashboard({ user }: { user: any }) {
           {rev.length > 0
             ? <><BarChart items={rev.map(r => ({ label: r.label, value: r.revenue }))} color={C.blue} />
               <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-                <div><div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>Rent</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.leaseRevenue || 0) / 1000).toFixed(0)}K</div></div>
-                <div><div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>CAM</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.camRevenue || 0) / 1000).toFixed(0)}K</div></div>
+                <div><div style={{ fontSize: "0.62rem", color: "var(--text-muted)" }}>Rent</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.leaseRevenue || 0) / 1000).toFixed(0)}K</div></div>
+                <div><div style={{ fontSize: "0.62rem", color: "var(--text-muted)" }}>CAM</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.camRevenue || 0) / 1000).toFixed(0)}K</div></div>
               </div></>
-            : <p style={{ textAlign: "center", color: "#94a3b8", margin: "30px 0", fontSize: "0.8rem" }}>No revenue data</p>}
+            : <p style={{ textAlign: "center", color: "var(--text-muted)", margin: "30px 0", fontSize: "0.8rem" }}>No revenue data</p>}
         </Panel>
 
         {/* Visitor Trend */}
         <Panel title="Visitor Analytics" icon="bi-graph-up-arrow" iconColor="#60a5fa" accent="#1e293b">
           {vis.length > 0
             ? <LineChart items={vis.map(v => ({ label: v.label, value: v.count }))} color={C.blue} />
-            : <p style={{ textAlign: "center", color: "#94a3b8", margin: "30px 0", fontSize: "0.8rem" }}>No visitor data</p>}
+            : <p style={{ textAlign: "center", color: "var(--text-muted)", margin: "30px 0", fontSize: "0.8rem" }}>No visitor data</p>}
           <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-            <div><div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>Today</div><div style={{ fontSize: "0.9rem", fontWeight: 800 }}>{m.visitorsToday ?? 0}</div></div>
-            <div><div style={{ fontSize: "0.62rem", color: "#94a3b8" }}>Pending</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.yellow }}>{m.visitorsPending ?? 0}</div></div>
+            <div><div style={{ fontSize: "0.62rem", color: "var(--text-muted)" }}>Today</div><div style={{ fontSize: "0.9rem", fontWeight: 800 }}>{m.visitorsToday ?? 0}</div></div>
+            <div><div style={{ fontSize: "0.62rem", color: "var(--text-muted)" }}>Pending</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: C.yellow }}>{m.visitorsPending ?? 0}</div></div>
           </div>
         </Panel>
 
@@ -245,7 +245,7 @@ export default function FloorAdminDashboard({ user }: { user: any }) {
           {recentV.length > 0 ? recentV.slice(0, 5).map((v: any, i: number) => (
             <AlertItem key={i} icon="bi-person-check" iconColor={C.blue}
               title={v.name} sub={`${v.property} · ${v.date}`} time={<StatusPill status={v.status} />} />
-          )) : <p style={{ textAlign: "center", color: "#94a3b8", fontSize: "0.8rem", margin: "20px 0" }}>No recent visitors</p>}
+          )) : <p style={{ textAlign: "center", color: "var(--text-muted)", fontSize: "0.8rem", margin: "20px 0" }}>No recent visitors</p>}
         </Panel>
 
         {/* Expiring Leases */}
@@ -255,7 +255,7 @@ export default function FloorAdminDashboard({ user }: { user: any }) {
             return <AlertItem key={i} icon="bi-calendar-x" iconColor={days <= 10 ? C.red : C.yellow}
               title={l.tenantName} sub={l.property}
               time={<span style={{ fontSize: "0.68rem", fontWeight: 700, color: days <= 10 ? C.red : C.yellow }}>{days}d left</span>} />;
-          }) : <div style={{ textAlign: "center", padding: "20px 0", color: "#94a3b8" }}>
+          }) : <div style={{ textAlign: "center", padding: "20px 0", color: "var(--text-muted)" }}>
             <i className="bi bi-check2-circle" style={{ fontSize: "1.8rem", color: C.green, display: "block", marginBottom: 6 }} />
             <span style={{ fontSize: "0.8rem" }}>No leases expiring soon</span>
           </div>}

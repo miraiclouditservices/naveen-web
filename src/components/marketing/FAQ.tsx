@@ -83,8 +83,8 @@ export default function FAQ() {
         }
 
         .faq-item {
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           border-radius: 16px;
           box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.01);
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -98,7 +98,7 @@ export default function FAQ() {
 
         .faq-trigger {
           outline: none;
-          color: #0f172a;
+          color: var(--text-main);
           cursor: pointer;
           padding: 20px 24px;
         }
@@ -110,7 +110,7 @@ export default function FAQ() {
 
         .faq-arrow-icon {
           font-size: 0.85rem;
-          color: #64748b;
+          color: var(--text-muted);
           transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 

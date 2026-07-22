@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
 import Table, { TableColumn } from "@/components/common/Table";
-import AssetFilterDrawer from "@/components/assets/AssetFilterDrawer";
 import AssetFormModal from "@/components/assets/AssetFormModal";
 import AssetDetailView from "@/components/assets/AssetDetailView";
 import { exportAssetsToExcel } from "@/utils/exportAssetsExcel";
@@ -12,32 +11,45 @@ import { exportAssetsToPdf } from "@/utils/exportAssetsPdf";
 const ITEMS_PER_PAGE = 20;
 
 export default function AssetsPage() {
+
   // ── Server Data ───────────────────────────────────────────────────────────
   const [assets, setAssets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [allFloors, setAllFloors] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [vendors, setVendors] = useState<any[]>([]);
   const [stats, setStats] = useState<any>({
     total: 0,
     amcActive: 0,
     amcExpired: 0,
     amcExpiringSoon: 0,
-    warrantyExpiringSoon: 0,
+    totalAmcValue: 0,
+    annualAmcCost: 0,
     noAmc: 0,
   });
 
-  // ── Query Parameters ──────────────────────────────────────────────────────
+  // ── Categories State (for filters) ─────────────────────────────────────────
+  const [categories, setCategories] = useState<any[]>([]);
+
+  // ── Query Parameters (Assets - High Density Filters) ──────────────────────
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [propertyFilter, setPropertyFilter] = useState("All");
+  const [vendorFilter, setVendorFilter] = useState("All");
+  const [amcStatusFilter, setAmcStatusFilter] = useState("All");
 
-  // ── UI State ──────────────────────────────────────────────────────────────
-  const [showFilters, setShowFilters] = useState(false);
-  const [showDetail, setShowDetail] = useState(false);
-  const [detailAssetId, setDetailAssetId] = useState("");
+  // ── Split View Telemetry Drawer State ─────────────────────────────────────
+  const [selectedAssetId, setSelectedAssetId] = useState<string | null>(null);
+  const [detailAsset, setDetailAsset] = useState<any>(null);
+  const [isLoadingDetail, setIsLoadingDetail] = useState(false);
+  const [activeDetailTab, setActiveDetailTab] = useState<"overview" | "vendor" | "amc" | "logs">("overview");
+
+  // ── Form Modal State ──────────────────────────────────────────────────────
   const [modalMode, setModalMode] = useState<"create" | "edit">("create");
   const [selectedAsset, setSelectedAsset] = useState<any>(null);
   const [showModal, setShowModal] = useState(false);
@@ -58,11 +70,28 @@ export default function AssetsPage() {
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(val);
       setCurrentPage(1);
-    }, 500);
+    }, 400);
   };
 
   // ── Reset page when filter changes ────────────────────────────────────────
-  useEffect(() => { setCurrentPage(1); }, [statusFilter, categoryFilter]);
+  useEffect(() => { setCurrentPage(1); }, [statusFilter, categoryFilter, propertyFilter, vendorFilter, amcStatusFilter]);
+
+  // ── Fetch Side Dropdown Options ───────────────────────────────────────────
+  useEffect(() => {
+    const fetchDropdownOptions = async () => {
+      try {
+        const [propRes, vendorRes] = await Promise.all([
+          api.get("/properties?limit=1000"),
+          api.get("/vendors?limit=1000")
+        ]);
+        if (propRes.success) setProperties(propRes.data);
+        if (vendorRes.success) setVendors(vendorRes.data);
+      } catch (err) {
+        console.error("Failed to load toolbar dropdown options:", err);
+      }
+    };
+    fetchDropdownOptions();
+  }, []);
 
   // ── Build API Query Params ────────────────────────────────────────────────
   const buildParams = useCallback(() => {
@@ -73,8 +102,11 @@ export default function AssetsPage() {
     if (debouncedSearch.trim()) params.search = debouncedSearch.trim();
     if (statusFilter !== "All") params.assetStatus = statusFilter;
     if (categoryFilter !== "All") params.category = categoryFilter;
+    if (propertyFilter !== "All") params.property = propertyFilter;
+    if (vendorFilter !== "All") params.vendor = vendorFilter;
+    if (amcStatusFilter !== "All") params.amcStatus = amcStatusFilter;
     return new URLSearchParams(params).toString();
-  }, [currentPage, debouncedSearch, statusFilter, categoryFilter]);
+  }, [currentPage, debouncedSearch, statusFilter, categoryFilter, propertyFilter, vendorFilter, amcStatusFilter]);
 
   // ── Fetch Assets ──────────────────────────────────────────────────────────
   const fetchAssets = useCallback(async () => {
@@ -93,33 +125,33 @@ export default function AssetsPage() {
     }
   }, [buildParams]);
 
-  // ── Fetch Stats ───────────────────────────────────────────────────────────
+  // ── Fetch Live Telemetry Stats ────────────────────────────────────────────
   const fetchStats = useCallback(async () => {
     try {
-      // Fetch all assets once to calculate metrics locally (since stats endpoint is not built for asset)
       const res = await api.get("/assets?limit=5000");
       if (res.success) {
         const all = res.data;
         const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
         const amcActive = all.filter((a: any) => a.amcEndDate && new Date(a.amcEndDate) >= today).length;
         const amcExpired = all.filter((a: any) => a.amcEndDate && new Date(a.amcEndDate) < today).length;
         const amcExpiringSoon = all.filter((a: any) => {
           if (!a.amcEndDate) return false;
           const diff = Math.ceil((new Date(a.amcEndDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          return diff >= 0 && diff <= 10;
+          return diff >= 0 && diff <= 45; // 45 days matching leaseAutomation
         }).length;
-        const warrantyExpiringSoon = all.filter((a: any) => {
-          if (!a.warrantyEndDate) return false;
-          const diff = Math.ceil((new Date(a.warrantyEndDate).getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-          return diff >= 0 && diff <= 10;
-        }).length;
+
+        const totalAmcValue = all.reduce((sum: number, a: any) => sum + (Number(a.contractValue) || 0), 0);
+        const annualAmcCost = all.reduce((sum: number, a: any) => sum + (Number(a.contractValue) || 0), 0);
 
         setStats({
           total: all.length,
           amcActive,
           amcExpired,
           amcExpiringSoon,
-          warrantyExpiringSoon,
+          totalAmcValue,
+          annualAmcCost,
           noAmc: all.filter((a: any) => !a.amcEndDate).length,
         });
       }
@@ -128,24 +160,57 @@ export default function AssetsPage() {
     }
   }, []);
 
+  // ── Fetch Categories ──────────────────────────────────────────────────────
+  const fetchCategories = useCallback(async () => {
+    try {
+      const res = await api.get("/assets/categories");
+      if (res.success) {
+        setCategories(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
+    }
+  }, []);
+
   const fetchAllFloors = useCallback(async () => {
     try {
       const res = await api.get("/floors?limit=5000");
-      if (res.success) {
-        setAllFloors(res.data);
-      }
+      if (res.success) setAllFloors(res.data);
     } catch (err) {
-      console.error("Failed to fetch all floors:", err);
+      console.error("Failed to fetch floors:", err);
     }
   }, []);
 
   useEffect(() => {
     fetchAssets();
     fetchStats();
+    fetchCategories();
     fetchAllFloors();
-  }, [fetchAssets, fetchStats, fetchAllFloors]);
+  }, [fetchAssets, fetchStats, fetchCategories, fetchAllFloors]);
 
-  // ── Save (create / edit) ──────────────────────────────────────────────────
+  // ── Fetch Detail Asset whenever Selected ID changes ──────────────────────
+  useEffect(() => {
+    const fetchDetail = async () => {
+      if (!selectedAssetId) {
+        setDetailAsset(null);
+        return;
+      }
+      setIsLoadingDetail(true);
+      try {
+        const res = await api.get(`/assets/${selectedAssetId}`);
+        if (res.success) {
+          setDetailAsset(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to load asset detail:", err);
+      } finally {
+        setIsLoadingDetail(false);
+      }
+    };
+    fetchDetail();
+  }, [selectedAssetId]);
+
+  // ── Save Asset ────────────────────────────────────────────────────────────
   const handleSave = async (data: any) => {
     try {
       setIsSubmitting(true);
@@ -155,6 +220,12 @@ export default function AssetsPage() {
       if (res.success) {
         fetchAssets();
         fetchStats();
+        fetchCategories();
+        if (selectedAssetId === data._id) {
+          // Refresh details pane
+          const detailRes = await api.get(`/assets/${data._id}`);
+          if (detailRes.success) setDetailAsset(detailRes.data);
+        }
       }
     } catch (err) {
       console.error("Failed to save asset:", err);
@@ -164,24 +235,28 @@ export default function AssetsPage() {
     }
   };
 
-  // ── Toggle Status (Active ↔ Under Repair ↔ Scrapped) ──────────────────────
+  // ── Toggle Status ─────────────────────────────────────────────────────────
   const handleToggleStatus = async (asset: any) => {
     const nextStatusMap: Record<string, string> = {
-      "Active": "Under Repair",
-      "Under Repair": "Scrapped",
-      "Scrapped": "Active",
+      "Active": "Under Maintenance",
+      "Under Maintenance": "Disposed",
+      "Disposed": "Active",
     };
     const nextStatus = nextStatusMap[asset.assetStatus] || "Active";
     try {
       setAssets(prev =>
-        prev.map(a => (a._id === asset._id ? { ...a, assetStatus: nextStatus } : a))
+          prev.map(a => (a._id === asset._id ? { ...a, assetStatus: nextStatus } : a))
       );
       const res = await api.put(`/assets/${asset._id}`, { assetStatus: nextStatus });
       if (!res.success) {
         fetchAssets();
+      } else {
+        if (selectedAssetId === asset._id) {
+          setDetailAsset((prev: any) => ({ ...prev, assetStatus: nextStatus }));
+        }
       }
     } catch (err) {
-      console.error("Failed to toggle asset status:", err);
+      console.error("Failed to toggle status:", err);
       fetchAssets();
     }
   };
@@ -192,15 +267,13 @@ export default function AssetsPage() {
     setDebouncedSearch("");
     setStatusFilter("All");
     setCategoryFilter("All");
+    setPropertyFilter("All");
+    setVendorFilter("All");
+    setAmcStatusFilter("All");
     setCurrentPage(1);
   };
 
-  // ── Active Filters Count ──────────────────────────────────────────────────
-  const activeFilters = [
-    debouncedSearch.trim() !== "",
-    statusFilter !== "All",
-    categoryFilter !== "All",
-  ].filter(Boolean).length;
+
 
   // ── Date Range Helper for Export ──────────────────────────────────────────
   const getFilteredExportData = async () => {
@@ -219,14 +292,13 @@ export default function AssetsPage() {
     }
   };
 
-  // ── Export Triggers ───────────────────────────────────────────────────────
   const handleDownloadExport = async () => {
     const dataToExport = await getFilteredExportData();
     if (dataToExport.length === 0) {
-      alert("No assets found in the selected date range!");
+      alert("No assets found in range!");
       return;
     }
-    const totalValue = dataToExport.reduce((sum: number, a: any) => sum + (a.purchaseValue || 0), 0);
+    const totalValue = dataToExport.reduce((sum: number, a: any) => sum + (a.purchaseValue || a.purchaseAmount || 0), 0);
     if (exportFormat === "pdf") {
       exportAssetsToPdf(dataToExport, totalValue);
     } else {
@@ -235,85 +307,82 @@ export default function AssetsPage() {
     setIsExportModalOpen(false);
   };
 
-  const handlePreviewExport = async () => {
-    const dataToExport = await getFilteredExportData();
-    if (dataToExport.length === 0) {
-      alert("No assets match this criteria.");
-      setExportPreviewData(null);
-    } else {
-      setExportPreviewData(dataToExport);
-    }
-  };
-
   const closeExportModal = () => {
     setIsExportModalOpen(false);
     setExportPreviewData(null);
   };
 
-  // ── AMC & Warranty Status Indicators ─────────────────────────────────────
+  // ── AMC & Warranty Indicators ────────────────────────────────────────────
   const getAmcInfo = (a: any) => {
     const today = new Date(); today.setHours(0, 0, 0, 0);
     if (!a.amcEndDate) return { status: "No AMC", badge: "secondary" };
     const aDate = new Date(a.amcEndDate); aDate.setHours(0, 0, 0, 0);
     const diffDays = Math.ceil((aDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { status: "AMC Expired", badge: "danger" };
-    if (diffDays <= 10) return { status: "Expiring Soon", badge: "warning" };
-    return { status: "AMC Active", badge: "success" };
+    if (diffDays < 0) return { status: "Expired", badge: "danger" };
+    if (diffDays <= 45) return { status: `Expiring (${diffDays}d)`, badge: "warning" };
+    return { status: "Active", badge: "success" };
   };
 
-  // ── Table Columns ─────────────────────────────────────────────────────────
+  // ── Dynamically Adaptive Columns for Table (Prevents Squishing) ──────────
   const columns: TableColumn<any>[] = [
     {
       header: "Asset",
-      render: (v: any) => (
-        <div>
-          <div className="fw-bold text-dark" style={{ fontSize: "0.88rem" }}>{v.assetDescription}</div>
-          <div className="text-muted" style={{ fontSize: "0.78rem" }}>{v.assetCode}</div>
-        </div>
-      ),
-    },
-    {
-      header: "Category",
-      render: (v: any) => (
-        <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.78rem" }}>
-          {v.category || "—"}
-        </span>
-      ),
-    },
-    {
-      header: "Location",
       render: (v: any) => {
-        const floorObj = allFloors.find(f => {
-          const propId = typeof f.property === "object" ? f.property?._id : f.property;
-          const targetPropId = typeof v.property === "object" ? v.property?._id : v.property;
-          const matchProp = propId === targetPropId;
-          const matchFloor = String(f.floorNumber) === String(v.floorNumber);
-          return matchProp && matchFloor;
-        });
-        const floorLabel = floorObj ? floorObj.floorName : (v.floorNumber !== undefined ? `Floor ${v.floorNumber}` : "Ground Floor");
+        const getIcon = (cat: string) => {
+          const c = (cat || "").toLowerCase();
+          if (c.includes("lift") || c.includes("elevator")) return "bi-arrow-up-down text-indigo";
+          if (c.includes("hvac") || c.includes("cooling") || c.includes("air")) return "bi-wind text-info";
+          if (c.includes("electric") || c.includes("power") || c.includes("generator") || c.includes("ups")) return "bi-lightning-charge-fill text-warning";
+          if (c.includes("fire") || c.includes("safety") || c.includes("alarm")) return "bi-shield-fire text-danger";
+          if (c.includes("security") || c.includes("cctv") || c.includes("access")) return "bi-camera-video-fill text-dark";
+          return "bi-box-seam text-secondary";
+        };
         return (
-          <div>
-            <div className="fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
-              {v.property?.propertyName || "Main Complex"}
+          <div className="d-flex align-items-center gap-2.5">
+            <div className="d-flex align-items-center justify-content-center bg-light border rounded-3" style={{ width: 36, height: 36 }}>
+              <i className={`bi ${getIcon(v.category)}`} style={{ fontSize: "1.1rem" }} />
             </div>
-            <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-              {floorLabel}
-              {v.unit && ` · Unit ${v.unit.unitNumber}`}
+            <div>
+              <div className="fw-bold text-dark" style={{ fontSize: "0.85rem", lineHeight: 1.2 }}>{v.assetName || v.assetDescription}</div>
+              <div className="text-muted small" style={{ fontSize: "0.72rem" }}>
+                {v.assetCode || "AST-NEW"} {v.brandName ? `· ${v.brandName}` : ""}
+              </div>
             </div>
           </div>
         );
       },
     },
     {
-      header: "Value & Date",
+      header: "Category",
+      render: (v: any) => (
+        <span className="badge bg-light text-dark border px-2.5 py-1" style={{ fontSize: "0.72rem", fontWeight: 600 }}>
+          {v.category || "General"}
+        </span>
+      ),
+    },
+    {
+      header: "Location",
+      render: (v: any) => {
+        const floorObj = allFloors.find(f => String(f.floorNumber) === String(v.floorNumber));
+        const floorLabel = floorObj ? floorObj.floorName : (v.floorNumber !== undefined && v.floorNumber !== null ? `Floor ${v.floorNumber}` : "Ground Floor");
+        return (
+          <div>
+            <div className="fw-semibold text-dark" style={{ fontSize: "0.82rem" }}>
+              {v.property?.propertyName || "Main Complex"}
+            </div>
+            <div className="text-muted small" style={{ fontSize: "0.72rem" }}>
+              {floorLabel} {v.unit ? `· Unit ${v.unit.unitNumber}` : ""}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      header: "Vendor Partner",
       render: (v: any) => (
         <div>
-          <div className="fw-bold text-dark" style={{ fontSize: "0.85rem" }}>
-            ₹ {v.purchaseValue?.toLocaleString() || "—"}
-          </div>
-          <div className="text-muted" style={{ fontSize: "0.75rem" }}>
-            {v.purchaseDate ? new Date(v.purchaseDate).toLocaleDateString() : "—"}
-          </div>
+          <div className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>{v.vendor?.vendorName || v.vendorName || "—"}</div>
+          <div className="text-muted small" style={{ fontSize: "0.72rem" }}>{v.contactNumber || v.vendor?.mobileNumber || "No contact"}</div>
         </div>
       ),
     },
@@ -321,29 +390,45 @@ export default function AssetsPage() {
       header: "AMC Status",
       render: (v: any) => {
         const amc = getAmcInfo(v);
+        const expiryDateStr = v.amcEndDate ? new Date(v.amcEndDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "";
         return (
-          <span
-            className={`badge bg-${amc.badge} bg-opacity-10 text-${amc.badge} border border-${amc.badge} border-opacity-25 rounded-pill px-3 py-1`}
-            style={{ fontSize: "0.72rem", fontWeight: 700 }}
-          >
-            {amc.status}
-          </span>
+          <div>
+            <span
+              className={`badge bg-${amc.badge} bg-opacity-10 text-${amc.badge} border border-${amc.badge} border-opacity-25 rounded-pill px-2.5 py-0.5`}
+              style={{ fontSize: "0.7rem", fontWeight: 700 }}
+            >
+              {amc.status}
+            </span>
+            {expiryDateStr && (
+              <div className="text-muted mt-0.5" style={{ fontSize: "0.68rem" }}>
+                Ends: {expiryDateStr}
+              </div>
+            )}
+          </div>
         );
       },
+    },
+    {
+      header: "AMC Value",
+      render: (v: any) => (
+        <div className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>
+          ₹ {(v.contractValue || v.purchaseValue || 0).toLocaleString()}
+        </div>
+      ),
     },
     {
       header: "Status",
       render: (v: any) => (
         <span
           onClick={() => handleToggleStatus(v)}
-          className={`badge rounded-pill px-3 py-1 ${
+          className={`badge rounded-pill px-2.5 py-1 ${
             v.assetStatus === "Active"
               ? "bg-success bg-opacity-10 text-success border border-success border-opacity-25"
-              : v.assetStatus === "Under Repair"
+              : v.assetStatus === "Under Maintenance"
               ? "bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25"
               : "bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25"
           }`}
-          style={{ fontSize: "0.72rem", fontWeight: 700, cursor: "pointer", userSelect: "none" }}
+          style={{ fontSize: "0.7rem", fontWeight: 700, cursor: "pointer", userSelect: "none" }}
           title="Click to toggle status"
         >
           {v.assetStatus || "Active"}
@@ -354,216 +439,365 @@ export default function AssetsPage() {
       header: "Actions",
       style: { textAlign: "center" as const },
       render: (v: any) => (
-        <div className="d-flex justify-content-center gap-2">
+        <div className="d-flex justify-content-center gap-1">
           <button
-            title="View"
-            onClick={() => { setDetailAssetId(v._id); setShowDetail(true); }}
-            style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", color: "#1e293b",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            title="View Details"
+            onClick={(e) => { e.stopPropagation(); setSelectedAssetId(v._id); }}
+            className="btn btn-sm btn-light border p-1 d-flex align-items-center justify-content-center"
+            style={{ width: 26, height: 26 }}
           >
-            <i className="bi bi-eye" style={{ fontSize: "0.9rem" }} />
+            <i className="bi bi-eye" style={{ fontSize: "0.75rem" }} />
           </button>
           <button
-            title="Edit"
-            onClick={() => { setSelectedAsset(v); setModalMode("edit"); setShowModal(true); }}
-            style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", color: "#1e293b",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            title="Edit Asset"
+            onClick={(e) => { e.stopPropagation(); setSelectedAsset(v); setModalMode("edit"); setShowModal(true); }}
+            className="btn btn-sm btn-light border p-1 d-flex align-items-center justify-content-center"
+            style={{ width: 26, height: 26 }}
           >
-            <i className="bi bi-pencil" style={{ fontSize: "0.85rem" }} />
+            <i className="bi bi-pencil" style={{ fontSize: "0.75rem" }} />
           </button>
         </div>
       ),
     },
   ];
 
-  // ── Render ────────────────────────────────────────────────────────────────
+  const activeFiltersCount = [
+    debouncedSearch.trim() !== "",
+    statusFilter !== "All",
+    categoryFilter !== "All",
+    propertyFilter !== "All",
+    vendorFilter !== "All",
+    amcStatusFilter !== "All",
+  ].filter(Boolean).length;
+
   return (
     <div
-      className="p-0 d-flex flex-column bg-white border rounded-4"
-      style={{ height: "calc(100vh - 104px)", fontFamily: "var(--font-geist-sans)", overflow: "hidden" }}
+      style={{
+        backgroundColor: "#F9F7F3",
+        minHeight: "100vh",
+        padding: "24px",
+        fontFamily: "var(--font-geist-sans), Inter, sans-serif",
+        color: "#202020",
+      }}
     >
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div
-        className="d-flex justify-content-between align-items-center pb-2 pt-3 px-4 flex-shrink-0"
-        style={{ backgroundColor: "#ffffff" }}
-      >
+      {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>Assets Management</span>
-          {/* VERY SMALL STATS UI */}
-          <div className="d-flex gap-3 mt-1 text-muted" style={{ fontSize: "0.72rem" }}>
-            <span>Total: <strong className="text-dark">{stats.total}</strong></span>
-            <span>·</span>
-            <span className="text-success">AMC Active: <strong>{stats.amcActive}</strong></span>
-            <span>·</span>
-            <span className="text-warning">Expiring: <strong>{stats.amcExpiringSoon}</strong></span>
-            <span>·</span>
-            <span className="text-danger">Expired: <strong>{stats.amcExpired}</strong></span>
-          </div>
+          <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
+            Assets & AMC Management
+          </h2>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+            Comprehensive asset lifecycle tracking, AMC contracts, maintenance schedules, and financial ledger
+          </p>
         </div>
-
-        <div className="d-flex gap-3 align-items-center">
-          {/* Search */}
-          <div className="position-relative" style={{ width: 260 }}>
-            <input
-              type="text"
-              className="form-control px-3 py-2"
-              placeholder="Search name, code, serial..."
-              value={searchQuery}
-              onChange={e => handleSearchChange(e.target.value)}
-              style={{ borderRadius: "4px", border: "1px solid #e0e0e0", fontSize: "0.85rem" }}
-            />
-            {searchQuery ? (
-              <button
-                onClick={() => handleSearchChange("")}
-                style={{
-                  position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer", color: "#94a3b8",
-                  fontSize: "0.85rem", lineHeight: 1,
-                }}
-              >×</button>
-            ) : (
-              <i className="bi bi-search position-absolute text-muted"
-                style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem" }} />
-            )}
-          </div>
-
-          {/* Filter Toggle */}
+        
+        <div className="d-flex gap-2 align-items-center">
           <button
-            className={`btn border d-flex align-items-center justify-content-center position-relative ${
-              showFilters ? "text-white border-primary" : "bg-white text-dark border-light"
-            }`}
-            onClick={() => setShowFilters(true)}
-            style={{
-              width: 40, height: 40, borderRadius: "4px",
-              backgroundColor: showFilters ? "#014aad" : "#fff",
+            onClick={() => {
+              setSelectedAsset(null);
+              setModalMode("create");
+              setShowModal(true);
             }}
-            title="Advanced Filters"
+            className="btn btn-dark btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
+            style={{ backgroundColor: "#040404", borderRadius: "8px", fontSize: "0.8rem", height: "38px" }}
           >
-            <i className={`bi bi-funnel ${showFilters ? "text-white" : "text-dark"}`} />
-            {activeFilters > 0 && (
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                style={{ fontSize: "0.6rem", padding: "2px 5px" }}
-              >
-                {activeFilters}
-              </span>
-            )}
+            <i className="bi bi-plus-lg"></i> Add Asset
           </button>
-
-          {/* Export */}
           <button
-            className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-            style={{ height: 40, fontSize: "0.85rem", borderRadius: "4px", fontWeight: 500 }}
+            className="btn btn-sm btn-white border fw-bold px-3 py-2"
+            style={{ borderRadius: "8px", fontSize: "0.8rem", backgroundColor: "#ffffff", height: "38px" }}
             onClick={() => setIsExportModalOpen(true)}
           >
-            <i className="bi bi-download me-2" /> Export
-          </button>
-
-          {/* Add Asset */}
-          <button
-            className="btn d-flex align-items-center gap-2 px-4"
-            style={{
-              backgroundColor: "#014aad", color: "#fff", fontWeight: 500,
-              borderRadius: "4px", height: 40, fontSize: "0.85rem", border: "none",
-            }}
-            onClick={() => { setSelectedAsset(null); setModalMode("create"); setShowModal(true); }}
-          >
-            <i className="bi bi-plus-lg" /> Add Asset
+            Export
           </button>
         </div>
       </div>
 
-      {/* Active filter chips */}
-      {activeFilters > 0 && (
-        <div className="d-flex align-items-center gap-2 px-4 pb-2 flex-shrink-0 flex-wrap">
-          {debouncedSearch && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Search: <strong>{debouncedSearch}</strong>
-              <button onClick={() => handleSearchChange("")} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {statusFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Status: <strong>{statusFilter}</strong>
-              <button onClick={() => setStatusFilter("All")} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {categoryFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Category: <strong>{categoryFilter}</strong>
-              <button onClick={() => setCategoryFilter("All")} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          <button
-            onClick={handleReset}
-            className="btn btn-link p-0 text-danger"
-            style={{ fontSize: "0.75rem", textDecoration: "none" }}
-          >
-            Clear all
-          </button>
+      {/* ── 2. STATS CARDS GRID ───────────────────────────────────────────── */}
+      <div className="row g-3 mb-4">
+        {/* KPI 1: Total Assets */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-box-seam text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Total Assets
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "1.1rem" }}>
+              {stats.total}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Active Inventory
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* ── Filter Drawer ─────────────────────────────────────────────────── */}
-      <AssetFilterDrawer
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
-        searchQuery={searchQuery}
-        setSearchQuery={handleSearchChange}
-        statusFilter={statusFilter}
-        setStatusFilter={v => { setStatusFilter(v); setCurrentPage(1); }}
-        categoryFilter={categoryFilter}
-        setCategoryFilter={v => { setCategoryFilter(v); setCurrentPage(1); }}
-        onReset={handleReset}
-      />
+        {/* KPI 2: Under AMC */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-shield-check text-success" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Under AMC
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "1.1rem" }}>
+              {stats.amcActive}
+            </h5>
+            <div className="text-success" style={{ fontSize: "0.68rem", fontWeight: "600" }}>
+              {stats.total > 0 ? `${((stats.amcActive / stats.total) * 100).toFixed(1)}%` : "0%"} Covered
+            </div>
+          </div>
+        </div>
 
-      {/* ── Table ─────────────────────────────────────────────────────────── */}
-      <Table
-        columns={columns}
-        data={assets}
-        isLoading={isLoading}
-        loadingMessage="Fetching assets..."
-        emptyMessage={
-          activeFilters > 0
-            ? "No assets match the current filters."
-            : "No assets found. Add your first asset."
-        }
-        containerClassName="table-responsive-container table-responsive flex-grow-1"
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={ITEMS_PER_PAGE}
-        onPageChange={setCurrentPage}
-      />
+        {/* KPI 3: Expiring Soon */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Expiring Soon
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "1.1rem" }}>
+              {stats.amcExpiringSoon}
+            </h5>
+            <div className="text-warning" style={{ fontSize: "0.68rem", fontWeight: "600" }}>
+              Next 45 Days
+            </div>
+          </div>
+        </div>
 
-      {/* ── Detail View ───────────────────────────────────────────────────── */}
-      {showDetail && detailAssetId && (
+        {/* KPI 4: AMC Expired */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                AMC Expired
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "1.1rem" }}>
+              {stats.amcExpired}
+            </h5>
+            <div className="text-danger" style={{ fontSize: "0.68rem", fontWeight: "600" }}>
+              Immediate Action
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 5: Total AMC Value */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-currency-rupee text-primary" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Total AMC Value
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "0.95rem" }}>
+              ₹ {stats.totalAmcValue.toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Contract Volume
+            </div>
+          </div>
+        </div>
+
+        {/* KPI 6: Annual Cost */}
+        <div className="col-md-2">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-wallet2 text-info" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Annual AMC Cost
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1" style={{ color: "#000000", fontSize: "0.95rem" }}>
+              ₹ {stats.annualAmcCost.toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Planned Per Year
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        {/* Left tabs */}
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+          {["All Assets", "Active", "Inactive", "Under Maintenance", "Disposed"].map((tab) => {
+            const targetStatus = tab === "All Assets" ? "All" : tab;
+            const isAct = statusFilter === targetStatus;
+            return (
+              <button
+                key={tab}
+                onClick={() => {
+                  setStatusFilter(targetStatus);
+                  setCurrentPage(1);
+                }}
+                className="btn btn-sm"
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: "600",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  backgroundColor: isAct ? "#040404" : "transparent",
+                  color: isAct ? "#FFFFFF" : "#787878",
+                  border: "none",
+                  transition: "all 0.2s",
+                }}
+              >
+                {tab}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right selectors */}
+        <div className="d-flex gap-2 flex-wrap">
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={propertyFilter}
+            onChange={(e) => {
+              setPropertyFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Properties</option>
+            {properties.map((p) => (
+              <option key={p._id} value={p._id}>{p.propertyName}</option>
+            ))}
+          </select>
+
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Categories</option>
+            {categories.filter(c => !c.parentCategory).map(c => (
+              <option key={c._id} value={c.categoryName}>{c.categoryName}</option>
+            ))}
+          </select>
+
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
+            value={vendorFilter}
+            onChange={(e) => {
+              setVendorFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Vendors</option>
+            {vendors.map(v => (
+              <option key={v._id} value={v._id}>{v.vendorName}</option>
+            ))}
+          </select>
+
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
+            value={amcStatusFilter}
+            onChange={(e) => {
+              setAmcStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All AMC Status</option>
+            <option value="Active">Active AMC</option>
+            <option value="Expired">Expired AMC</option>
+            <option value="No AMC">No AMC</option>
+          </select>
+        </div>
+      </div>
+
+      {/* ── 4. BOTTOM DIRECTORY: Assets Table ─────────────────────────────── */}
+      <div className="row g-4">
+        <div className="col-lg-12">
+          <div
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: "12px",
+              border: "1px solid #E8E6E3",
+              overflow: "hidden",
+            }}
+          >
+            {/* Table Header controls */}
+            <div className="p-3 bg-white d-flex justify-content-between align-items-center gap-3 flex-wrap border-bottom border-light">
+              <h6 className="fw-bold m-0" style={{ fontSize: "0.95rem" }}>
+                Asset Inventory Directory
+              </h6>
+              <div className="d-flex gap-2 align-items-center">
+                <div className="position-relative">
+                  <input
+                    type="text"
+                    placeholder="Search name, code, serial..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                  />
+                </div>
+                {activeFiltersCount > 0 && (
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    style={{ borderRadius: "6px", fontSize: "0.78rem" }}
+                    onClick={handleReset}
+                  >
+                    Reset
+                  </button>
+                )}
+                <button
+                  className="btn btn-sm btn-white border"
+                  style={{ borderRadius: "6px", backgroundColor: "#ffffff" }}
+                  onClick={() => setIsExportModalOpen(true)}
+                >
+                  <i className="bi bi-download" style={{ fontSize: "0.85rem" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Table Component */}
+            <Table
+              columns={columns}
+              data={assets}
+              isLoading={isLoading}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={setCurrentPage}
+              emptyMessage="No asset records match the current filters."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. ASSET DETAIL MODAL ────────────────────────────────────────── */}
+      {selectedAssetId && (
         <AssetDetailView
-          assetId={detailAssetId}
-          onClose={() => { setShowDetail(false); setDetailAssetId(""); }}
+          assetId={selectedAssetId}
+          onClose={() => setSelectedAssetId(null)}
           onEdit={() => {
-            const a = assets.find(x => x._id === detailAssetId);
+            const a = assets.find(x => x._id === selectedAssetId);
             setSelectedAsset(a || null);
             setModalMode("edit");
-            setShowDetail(false);
             setShowModal(true);
+            setSelectedAssetId(null);
           }}
         />
       )}
 
-      {/* ── Form Modal (create / edit) ─────────────────────────────────────── */}
+      {/* ── 6. ASSET FORM MODAL (CREATE / EDIT) ──────────────────────────── */}
       {showModal && (
         <AssetFormModal
           mode={modalMode}
@@ -574,7 +808,7 @@ export default function AssetsPage() {
         />
       )}
 
-      {/* ── Export Modal ────────────────────────────────────────────────────── */}
+      {/* ── 7. EXPORT MODAL ──────────────────────────────────────────────── */}
       {isExportModalOpen && (
         <div
           style={{
@@ -620,7 +854,7 @@ export default function AssetsPage() {
                   <div className="p-2 border-bottom bg-white d-flex justify-content-between align-items-center">
                     <span className="small fw-bold text-primary">Previewing {exportPreviewData.length} Records</span>
                     <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3">
-                      Total Value: ₹ {exportPreviewData.reduce((s, a) => s + (a.purchaseValue || 0), 0).toLocaleString()}
+                      Total Value: ₹ {exportPreviewData.reduce((s, a) => s + (a.purchaseValue || a.purchaseAmount || 0), 0).toLocaleString()}
                     </span>
                   </div>
                   <div style={{ maxHeight: "250px", overflowY: "auto" }}>
@@ -638,10 +872,10 @@ export default function AssetsPage() {
                         {exportPreviewData.slice(0, 10).map((a, i) => (
                           <tr key={i}>
                             <td className="fw-medium">{a.assetCode}</td>
-                            <td>{a.assetDescription}</td>
+                            <td>{a.assetName || a.assetDescription}</td>
                             <td>{a.category}</td>
                             <td>
-                              <div className="fw-bold text-dark">₹ {a.purchaseValue?.toLocaleString() || 0}</div>
+                              <div className="fw-bold text-dark">₹ {(a.purchaseValue || a.purchaseAmount || 0).toLocaleString()}</div>
                               <div className="text-muted" style={{ fontSize: "0.65rem" }}>
                                 {a.purchaseDate ? new Date(a.purchaseDate).toLocaleDateString() : "N/A"}
                               </div>
@@ -663,7 +897,15 @@ export default function AssetsPage() {
               )}
 
               <div className="d-flex gap-2 justify-content-end mt-2">
-                <button className="btn btn-light btn-sm fw-bold px-3 border" onClick={handlePreviewExport}>
+                <button className="btn btn-light btn-sm fw-bold px-3 border" onClick={async () => {
+                  const dataToExport = await getFilteredExportData();
+                  if (dataToExport.length === 0) {
+                    alert("No assets match this criteria.");
+                    setExportPreviewData(null);
+                  } else {
+                    setExportPreviewData(dataToExport);
+                  }
+                }}>
                   <i className="bi bi-eye" /> Preview Data
                 </button>
                 <button
@@ -681,3 +923,9 @@ export default function AssetsPage() {
     </div>
   );
 }
+
+// Simple export helper close helper
+const closeExportModalHelper = (setOpen: any, setPreview: any) => {
+  setOpen(false);
+  setPreview(null);
+};

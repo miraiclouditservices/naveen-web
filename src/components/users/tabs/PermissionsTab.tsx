@@ -74,8 +74,8 @@ export default function PermissionsTab({ viewUser }: PermissionsTabProps) {
               <div
                 className="d-flex justify-content-between align-items-center p-3 rounded-3 border"
                 style={{
-                  backgroundColor: active ? "rgba(1, 74, 173, 0.03)" : "#f8fafc",
-                  borderColor: active ? "rgba(1, 74, 173, 0.15)" : "#e2e8f0",
+                  backgroundColor: active ? "rgba(1, 74, 173, 0.03)" : "var(--bg-app)",
+                  borderColor: active ? "rgba(1, 74, 173, 0.15)" : "var(--border-color)",
                 }}
               >
                 <div>

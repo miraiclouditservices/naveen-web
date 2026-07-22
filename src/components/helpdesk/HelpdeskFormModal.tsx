@@ -179,7 +179,7 @@ export default function HelpdeskFormModal({
           {/* Modal Header */}
           <div
             className="px-4 py-3 d-flex justify-content-between align-items-center"
-            style={{ backgroundColor: "#3a3a3a", color: "#ffffff" }}
+            style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-card)" }}
           >
             <div className="d-flex align-items-center gap-2">
               <i className="bi bi-ticket-detailed fs-5"></i>
@@ -191,7 +191,7 @@ export default function HelpdeskFormModal({
               type="button"
               className="btn-close btn-close-white shadow-none"
               onClick={onClose}
-              style={{ background: "none", border: "none", color: "#d1d5db", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
+              style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
             >
               ×
             </button>
@@ -347,8 +347,8 @@ export default function HelpdeskFormModal({
                             className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                             style={{
                               cursor: "pointer",
-                              backgroundColor: formData.property === p._id ? "#f1f5f9" : "transparent",
-                              color: formData.property === p._id ? "#014aad" : "#334155",
+                              backgroundColor: formData.property === p._id ? "var(--border-color)" : "transparent",
+                              color: formData.property === p._id ? "var(--dark-section)" : "var(--text-primary)",
                               fontWeight: formData.property === p._id ? 600 : 400
                             }}
                             onClick={() => {
@@ -425,8 +425,8 @@ export default function HelpdeskFormModal({
                               className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.floor === f._id ? "#f1f5f9" : "transparent",
-                                color: formData.floor === f._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.floor === f._id ? "var(--border-color)" : "transparent",
+                                color: formData.floor === f._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.floor === f._id ? 600 : 400
                               }}
                               onClick={() => {
@@ -504,8 +504,8 @@ export default function HelpdeskFormModal({
                               className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.unit === u._id ? "#f1f5f9" : "transparent",
-                                color: formData.unit === u._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.unit === u._id ? "var(--border-color)" : "transparent",
+                                color: formData.unit === u._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.unit === u._id ? 600 : 400
                               }}
                               onClick={() => {
@@ -552,7 +552,7 @@ export default function HelpdeskFormModal({
               <button
                 type="submit"
                 className="btn btn-primary btn-sm px-4 fw-bold text-white border-0"
-                style={{ height: "38px", borderRadius: "6px", backgroundColor: "#014aad" }}
+                style={{ height: "38px", borderRadius: "6px", backgroundColor: "var(--dark-section)" }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? "Submitting..." : "Raise Ticket"}

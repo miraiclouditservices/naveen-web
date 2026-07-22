@@ -176,7 +176,7 @@ export default function Header() {
                 <p className="mb-0 fw-bold small" style={{ lineHeight: 1.2, color: 'var(--text-main)' }}>{displayName}</p>
                 <p className="mb-0 text-muted small" style={{ fontSize: '0.7rem' }}>{displayRole}</p>
               </div>
-              <div className={styles.actionButton} style={{ background: 'var(--bg-app)', fontWeight: 'bold', color: '#014aad', fontSize: '0.85rem', margin: 0 }}>
+              <div className={styles.actionButton} style={{ background: 'var(--bg-app)', fontWeight: 'bold', color: 'var(--dark-section)', fontSize: '0.85rem', margin: 0 }}>
                 {avatarChar}
               </div>
             </button>
@@ -186,7 +186,7 @@ export default function Header() {
               <li className={styles.profileDropdownHeader}>
                 <div className="d-flex align-items-center gap-2">
                   <div className="d-flex align-items-center justify-content-center rounded-circle fw-bold text-white shadow-sm" 
-                       style={{ background: 'linear-gradient(135deg, #014aad 0%, #002d6a 100%)', width: '38px', height: '38px', fontSize: '0.9rem' }}>
+                       style={{ background: 'linear-gradient(135deg, var(--dark-section) 0%, #002d6a 100%)', width: '38px', height: '38px', fontSize: '0.9rem' }}>
                     {avatarChar}
                   </div>
                   <div style={{ minWidth: 0, flexGrow: 1 }}>

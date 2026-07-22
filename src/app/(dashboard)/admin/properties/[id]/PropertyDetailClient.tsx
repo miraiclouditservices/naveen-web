@@ -82,7 +82,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
   if (isLoading) {
     return (
       <div className="d-flex justify-content-center align-items-center" style={{ minHeight: "60vh" }}>
-        <div className="spinner-border text-primary" style={{ color: "#014aad", width: "3rem", height: "3rem" }} role="status">
+        <div className="spinner-border text-primary" style={{ color: "var(--dark-section)", width: "3rem", height: "3rem" }} role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
       </div>
@@ -170,7 +170,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
 
             {/* Property Name Header */}
             <div className="d-flex align-items-center gap-3 mb-3">
-              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, backgroundColor: '#e8f0fe', color: '#014aad', flexShrink: 0 }}>
+              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, backgroundColor: '#e8f0fe', color: 'var(--dark-section)', flexShrink: 0 }}>
                 <i className="bi bi-building-fill" style={{ fontSize: '1.2rem' }}></i>
               </div>
               <div className="text-truncate">
@@ -197,12 +197,12 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
                 <div
                   key={idx}
                   className="d-flex justify-content-between align-items-center py-2"
-                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid #f1f5f9" }}
+                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}
                 >
                   <div className="d-flex align-items-center gap-2">
                     <div
                       className="d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 6, color: '#014aad' }}
+                      style={{ width: 28, height: 28, backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 6, color: 'var(--dark-section)' }}
                     >
                       <i className={`bi ${item.icon}`} style={{ fontSize: "0.85rem" }}></i>
                     </div>
@@ -223,7 +223,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
               {/* Header Title with Total Area Badge */}
               <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2 flex-shrink-0">
                 <h5 className="fw-bold mb-0 text-dark d-flex align-items-center gap-2">
-                  <i className="bi bi-building text-primary" style={{ color: '#014aad', fontSize: "1.4rem" }}></i>
+                  <i className="bi bi-building text-primary" style={{ color: 'var(--dark-section)', fontSize: "1.4rem" }}></i>
                   Floor Details
                 </h5>
                 <span className="badge bg-light text-dark border px-3 py-2 fw-bold" style={{ fontSize: '0.75rem', borderRadius: '6px' }}>
@@ -241,9 +241,9 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
                       onClick={() => setActiveTowerIdx(idx)}
                       style={{ 
                         fontSize: '0.75rem', 
-                        backgroundColor: activeTowerIdx === idx ? '#014aad' : '#ffffff', 
-                        color: activeTowerIdx === idx ? '#ffffff' : '#64748b',
-                        border: activeTowerIdx === idx ? 'none' : '1px solid #e2e8f0'
+                        backgroundColor: activeTowerIdx === idx ? 'var(--dark-section)' : 'var(--bg-card)', 
+                        color: activeTowerIdx === idx ? 'var(--bg-card)' : 'var(--text-muted)',
+                        border: activeTowerIdx === idx ? 'none' : '1px solid var(--border-color)'
                       }}
                     >
                       {tower.name}
@@ -266,7 +266,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
                     {activeFloors.map((floor: any, idx: number) => (
                       <div key={idx} className="d-flex align-items-center py-2 px-3 border-bottom border-light">
                         <div className="d-flex align-items-center gap-3" style={{ flex: 1 }}>
-                          <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', backgroundColor: '#e8f0fe', color: '#014aad' }}>
+                          <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', backgroundColor: '#e8f0fe', color: 'var(--dark-section)' }}>
                             <i className="bi bi-layers" style={{ fontSize: '0.9rem' }}></i>
                           </div>
                           <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{floor.floorName}</span>
@@ -294,7 +294,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
               ].map(card => (
                 <div key={card.label} className="col-md-6 col-12">
                   <div className="d-flex align-items-center gap-3 bg-light bg-opacity-50 p-3 border" style={{ borderRadius: 10 }}>
-                    <div className="d-flex align-items-center justify-content-center bg-white border" style={{ width: 40, height: 40, borderRadius: 8, color: '#014aad' }}>
+                    <div className="d-flex align-items-center justify-content-center bg-white border" style={{ width: 40, height: 40, borderRadius: 8, color: 'var(--dark-section)' }}>
                       <i className={`bi ${card.icon}`} style={{ fontSize: '1.1rem' }}></i>
                     </div>
                     <div>

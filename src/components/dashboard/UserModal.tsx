@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ModalMode } from "./AssetModal";
+import { api } from "@/utils/api";
 
 interface UserModalProps {
   isOpen: boolean;
@@ -18,15 +19,32 @@ export default function UserModal({ isOpen, onClose, onSave, editData, mode }: U
     email: "",
     password: "",
     role: "Staff",
-    status: "Active"
+    status: "Active",
+    assignedFloors: [] as string[],
+    assignedUnits: [] as string[]
   });
+
+  const [floors, setFloors] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
 
   useEffect(() => {
     if (isOpen) {
+      // Fetch floors for assignment
+      api.get('/floors?limit=100').then(res => {
+        if (res.success) setFloors(res.data);
+      }).catch(console.error);
+
+      // Fetch units for assignment
+      api.get('/units?limit=500').then(res => {
+        if (res.success) setUnits(res.data);
+      }).catch(console.error);
+
       if (editData && (mode === "edit" || mode === "view")) {
         setFormData({ 
             ...editData,
-            password: "" // Don't show password on edit
+            password: "", // Don't show password on edit
+            assignedFloors: editData.assignedFloors || [],
+            assignedUnits: editData.assignedUnits || []
         });
       } else {
         setFormData({
@@ -34,7 +52,9 @@ export default function UserModal({ isOpen, onClose, onSave, editData, mode }: U
           email: "",
           password: "",
           role: "Staff",
-          status: "Active"
+          status: "Active",
+          assignedFloors: [],
+          assignedUnits: []
         });
       }
     }
@@ -112,9 +132,12 @@ export default function UserModal({ isOpen, onClose, onSave, editData, mode }: U
                 <div className="col-md-6">
                   <label className="form-label small fw-bold text-muted mb-1 text-uppercase tracking-wider" style={{ fontSize: '0.65rem' }}>System Role</label>
                   <select className="form-select bg-light border-0 py-2" disabled={isReadOnly}
-                    value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value})}>
+                    value={formData.role} onChange={(e) => setFormData({...formData, role: e.target.value, assignedFloors: [], assignedUnits: []})}>
                     <option value="Staff">Staff Member</option>
-                    <option value="Owner">OFFICE_OWNER</option>
+                    <option value="Owner">Whole Floor Owner</option>
+                    <option value="OFFICE_OWNER">Office Owner (Unit)</option>
+                    <option value="Tenant">Tenant</option>
+                    <option value="FLOOR_ADMIN">Floor Admin</option>
                     <option value="Admin">System Admin</option>
                   </select>
                 </div>
@@ -128,6 +151,34 @@ export default function UserModal({ isOpen, onClose, onSave, editData, mode }: U
                     <option value="Pending">Pending Invite</option>
                   </select>
                 </div>
+
+                {(formData.role === 'Owner' || formData.role === 'Admin' || formData.role === 'FLOOR_ADMIN') && (
+                  <div className="col-12">
+                    <label className="form-label small fw-bold text-muted mb-1 text-uppercase tracking-wider" style={{ fontSize: '0.65rem' }}>Assign Floor</label>
+                    <select className="form-select bg-light border-0 py-2" disabled={isReadOnly}
+                      value={formData.assignedFloors.length > 0 ? formData.assignedFloors[0] : ""} 
+                      onChange={(e) => setFormData({...formData, assignedFloors: e.target.value ? [e.target.value] : []})}>
+                      <option value="">-- No Floor Assigned --</option>
+                      {floors.map(f => (
+                        <option key={f._id} value={f._id}>{f.floorName || `Floor ${f.floorNumber}`}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {(formData.role === 'OFFICE_OWNER' || formData.role === 'Tenant') && (
+                  <div className="col-12">
+                    <label className="form-label small fw-bold text-muted mb-1 text-uppercase tracking-wider" style={{ fontSize: '0.65rem' }}>Assign Unit</label>
+                    <select className="form-select bg-light border-0 py-2" disabled={isReadOnly}
+                      value={formData.assignedUnits.length > 0 ? formData.assignedUnits[0] : ""} 
+                      onChange={(e) => setFormData({...formData, assignedUnits: e.target.value ? [e.target.value] : []})}>
+                      <option value="">-- No Unit Assigned --</option>
+                      {units.map(u => (
+                        <option key={u._id} value={u._id}>{u.unitName || `Unit ${u.unitNumber}`} - {u.property?.propertyName}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
 
               {mode === 'create' && (
@@ -154,7 +205,7 @@ export default function UserModal({ isOpen, onClose, onSave, editData, mode }: U
                 <button 
                   type="submit" className="btn btn-emerald-solid rounded-pill px-4 flex-grow-1 fw-bold text-white border-0"
                   disabled={isSubmitting}
-                  style={{ backgroundColor: '#014aad', fontSize: '0.85rem', height: '42px' }}
+                  style={{ backgroundColor: 'var(--dark-section)', fontSize: '0.85rem', height: '42px' }}
                 >
                   {isSubmitting ? (
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

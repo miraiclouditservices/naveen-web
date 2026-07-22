@@ -364,7 +364,7 @@ export default function HelpdeskModal({
           {/* Modal Header */}
           <div
             className="px-4 py-3 d-flex justify-content-between align-items-center"
-            style={{ backgroundColor: "#3a3a3a", color: "#ffffff" }}
+            style={{ backgroundColor: "var(--text-primary)", color: "var(--bg-card)" }}
           >
             <div className="d-flex align-items-center gap-2">
               <i className="bi bi-ticket-detailed fs-5"></i>
@@ -376,7 +376,7 @@ export default function HelpdeskModal({
               type="button"
               className="btn-close btn-close-white shadow-none"
               onClick={onClose}
-              style={{ background: "none", border: "none", color: "#d1d5db", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
+              style={{ background: "none", border: "none", color: "var(--text-muted)", fontSize: "1.4rem", cursor: "pointer", lineHeight: 1 }}
             >
               ×
             </button>
@@ -513,8 +513,8 @@ export default function HelpdeskModal({
                               className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.property === p._id ? "#f1f5f9" : "transparent",
-                                color: formData.property === p._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.property === p._id ? "var(--border-color)" : "transparent",
+                                color: formData.property === p._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.property === p._id ? 600 : 400
                               }}
                               onClick={() => {
@@ -591,8 +591,8 @@ export default function HelpdeskModal({
                                 className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                                 style={{
                                   cursor: "pointer",
-                                  backgroundColor: formData.floor === f._id ? "#f1f5f9" : "transparent",
-                                  color: formData.floor === f._id ? "#014aad" : "#334155",
+                                  backgroundColor: formData.floor === f._id ? "var(--border-color)" : "transparent",
+                                  color: formData.floor === f._id ? "var(--dark-section)" : "var(--text-primary)",
                                   fontWeight: formData.floor === f._id ? 600 : 400
                                 }}
                                 onClick={() => {
@@ -670,8 +670,8 @@ export default function HelpdeskModal({
                                 className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
                                 style={{
                                   cursor: "pointer",
-                                  backgroundColor: formData.unit === u._id ? "#f1f5f9" : "transparent",
-                                  color: formData.unit === u._id ? "#014aad" : "#334155",
+                                  backgroundColor: formData.unit === u._id ? "var(--border-color)" : "transparent",
+                                  color: formData.unit === u._id ? "var(--dark-section)" : "var(--text-primary)",
                                   fontWeight: formData.unit === u._id ? 600 : 400
                                 }}
                                 onClick={() => {
@@ -718,7 +718,7 @@ export default function HelpdeskModal({
                 <button
                   type="submit"
                   className="btn btn-primary btn-sm px-4 fw-bold text-white border-0"
-                  style={{ height: "38px", borderRadius: "6px", backgroundColor: "#014aad" }}
+                  style={{ height: "38px", borderRadius: "6px", backgroundColor: "var(--dark-section)" }}
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? "Submitting..." : "Raise Ticket"}
@@ -835,7 +835,7 @@ export default function HelpdeskModal({
                   {!showAssignForm && !showResolveForm && (
                     <div className="d-flex flex-wrap gap-2">
                       {canAssign && (
-                        <button className="btn btn-primary btn-sm flex-grow-1 fw-bold border-0" style={{ backgroundColor: "#014aad" }} onClick={() => setShowAssignForm(true)}>
+                        <button className="btn btn-primary btn-sm flex-grow-1 fw-bold border-0" style={{ backgroundColor: "var(--dark-section)" }} onClick={() => setShowAssignForm(true)}>
                           <i className="bi bi-person-plus me-1"></i> Assign Ticket
                         </button>
                       )}
@@ -884,7 +884,7 @@ export default function HelpdeskModal({
                       </div>
                       <div className="d-flex gap-2 mt-1">
                         <button className="btn btn-outline-secondary btn-sm flex-grow-1" onClick={() => setShowAssignForm(false)}>Cancel</button>
-                        <button className="btn btn-primary btn-sm flex-grow-1 text-white border-0" style={{ backgroundColor: "#014aad" }} onClick={handleAssignTicket} disabled={isSubmitting}>Submit</button>
+                        <button className="btn btn-primary btn-sm flex-grow-1 text-white border-0" style={{ backgroundColor: "var(--dark-section)" }} onClick={handleAssignTicket} disabled={isSubmitting}>Submit</button>
                       </div>
                     </div>
                   )}
@@ -915,14 +915,14 @@ export default function HelpdeskModal({
                 <div className="d-flex border-bottom bg-light">
                   <button
                     className={`px-4 py-2.5 fw-bold border-0 bg-transparent small transition-all ${activeTab === "chat" ? "border-bottom border-primary border-3 text-primary" : "text-muted"}`}
-                    style={{ borderBottomColor: activeTab === "chat" ? "#014aad" : "transparent" }}
+                    style={{ borderBottomColor: activeTab === "chat" ? "var(--dark-section)" : "transparent" }}
                     onClick={() => setActiveTab("chat")}
                   >
                     Comments Chat ({comments.length})
                   </button>
                   <button
                     className={`px-4 py-2.5 fw-bold border-0 bg-transparent small transition-all ${activeTab === "timeline" ? "border-bottom border-primary border-3 text-primary" : "text-muted"}`}
-                    style={{ borderBottomColor: activeTab === "timeline" ? "#014aad" : "transparent" }}
+                    style={{ borderBottomColor: activeTab === "timeline" ? "var(--dark-section)" : "transparent" }}
                     onClick={() => setActiveTab("timeline")}
                   >
                     Activity Timeline ({logs.length})
@@ -985,7 +985,7 @@ export default function HelpdeskModal({
                         <button
                           type="submit"
                           className="btn btn-primary rounded-circle p-0 d-flex align-items-center justify-content-center text-white border-0 shadow-sm"
-                          style={{ width: "40px", height: "40px", backgroundColor: "#014aad", flexShrink: 0 }}
+                          style={{ width: "40px", height: "40px", backgroundColor: "var(--dark-section)", flexShrink: 0 }}
                         >
                           <i className="bi bi-send-fill fs-6"></i>
                         </button>
@@ -993,14 +993,14 @@ export default function HelpdeskModal({
                     </>
                   ) : (
                     /* Timeline Logs */
-                    <div className="flex-grow-1 overflow-y-auto p-4" style={{ backgroundColor: "#ffffff" }}>
+                    <div className="flex-grow-1 overflow-y-auto p-4" style={{ backgroundColor: "var(--bg-card)" }}>
                       {logs.length === 0 ? (
                         <div className="text-center my-auto text-muted small py-5">
                           <i className="bi bi-clock-history fs-3 d-block mb-2 opacity-50"></i>
                           No activity logged yet.
                         </div>
                       ) : (
-                        <div className="position-relative ps-4" style={{ borderLeft: "2px solid #e2e8f0" }}>
+                        <div className="position-relative ps-4" style={{ borderLeft: "2px solid var(--border-color)" }}>
                           {logs.map((log, idx) => (
                             <div key={log._id || idx} className="position-relative mb-4">
                               {/* Dot indicator */}
@@ -1015,8 +1015,8 @@ export default function HelpdeskModal({
                                     log.actionType === "TICKET_CREATED" ? "#3b82f6" :
                                     log.actionType === "TICKET_ASSIGNED" ? "#f59e0b" :
                                     log.actionType === "TICKET_RESOLVED" ? "#10b981" :
-                                    "#94a3b8",
-                                  border: "2px solid #ffffff"
+                                    "var(--text-muted)",
+                                  border: "2px solid var(--bg-card)"
                                 }}
                               />
                               <div>

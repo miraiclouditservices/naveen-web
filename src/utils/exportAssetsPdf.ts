@@ -18,10 +18,10 @@ export const exportAssetsToPdf = (dataToExport: any[], totalValue: number) => {
       <title>Assets Management Report</title>
       <style>
         :root {
-          --primary-color: #014aad;
-          --secondary-color: #64748b;
-          --bg-light: #f8fafc;
-          --border-color: #e2e8f0;
+          --primary-color: var(--dark-section);
+          --secondary-color: var(--text-muted);
+          --bg-light: var(--bg-app);
+          --border-color: var(--border-color);
         }
 
         @page {
@@ -31,7 +31,7 @@ export const exportAssetsToPdf = (dataToExport: any[], totalValue: number) => {
 
         body {
           font-family: 'Segoe UI', Inter, Roboto, Helvetica, Arial, sans-serif;
-          color: #0f172a;
+          color: var(--text-main);
           line-height: 1.5;
           margin: 0;
           padding: 0;
@@ -132,7 +132,7 @@ export const exportAssetsToPdf = (dataToExport: any[], totalValue: number) => {
         /* Value Column specific styling */
         .financial-col {
           font-weight: 600;
-          color: #0f172a;
+          color: var(--text-main);
         }
 
         /* Creator Column specific styling */

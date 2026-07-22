@@ -162,28 +162,28 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
       <style>{`
         @keyframes fadeIn  { from{opacity:0}         to{opacity:1} }
         @keyframes slideUp { from{transform:translateY(24px);opacity:0} to{transform:translateY(0);opacity:1} }
-        .gp-label { font-size:0.72rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; display:block; }
-        .gp-control { font-size:0.85rem; border-radius:8px; border:1.5px solid #e2e8f0; background:#f8fafc; padding:7px 11px; width:100%; outline:none; transition:border-color 0.15s; }
-        .gp-control:focus { border-color:#014aad; background:#fff; }
+        .gp-label { font-size:0.72rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; letter-spacing:0.04em; margin-bottom:4px; display:block; }
+        .gp-control { font-size:0.85rem; border-radius:8px; border:1.5px solid var(--border-color); background:var(--bg-app); padding:7px 11px; width:100%; outline:none; transition:border-color 0.15s; }
+        .gp-control:focus { border-color:var(--dark-section); background:var(--bg-card); }
         .gp-control:disabled { opacity:0.6; cursor:not-allowed; }
-        .gp-section { font-size:0.7rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:#94a3b8; padding:10px 0 6px; border-top:1px solid #f1f5f9; margin-top:8px; }
+        .gp-section { font-size:0.7rem; font-weight:800; letter-spacing:0.08em; text-transform:uppercase; color:var(--text-muted); padding:10px 0 6px; border-top:1px solid var(--border-color); margin-top:8px; }
       `}</style>
 
       <div style={{ width:"100%", maxWidth:"820px", margin:"0 16px", animation:"slideUp 0.35s cubic-bezier(0.4,0,0.2,1)" }}>
-        <div style={{ background:"#fff", borderRadius:"16px", boxShadow:"0 25px 50px -12px rgba(0,0,0,0.35)", overflow:"hidden" }}>
+        <div style={{ background:"var(--bg-card)", borderRadius:"16px", boxShadow:"0 25px 50px -12px rgba(0,0,0,0.35)", overflow:"hidden" }}>
 
           {/* ── Header ───────────────────────────────────────────────────────── */}
           <div style={{ background:"#1e293b", padding:"20px 24px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <div>
-              <h5 style={{ color:"#fff", fontWeight:700, margin:0, fontSize:"1.05rem" }}>
+              <h5 style={{ color:"var(--bg-card)", fontWeight:700, margin:0, fontSize:"1.05rem" }}>
                 <i className="bi bi-card-checklist me-2" style={{ color:"#60a5fa" }} />
                 {mode === "create" ? "Create Gate Pass" : mode === "edit" ? "Edit Gate Pass" : "View Gate Pass"}
               </h5>
-              <p style={{ color:"#94a3b8", margin:"2px 0 0", fontSize:"0.75rem" }}>
+              <p style={{ color:"var(--text-muted)", margin:"2px 0 0", fontSize:"0.75rem" }}>
                 Material movement approval with hierarchy-based routing
               </p>
             </div>
-            <button onClick={onClose} style={{ background:"rgba(255,255,255,0.1)", border:"none", borderRadius:"8px", color:"#fff", width:"32px", height:"32px", cursor:"pointer", fontSize:"1.1rem", display:"flex", alignItems:"center", justifyContent:"center" }}>
+            <button onClick={onClose} style={{ background:"rgba(255,255,255,0.1)", border:"none", borderRadius:"8px", color:"var(--bg-card)", width:"32px", height:"32px", cursor:"pointer", fontSize:"1.1rem", display:"flex", alignItems:"center", justifyContent:"center" }}>
               ×
             </button>
           </div>
@@ -214,7 +214,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                       {approvalLevel === "Office Level"   && "Notification will be sent to the Office Owner"}
                     </div>
                   </div>
-                  <div style={{ marginLeft:"auto", background:apc.color, color:"#fff", borderRadius:"20px", padding:"3px 12px", fontSize:"0.68rem", fontWeight:700, whiteSpace:"nowrap" }}>
+                  <div style={{ marginLeft:"auto", background:apc.color, color:"var(--bg-card)", borderRadius:"20px", padding:"3px 12px", fontSize:"0.68rem", fontWeight:700, whiteSpace:"nowrap" }}>
                     {approvalLevel}
                   </div>
                 </div>
@@ -268,14 +268,14 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
 
               {/* ── SECTION 2: Location Hierarchy ────────────────────────────── */}
               <div className="gp-section">Location Hierarchy</div>
-              <div style={{ background:"#f8fafc", border:"1px solid #e2e8f0", borderRadius:"12px", padding:"16px", marginBottom:"8px" }}>
+              <div style={{ background:"var(--bg-app)", border:"1px solid var(--border-color)", borderRadius:"12px", padding:"16px", marginBottom:"8px" }}>
 
                 {/* Step 1 — Property (always shown) */}
                 <div style={{ marginBottom:"14px" }}>
                   <label className="gp-label">
                     <i className="bi bi-building me-1" style={{ color:"#1d4ed8" }} />
                     Property <span style={{ color:"#dc2626" }}>*</span>
-                    <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"#94a3b8", fontWeight:500, textTransform:"none" }}>
+                    <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"var(--text-muted)", fontWeight:500, textTransform:"none" }}>
                       — mandatory
                     </span>
                   </label>
@@ -288,8 +288,8 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                     ))}
                   </select>
                   {selPropertyObj && (
-                    <div style={{ fontSize:"0.7rem", color:"#64748b", marginTop:"4px" }}>
-                      <i className="bi bi-geo-alt me-1" style={{ color:"#014aad" }} />
+                    <div style={{ fontSize:"0.7rem", color:"var(--text-muted)", marginTop:"4px" }}>
+                      <i className="bi bi-geo-alt me-1" style={{ color:"var(--dark-section)" }} />
                       {selPropertyObj.propertyAddress} · {selPropertyObj.propertyType}
                     </div>
                   )}
@@ -301,7 +301,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                     <label className="gp-label">
                       <i className="bi bi-layers me-1" style={{ color:"#15803d" }} />
                       Floor
-                      <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"#94a3b8", fontWeight:500, textTransform:"none" }}>
+                      <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"var(--text-muted)", fontWeight:500, textTransform:"none" }}>
                         — optional (leave blank for Property-level approval)
                       </span>
                     </label>
@@ -316,7 +316,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                       ))}
                     </select>
                     {selFloorObj && (
-                      <div style={{ fontSize:"0.7rem", color:"#64748b", marginTop:"4px" }}>
+                      <div style={{ fontSize:"0.7rem", color:"var(--text-muted)", marginTop:"4px" }}>
                         <i className="bi bi-info-circle me-1" />
                         {selFloorObj.totalUnits} units · {selFloorObj.totalSft} sqft
                       </div>
@@ -330,7 +330,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                     <label className="gp-label">
                       <i className="bi bi-door-open me-1" style={{ color:"#7e22ce" }} />
                       Office / Unit
-                      <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"#94a3b8", fontWeight:500, textTransform:"none" }}>
+                      <span style={{ marginLeft:"8px", fontSize:"0.65rem", color:"var(--text-muted)", fontWeight:500, textTransform:"none" }}>
                         — optional (leave blank for Floor-level approval)
                       </span>
                     </label>
@@ -345,7 +345,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
                       ))}
                     </select>
                     {selUnitObj && (
-                      <div style={{ fontSize:"0.7rem", color:"#64748b", marginTop:"4px" }}>
+                      <div style={{ fontSize:"0.7rem", color:"var(--text-muted)", marginTop:"4px" }}>
                         <i className="bi bi-person me-1" />
                         {selUnitObj.ownerName || "No owner"} · {selUnitObj.unitType} · {selUnitObj.sqft} sqft
                       </div>
@@ -401,7 +401,7 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
             </div>
 
             {/* ── Footer ───────────────────────────────────────────────────────── */}
-            <div style={{ background:"#f8fafc", borderTop:"1px solid #e2e8f0", padding:"16px 24px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <div style={{ background:"var(--bg-app)", borderTop:"1px solid var(--border-color)", padding:"16px 24px", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
               {/* Approval pill */}
               <div style={{ display:"flex", alignItems:"center", gap:"8px" }}>
                 <i className={`bi ${apc.icon}`} style={{ color:apc.color, fontSize:"0.9rem" }} />
@@ -412,12 +412,12 @@ export default function GatePassModal({ isOpen, onClose, onSave, editData, mode 
               <div style={{ display:"flex", gap:"10px" }}>
                 <button type="button"
                   onClick={onClose} disabled={isSubmitting}
-                  style={{ padding:"8px 20px", borderRadius:"8px", border:"1.5px solid #e2e8f0", background:"#fff", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", color:"#64748b" }}>
+                  style={{ padding:"8px 20px", borderRadius:"8px", border:"1.5px solid var(--border-color)", background:"var(--bg-card)", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", color:"var(--text-muted)" }}>
                   {mode === "view" ? "Close" : "Cancel"}
                 </button>
                 {mode !== "view" && (
                   <button type="submit" disabled={isSubmitting}
-                    style={{ padding:"8px 24px", borderRadius:"8px", border:"none", background:"#014aad", color:"#fff", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px" }}>
+                    style={{ padding:"8px 24px", borderRadius:"8px", border:"none", background:"var(--dark-section)", color:"var(--bg-card)", fontWeight:700, fontSize:"0.85rem", cursor:"pointer", display:"flex", alignItems:"center", gap:"8px" }}>
                     {isSubmitting && <span className="spinner-border spinner-border-sm" role="status" />}
                     <i className="bi bi-send-fill" />
                     {mode === "create" ? "Submit Gate Pass" : "Update Gate Pass"}

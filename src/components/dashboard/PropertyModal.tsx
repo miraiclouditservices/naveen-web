@@ -3,13 +3,6 @@
 import { useState, useEffect } from "react";
 import { api } from "@/utils/api";
 
-interface TowerConfig {
-  id: string;
-  name: string;
-  floors: number;
-  sft: number;
-}
-
 interface PropertyModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,13 +12,13 @@ interface PropertyModalProps {
 
 const FIELD_STYLE: React.CSSProperties = {
   borderRadius: "6px",
-  border: "1px solid #d1d5db",
+  border: "1px solid var(--text-muted)",
   fontSize: "0.88rem",
   padding: "8px 12px",
   width: "100%",
   outline: "none",
-  backgroundColor: "#fff",
-  color: "#111827",
+  backgroundColor: "var(--bg-card)",
+  color: "var(--text-main)",
 };
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -40,77 +33,63 @@ export default function PropertyModal({ isOpen, onClose, onSave, editData }: Pro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     propertyName: "",
+    propertyCode: "",
     propertyType: "Office",
-    location: "",
     status: "Active",
-    openingTime: "09:00",
-    closingTime: "18:00"
+    propertyAddress: "",
+    area: "",
+    city: "",
+    state: "",
+    country: "India",
+    pincode: "",
+    totalSft: 10000
   });
-
-  const [towers, setTowers] = useState<TowerConfig[]>([
-    { id: '1', name: 'Tower A', floors: 0, sft: 10000 }
-  ]);
 
   useEffect(() => {
     if (isOpen) {
       if (editData) {
         setFormData({
           propertyName: editData.propertyName || "",
+          propertyCode: editData.propertyCode || "",
           propertyType: editData.propertyType || "Office",
-          location: editData.propertyAddress || editData.location || "",
           status: editData.status || "Active",
-          openingTime: editData.openingTime || "09:00",
-          closingTime: editData.closingTime || "18:00"
+          propertyAddress: editData.propertyAddress || editData.location || "",
+          area: editData.area || "",
+          city: editData.city || "",
+          state: editData.state || "",
+          country: editData.country || "India",
+          pincode: editData.pincode || "",
+          totalSft: editData.totalSft || 10000
         });
-        setTowers(editData.towerConfigs && editData.towerConfigs.length > 0 
-          ? editData.towerConfigs.map((t: any) => ({ ...t, floors: t.floors || 0 }))
-          : [{ id: '1', name: 'Tower A', floors: 0, sft: editData.totalSft || 10000 }]);
       } else {
         setFormData({
           propertyName: "",
+          propertyCode: "",
           propertyType: "Office",
-          location: "",
           status: "Active",
-          openingTime: "09:00",
-          closingTime: "18:00"
+          propertyAddress: "",
+          area: "",
+          city: "",
+          state: "",
+          country: "India",
+          pincode: "",
+          totalSft: 10000
         });
-        setTowers([{ id: '1', name: 'Tower A', floors: 0, sft: 10000 }]);
       }
     }
   }, [editData, isOpen]);
 
   if (!isOpen) return null;
 
-  const handleAddTower = () => {
-    const nextChar = String.fromCharCode(65 + towers.length);
-    setTowers([...towers, { id: Date.now().toString(), name: `Tower ${nextChar}`, floors: 0, sft: 10000 }]);
-  };
-
-  const handleRemoveTower = (id: string) => {
-    if (towers.length > 1) {
-      setTowers(towers.filter(t => t.id !== id));
-    }
-  };
-
-  const updateTower = (id: string, field: keyof TowerConfig, value: any) => {
-    setTowers(towers.map(t => t.id === id ? { ...t, [field]: value } : t));
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    const totalSft = towers.reduce((sum, t) => sum + (t.sft || 0), 0);
-    const totalFloors = Math.max(...towers.map(t => t.floors), 1);
-    
     await onSave({ 
       ...formData, 
-      propertyAddress: formData.location, 
-      totalFloors, 
-      totalSft,
+      totalFloors: 1,
+      totalBasements: 0,
       totalUnits: 0,
-      towerConfigs: towers, 
-      towers: towers.length 
     });
     setIsSubmitting(false);
     onClose();
@@ -122,32 +101,40 @@ export default function PropertyModal({ isOpen, onClose, onSave, editData }: Pro
       backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex',
       alignItems: 'center', justifyContent: 'center', zIndex: 9999,
     }}>
-      <div className="bg-white rounded-3 shadow-lg overflow-hidden w-100 mx-3" style={{ maxWidth: '850px' }}>
-        {/* Header (Popup Dark Header Style) */}
+      <div className="bg-white rounded-3 shadow-lg overflow-hidden w-100 mx-3" style={{ maxWidth: '700px' }}>
         <div className="px-4 py-3 d-flex justify-content-between align-items-center" style={{ backgroundColor: '#2d3748' }}>
           <h6 className="fw-bold mb-0 text-white" style={{ fontSize: '1rem' }}>
-            {editData ? "Edit Property Configuration" : "Add New Property"}
+            {editData ? "Edit Property" : "Add Property"}
           </h6>
           <button type="button" className="btn-close btn-close-white shadow-none" onClick={onClose} style={{ fontSize: '0.8rem' }}></button>
         </div>
         
         <form onSubmit={handleSubmit}>
-          <div className="p-4" style={{ maxHeight: '72vh', overflowY: 'auto' }}>
-            <div className="row g-3">
-              {/* Property Name */}
+          <div className="p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+            
+            {/* Basic Info */}
+            <div className="row g-3 mb-4">
               <div className="col-md-8">
                 <label style={LABEL_STYLE}>Property Name *</label>
                 <input 
                   type="text" required 
-                  placeholder="e.g. Emerald Tech Park"
+                  placeholder="e.g. Green Valley Commercial"
                   value={formData.propertyName} 
                   onChange={(e) => setFormData({...formData, propertyName: e.target.value})}
                   style={FIELD_STYLE}
                 />
               </div>
-
-              {/* Property Type */}
               <div className="col-md-4">
+                <label style={LABEL_STYLE}>Property Code</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. PC-001"
+                  value={formData.propertyCode} 
+                  onChange={(e) => setFormData({...formData, propertyCode: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-6">
                 <label style={LABEL_STYLE}>Property Type *</label>
                 <select 
                   value={formData.propertyType} 
@@ -155,117 +142,107 @@ export default function PropertyModal({ isOpen, onClose, onSave, editData }: Pro
                   style={FIELD_STYLE}
                 >
                   <option>Office</option>
-                  <option>Commercial</option>
                   <option>IT Park</option>
-                  <option>Mixed Use</option>
+                  <option>Commercial</option>
                   <option>Residential</option>
+                  <option>Mixed Use</option>
                   <option>Industrial</option>
                 </select>
               </div>
-
-              {/* Location */}
-              <div className="col-12">
-                <label style={LABEL_STYLE}>Location / Address *</label>
-                <input 
-                  type="text" required 
-                  placeholder="City, Country"
-                  value={formData.location} 
-                  onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  style={FIELD_STYLE}
-                />
-              </div>
-            </div>
-
-            {/* Towers configuration */}
-            <div className="mt-4">
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <span className="fw-bold text-dark" style={{ fontSize: '0.88rem' }}>Tower & Vertical Configuration</span>
-                <button type="button" onClick={handleAddTower} className="btn btn-sm fw-bold d-flex align-items-center gap-1"
-                  style={{ backgroundColor: '#e8f0fe', color: '#014aad', border: '1px solid #c7d7f9', borderRadius: '4px', padding: '4px 10px', fontSize: '0.78rem' }}>
-                  <i className="bi bi-plus-lg"></i> Add Tower
-                </button>
-              </div>
-
-              <div className="p-3 border rounded-3 bg-light bg-opacity-50">
-                <div className="row g-3">
-                  {towers.map((tower, idx) => (
-                    <div key={tower.id} className="col-md-6">
-                      <div className="bg-white p-3 rounded border position-relative">
-                        <div className="d-flex justify-content-between align-items-center mb-2">
-                          <span className="fw-bold text-dark" style={{ fontSize: '0.82rem' }}>{tower.name || `Tower ${idx + 1}`}</span>
-                          {towers.length > 1 && (
-                            <button type="button" onClick={() => handleRemoveTower(tower.id)} className="btn btn-link text-danger p-0 shadow-none">
-                              <i className="bi bi-trash"></i>
-                            </button>
-                          )}
-                        </div>
-                        <div className="row g-2">
-                          <div className="col-12">
-                            <label className="text-muted mb-1" style={{ fontSize: '0.74rem' }}>Tower Name</label>
-                            <input 
-                              type="text" className="form-control form-control-sm"
-                              value={tower.name} onChange={(e) => updateTower(tower.id, 'name', e.target.value)}
-                              style={{ fontSize: '0.82rem' }}
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="text-muted mb-1" style={{ fontSize: '0.74rem' }}>No. of Floors</label>
-                            <input 
-                              type="number" min={0} className="form-control form-control-sm"
-                              value={tower.floors} onChange={(e) => updateTower(tower.id, 'floors', parseInt(e.target.value) || 0)}
-                              style={{ fontSize: '0.82rem' }}
-                            />
-                          </div>
-                          <div className="col-6">
-                            <label className="text-muted mb-1" style={{ fontSize: '0.74rem' }}>Total SFT</label>
-                            <input 
-                              type="number" min={0} className="form-control form-control-sm"
-                              value={tower.sft} onChange={(e) => updateTower(tower.id, 'sft', parseInt(e.target.value) || 0)}
-                              style={{ fontSize: '0.82rem' }}
-                            />
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Time / Status */}
-            <div className="row g-3 mt-3">
-              <div className="col-md-4">
-                <label style={LABEL_STYLE}>Opening Time</label>
-                <input 
-                  type="time" 
-                  value={formData.openingTime} onChange={(e) => setFormData({...formData, openingTime: e.target.value})}
-                  style={FIELD_STYLE}
-                />
-              </div>
-              <div className="col-md-4">
-                <label style={LABEL_STYLE}>Closing Time</label>
-                <input 
-                  type="time" 
-                  value={formData.closingTime} onChange={(e) => setFormData({...formData, closingTime: e.target.value})}
-                  style={FIELD_STYLE}
-                />
-              </div>
-              <div className="col-md-4">
-                <label style={LABEL_STYLE}>Operational Status</label>
+              <div className="col-md-6">
+                <label style={LABEL_STYLE}>Property Status *</label>
                 <select 
-                  value={formData.status} onChange={(e) => setFormData({...formData, status: e.target.value})}
+                  value={formData.status} 
+                  onChange={(e) => setFormData({...formData, status: e.target.value})}
                   style={FIELD_STYLE}
                 >
                   <option>Active</option>
-                  <option>Maintenance</option>
-                  <option>Pre-Launch</option>
                   <option>Inactive</option>
                 </select>
               </div>
             </div>
+
+            {/* Location Details */}
+            <h6 className="fw-bold mb-3 border-bottom pb-2">Location Details</h6>
+            <div className="row g-3 mb-4">
+              <div className="col-12">
+                <label style={LABEL_STYLE}>Property Address *</label>
+                <input 
+                  type="text" required 
+                  placeholder="Full street address"
+                  value={formData.propertyAddress} 
+                  onChange={(e) => setFormData({...formData, propertyAddress: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-6">
+                <label style={LABEL_STYLE}>Area / Locality</label>
+                <input 
+                  type="text" 
+                  placeholder="e.g. Downtown"
+                  value={formData.area} 
+                  onChange={(e) => setFormData({...formData, area: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-6">
+                <label style={LABEL_STYLE}>City *</label>
+                <input 
+                  type="text" required 
+                  placeholder="e.g. Bangalore"
+                  value={formData.city} 
+                  onChange={(e) => setFormData({...formData, city: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-4">
+                <label style={LABEL_STYLE}>State *</label>
+                <input 
+                  type="text" required 
+                  placeholder="State"
+                  value={formData.state} 
+                  onChange={(e) => setFormData({...formData, state: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-4">
+                <label style={LABEL_STYLE}>Country</label>
+                <input 
+                  type="text" 
+                  placeholder="Country"
+                  value={formData.country} 
+                  onChange={(e) => setFormData({...formData, country: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+              <div className="col-md-4">
+                <label style={LABEL_STYLE}>Pincode *</label>
+                <input 
+                  type="text" required 
+                  placeholder="Pincode"
+                  value={formData.pincode} 
+                  onChange={(e) => setFormData({...formData, pincode: e.target.value})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+            </div>
+
+            {/* Building Details */}
+            <h6 className="fw-bold mb-3 border-bottom pb-2">Building Details</h6>
+            <div className="row g-3">
+              <div className="col-md-6">
+                <label style={LABEL_STYLE}>Total Area (SFT) *</label>
+                <input 
+                  type="number" required min="0"
+                  value={formData.totalSft} 
+                  onChange={(e) => setFormData({...formData, totalSft: parseInt(e.target.value) || 0})}
+                  style={FIELD_STYLE}
+                />
+              </div>
+            </div>
+
           </div>
           
-          {/* Footer actions */}
           <div className="px-4 py-3 border-top d-flex gap-2 justify-content-end bg-light">
             <button 
               type="button" className="btn btn-sm btn-outline-secondary fw-bold px-3 py-2" 
@@ -276,7 +253,7 @@ export default function PropertyModal({ isOpen, onClose, onSave, editData }: Pro
             <button 
               type="submit" className="btn btn-sm fw-bold text-white px-4 py-2"
               disabled={isSubmitting}
-              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: '#014aad' }}
+              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: 'var(--dark-section)' }}
             >
               {isSubmitting ? "Saving..." : "Save Property"}
             </button>

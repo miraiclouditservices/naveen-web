@@ -225,7 +225,7 @@ function BookingsContent() {
 
     {
       header: "Booking ID",
-      render: (b) => <span className="fw-bold" style={{ color: "#014aad" }}>{b.bookingId}</span>
+      render: (b) => <span className="fw-bold" style={{ color: "var(--dark-section)" }}>{b.bookingId}</span>
     },
 
     {
@@ -273,13 +273,13 @@ function BookingsContent() {
               setIsBookingDetailViewOpen(true);
             }}
             style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
+              width: 32, height: 32, borderRadius: "6px", border: "1px solid var(--border-color)",
+              background: "var(--bg-card)", cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center", color: "#1e293b",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-app)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-card)")}
           >
             <i className="bi bi-eye text-secondary" style={{ fontSize: '0.9rem' }} />
           </button>
@@ -289,13 +289,13 @@ function BookingsContent() {
               title="Cancel Booking"
               onClick={() => setCancelConfirmId(b._id)}
               style={{
-                width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-                background: "#fff", cursor: "pointer", display: "flex",
+                width: 32, height: 32, borderRadius: "6px", border: "1px solid var(--border-color)",
+                background: "var(--bg-card)", cursor: "pointer", display: "flex",
                 alignItems: "center", justifyContent: "center", color: "#1e293b",
                 transition: "background 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-              onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+              onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-app)")}
+              onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-card)")}
             >
               <i className="bi bi-x-circle text-danger" style={{ fontSize: '0.9rem' }} />
             </button>
@@ -359,7 +359,7 @@ function BookingsContent() {
               setBookingFormModalMode("create");
               setIsBookingFormModalOpen(true);
             }}
-            style={{ fontSize: '0.7rem', backgroundColor: "#014aad", borderRadius: "4px", padding: "6px 12px" }}
+            style={{ fontSize: '0.7rem', backgroundColor: "var(--dark-section)", borderRadius: "4px", padding: "6px 12px" }}
             disabled={r.status === 'Under Maintenance'}
           >
             📅 Book Room
@@ -371,13 +371,13 @@ function BookingsContent() {
               setIsRoomDetailViewOpen(true);
             }}
             style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
+              width: 32, height: 32, borderRadius: "6px", border: "1px solid var(--border-color)",
+              background: "var(--bg-card)", cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center", color: "#1e293b",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-app)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-card)")}
           >
             <i className="bi bi-eye text-secondary" style={{ fontSize: '0.9rem' }} />
           </button>
@@ -394,7 +394,7 @@ function BookingsContent() {
       {/* Header */}
       <div
         className="d-flex justify-content-between align-items-center pb-2 pt-3 px-4 flex-shrink-0 border-bottom"
-        style={{ backgroundColor: "#ffffff" }}
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <div>
           <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>Meeting Room & Space Booking</span>
@@ -461,7 +461,7 @@ function BookingsContent() {
                 }}
                 style={{
                   position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer", color: "#94a3b8",
+                  border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)",
                   fontSize: "0.85rem", lineHeight: 1,
                 }}
               >×</button>
@@ -487,8 +487,8 @@ function BookingsContent() {
               width: 40,
               height: 40,
               borderRadius: "4px",
-              backgroundColor: (activeTab === 'bookings' ? isBookingFilterDrawerOpen : isRoomFilterDrawerOpen) ? "#014aad" : "#fff",
-              border: "1px solid #e2e8f0"
+              backgroundColor: (activeTab === 'bookings' ? isBookingFilterDrawerOpen : isRoomFilterDrawerOpen) ? "var(--dark-section)" : "var(--bg-card)",
+              border: "1px solid var(--border-color)"
             }}
             title="Filters"
           >
@@ -500,7 +500,7 @@ function BookingsContent() {
             <button
               className="btn d-flex align-items-center gap-2 px-3 text-white border-0"
               style={{
-                backgroundColor: "#014aad", fontWeight: 500,
+                backgroundColor: "var(--dark-section)", fontWeight: 500,
                 borderRadius: "4px", height: 40, fontSize: "0.85rem"
               }}
               onClick={() => {
@@ -516,7 +516,7 @@ function BookingsContent() {
               <button
                 className="btn d-flex align-items-center gap-2 px-3 text-white border-0"
                 style={{
-                  backgroundColor: "#014aad", fontWeight: 500,
+                  backgroundColor: "var(--dark-section)", fontWeight: 500,
                   borderRadius: "4px", height: 40, fontSize: "0.85rem"
                 }}
                 onClick={() => {

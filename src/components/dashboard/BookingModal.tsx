@@ -245,7 +245,7 @@ export default function BookingModal({
               )}
 
               <div className="d-flex justify-content-between align-items-center mb-4">
-                <h6 className="fw-bold text-primary mb-0" style={{ color: '#014aad' }}>Booking Parameters</h6>
+                <h6 className="fw-bold text-primary mb-0" style={{ color: 'var(--dark-section)' }}>Booking Parameters</h6>
                 <div className="badge bg-light text-dark border">ID: {formData.bookingId}</div>
               </div>
               
@@ -337,13 +337,13 @@ export default function BookingModal({
                             fontSize: '0.75rem',
                             minHeight: '62px',
                             transition: 'all 0.15s ease',
-                            backgroundColor: isSelected ? '#014aad' : undefined,
-                            borderColor: isSelected ? '#014aad' : undefined
+                            backgroundColor: isSelected ? 'var(--dark-section)' : undefined,
+                            borderColor: isSelected ? 'var(--dark-section)' : undefined
                           }}
                         >
                           <span className="fw-bold">{format12Hour(slot.start)}</span>
-                          <span className="text-muted small" style={{ fontSize: '0.65rem', color: isSelected ? '#e2e8f0' : undefined }}>to {format12Hour(slot.end)}</span>
-                          <span className="mt-1" style={{ fontSize: '0.58rem', fontWeight: 700, opacity: 0.9, color: isSelected ? '#fff' : isBooked ? '#dc2626' : '#16a34a' }}>
+                          <span className="text-muted small" style={{ fontSize: '0.65rem', color: isSelected ? 'var(--border-color)' : undefined }}>to {format12Hour(slot.end)}</span>
+                          <span className="mt-1" style={{ fontSize: '0.58rem', fontWeight: 700, opacity: 0.9, color: isSelected ? 'var(--bg-card)' : isBooked ? '#dc2626' : '#16a34a' }}>
                             {isBooked ? '🚫 Booked' : isSelected ? '✓ Selected' : '🟢 Open'}
                           </span>
                         </button>
@@ -424,7 +424,7 @@ export default function BookingModal({
                 <button 
                   type="submit" className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm text-white border-0"
                   disabled={isSubmitting}
-                  style={{ backgroundColor: '#014aad', fontSize: '0.85rem' }}
+                  style={{ backgroundColor: 'var(--dark-section)', fontSize: '0.85rem' }}
                 >
                   {isSubmitting ? (
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

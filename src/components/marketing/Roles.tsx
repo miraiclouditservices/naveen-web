@@ -103,7 +103,7 @@ export default function Roles() {
 
         .section-title {
           font-size: clamp(1.8rem, 3.5vw, 2.4rem);
-          color: #0f172a !important;
+          color: var(--text-main) !important;
           letter-spacing: -0.02em;
         }
 
@@ -115,8 +115,8 @@ export default function Roles() {
 
         .portfolio-card {
           position: relative;
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           border-radius: 20px;
           padding: 30px 24px;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -154,8 +154,8 @@ export default function Roles() {
         .icon-circle {
           width: 44px;
           height: 44px;
-          background: #0f172a;
-          color: #ffffff;
+          background: var(--text-main);
+          color: var(--bg-card);
           border-radius: 50%;
           display: flex;
           align-items: center;
@@ -166,7 +166,7 @@ export default function Roles() {
 
         .card-title {
           font-size: 0.98rem;
-          color: #0f172a;
+          color: var(--text-main);
           position: relative;
           z-index: 2;
           letter-spacing: -0.01em;
@@ -174,7 +174,7 @@ export default function Roles() {
 
         .feature-text {
           font-size: 0.82rem;
-          color: #64748b;
+          color: var(--text-muted);
           font-weight: 500;
         }
 

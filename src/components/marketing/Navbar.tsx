@@ -4,179 +4,225 @@ import { useState, useEffect } from 'react';
 
 export default function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
-  const [activeSection, setActiveSection] = useState('');
 
   useEffect(() => {
     const handleScroll = () => {
-      // Add background when scrolled
-      setIsScrolled(window.scrollY > 50);
-
-      // Determine active section
-      const sections = ['features', 'how-it-works', 'faq'];
-
-      let currentSection = '';
-      for (const section of sections) {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          // Adjust 150 to catch the section a bit earlier
-          if (rect.top <= 150 && rect.bottom >= 150) {
-            currentSection = section;
-            break;
-          }
-        }
-      }
-
-      setActiveSection(currentSection);
+      setIsScrolled(window.scrollY > 10);
     };
 
-    // Initial check
     handleScroll();
-
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   return (
-    <nav className={`navbar navbar-expand-lg fixed-top ${isScrolled ? 'floating-nav' : 'default-nav'}`}>
-      <div className="container h-100">
-        <Link href="/" className="navbar-brand d-flex align-items-center">
-          <span className="brand-text-kalki">ANVAYA360</span>
+    <nav className={`navbar navbar-expand-lg fixed-top navbar-custom ${isScrolled ? 'navbar-scrolled' : ''}`}>
+      <div className="container">
+        <Link href="/" className="logo-container">
+          <img src="/anvaya360-logo.png" alt="Anvaya360 Logo" className="logo-img" />
         </Link>
 
-        <button className="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
-          <span className="navbar-toggler-icon" style={{ width: '1.1rem', height: '1.1rem' }}></span>
+        {/* Mobile Header Toggler */}
+        <button className="navbar-toggler border-0 d-lg-none" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span className="navbar-toggler-icon"></span>
         </button>
 
         <div className="collapse navbar-collapse" id="navbarContent">
-          <ul className="navbar-nav mx-auto mb-2 mb-lg-0 fw-bold">
+          <ul className="navbar-nav mx-auto mb-2 mb-lg-0">
             <li className="nav-item">
-              <a className={`nav-link px-3 transition-all ${activeSection === 'features' ? 'active-link' : ''}`} style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em' }} href="#features">Features</a>
+              <a className="nav-link-custom" href="#modules">Modules</a>
             </li>
             <li className="nav-item">
-              <a className={`nav-link px-3 transition-all ${activeSection === 'how-it-works' ? 'active-link' : ''}`} style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em' }} href="#how-it-works">How it works</a>
+              <a className="nav-link-custom" href="#why-anvaya360">Why Anvaya360</a>
             </li>
             <li className="nav-item">
-              <a className={`nav-link px-3 transition-all ${activeSection === 'faq' ? 'active-link' : ''}`} style={{ fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.08em' }} href="#faq">FAQ</a>
+              <a className="nav-link-custom" href="#industries">Industries</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link-custom" href="#pricing">Pricing</a>
+            </li>
+            <li className="nav-item">
+              <a className="nav-link-custom" href="#faq">FAQ</a>
             </li>
           </ul>
-          <div className="d-flex align-items-center">
-            <Link href="/login" className="btn btn-orange-nav rounded-pill px-4 py-2.5 fw-bold shadow-orange-nav text-white transition-all hover-lift" style={{ fontSize: '0.72rem', letterSpacing: '0.04em' }}>Get Started</Link>
+
+          {/* Desktop Actions */}
+          <div className="navbar-actions-desktop d-none d-lg-flex align-items-center">
+            <Link href="/login" className="btn-signin">Sign in</Link>
+          </div>
+
+          {/* Mobile Collapse Menu Sign-in (Visible inside the open collapse) */}
+          <div className="navbar-actions-mobile-menu d-flex d-lg-none justify-content-center pt-3 border-top border-light mt-3">
+            <Link href="/login" className="btn-signin-mobile">Sign in</Link>
           </div>
         </div>
       </div>
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Orbitron:wght@900&display=swap');
-
-        .brand-text-kalki {
-          font-family: 'Cinzel', 'Orbitron', serif;
-          font-weight: 900;
-          font-size: 1.45rem;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          background: linear-gradient(135deg, #ffe066 0%, #ff7a00 40%, #ff5500 75%, #cc2200 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0px 2px 4px rgba(255, 85, 0, 0.2));
+      <style jsx>{`
+        .navbar-custom {
+          background-color: var(--bg-card) !important;
+          border-bottom: 1px solid var(--border-color) !important;
+          padding: 6px 0;
+          transition: padding 0.3s ease, box-shadow 0.3s ease;
+          z-index: 1030;
         }
 
-        .navbar {
-          transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-          padding: 18px 0;
-          background: transparent !important;
-          left: 0;
-          right: 0;
+        .navbar-scrolled {
+          padding: 12px 0;
+          box-shadow: 0 4px 20px -10px rgba(0, 0, 0, 0.05);
         }
 
-        .navbar.default-nav {
-          background: rgba(255, 255, 255, 0.9) !important;
-          backdrop-filter: blur(12px);
-          -webkit-backdrop-filter: blur(12px);
-          border-bottom: 1px solid rgba(15, 23, 42, 0.04);
+        .logo-container {
+          display: flex;
+          align-items: center;
+          text-decoration: none;
         }
 
-        .navbar.floating-nav {
-          top: 15px !important;
-          left: 50% !important;
-          transform: translateX(-50%) !important;
-          width: 90% !important;
-          max-width: 1200px;
-          border-radius: 20px;
-          background: rgba(255, 255, 255, 0.85) !important;
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border: 1px solid rgba(15, 23, 42, 0.06);
-          box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.08);
-          padding: 10px 24px;
+        .logo-img {
+          width: 32px;
+          height: 32px;
+          object-fit: contain;
+          margin-right: 8px;
         }
 
-        .navbar-nav .nav-link {
-          position: relative;
-          color: #64748b !important;
-          transition: all 0.3s ease;
-          padding: 6px 16px;
+        .logo-text {
+          font-weight: 800;
+          font-size: 1.3rem;
+          color: var(--text-main, #000000);
+          letter-spacing: -0.02em;
         }
 
-        .navbar-nav .nav-link:hover,
-        .navbar-nav .nav-link.active-link {
-          color: #0f172a !important;
+        .logo-text span {
+          color: var(--text-muted, #787878);
         }
 
-        .navbar-nav .nav-link::after {
-          content: '';
-          position: absolute;
-          bottom: -2px;
-          left: 50%;
-          width: 0;
-          height: 2px;
-          background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%);
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          transform: translateX(-50%);
-          border-radius: 9999px;
+        .nav-link-custom {
+          color: var(--text-muted, #787878) !important;
+          font-weight: 500;
+          font-size: 0.9rem;
+          padding: 8px 16px !important;
+          text-decoration: none;
+          transition: color 0.2s ease;
+          display: inline-block;
         }
 
-        .navbar-nav .nav-link:hover::after,
-        .navbar-nav .nav-link.active-link::after {
-          width: 16px;
+        .nav-link-custom:hover {
+          color: var(--text-main, #000000) !important;
         }
 
-        .btn-orange-nav {
-          background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%) !important;
-          border: none !important;
+        .btn-navbar-cta {
+          background-color: #1b723a !important;
+          border-color: #1b723a !important;
+          color: #ffffff !important;
+          border-radius: 9999px !important;
+          padding: 10px 24px !important;
+          font-weight: 700 !important;
+          font-size: 0.95rem !important;
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          text-decoration: none;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+          border: none;
         }
 
-        .btn-orange-nav:hover {
-          background: linear-gradient(135deg, #ff8c00 0%, #ff6f00 100%) !important;
-          transform: translateY(-2px);
-          box-shadow: 0 12px 20px -3px rgba(255, 111, 0, 0.4);
+        .btn-navbar-cta:hover {
+          background-color: #14532d !important;
+          border-color: #14532d !important;
+          box-shadow: 0 4px 12px rgba(27, 114, 58, 0.15);
         }
 
-        .shadow-orange-nav { 
-          box-shadow: 0 8px 15px -3px rgba(255, 111, 0, 0.25); 
+        .btn-navbar-cta .arrow-icon {
+          width: 14px;
+          height: 14px;
+          transition: transform 0.2s ease;
         }
 
-        .hover-lift:hover { 
-          transform: translateY(-2px); 
+        .btn-navbar-cta:hover .arrow-icon {
+          transform: translateX(3px);
+        }
+
+        .btn-navbar-cta-mobile {
+          background-color: #1b723a !important;
+          border-color: #1b723a !important;
+          color: #ffffff !important;
+          border-radius: 9999px !important;
+          padding: 8px 18px !important;
+          font-weight: 700 !important;
+          font-size: 0.85rem !important;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          border: none;
+          transition: all 0.2s ease;
+        }
+
+        .btn-navbar-cta-mobile:hover {
+          background-color: #14532d !important;
+          border-color: #14532d !important;
+        }
+
+        .btn-signin {
+          border: 1px solid var(--border-color, #E8E6E3) !important;
+          color: var(--text-primary, #202020) !important;
+          background-color: transparent !important;
+          border-radius: 9999px !important;
+          padding: 8px 22px !important;
+          font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .btn-signin:hover {
+          border-color: var(--dark-section, #040404) !important;
+          background-color: var(--dark-section, #040404) !important;
+          color: var(--bg-card, #ffffff) !important;
+        }
+
+        .btn-signin-mobile {
+          border: 1px solid var(--border-color, #E8E6E3) !important;
+          color: var(--text-primary, #202020) !important;
+          background-color: transparent !important;
+          border-radius: 9999px !important;
+          padding: 8px 22px !important;
+          font-weight: 600 !important;
+          font-size: 0.85rem !important;
+          text-decoration: none;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          transition: all 0.2s ease;
+          width: 100%;
+        }
+
+        .btn-signin-mobile:hover {
+          border-color: var(--dark-section, #040404) !important;
+          background-color: var(--dark-section, #040404) !important;
+          color: var(--bg-card, #ffffff) !important;
         }
 
         @media (max-width: 991.98px) {
           .navbar-collapse {
-            background: #ffffff;
+            background: var(--bg-card, #ffffff);
             border-radius: 12px;
             padding: 20px;
             margin-top: 12px;
-            box-shadow: 0 10px 25px -10px rgba(15, 23, 42, 0.1);
-            border: 1px solid rgba(15, 23, 42, 0.05);
-          }
-          
-          .navbar.floating-nav {
-            border-radius: 16px;
-            padding: 10px 16px;
+            border: 1px solid var(--border-color, #E8E6E3);
+            box-shadow: 0 10px 25px -10px rgba(0, 0, 0, 0.08);
           }
 
-          .navbar-nav .nav-link::after {
-            left: 16px;
-            transform: none;
+          .nav-link-custom {
+            padding: 10px 0 !important;
+            display: block;
+            border-bottom: 1px solid var(--border-color, #E8E6E3);
+            width: 100%;
+          }
+
+          .navbar-nav li:last-child .nav-link-custom {
+            border-bottom: none;
           }
         }
       `}</style>

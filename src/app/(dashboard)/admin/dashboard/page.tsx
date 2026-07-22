@@ -9,12 +9,12 @@ const OfficeOwnerDash = lazy(() => import("@/components/dashboard/OfficeOwnerDas
 const StaffAdminDash = lazy(() => import("@/components/dashboard/StaffAdminDashboard"));
 const WatchmanDash = lazy(() => import("@/components/dashboard/WatchmanDashboard"));
 
-const COLOR = { blue: "#014aad", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", slate: "#475569", teal: "#0891b2", orange: "#ea580c" };
+const COLOR = { blue: "var(--dark-section)", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", slate: "var(--text-primary)", teal: "#0891b2", orange: "#ea580c" };
 
 const SPINNER = (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh", flexDirection: "column", gap: 16 }}>
-    <div className="spinner-border" style={{ color: "#014aad", width: 36, height: 36 }} role="status" />
-    <span style={{ color: "#64748b", fontSize: "0.9rem", fontWeight: 600 }}>Loading dashboard...</span>
+    <div className="spinner-border" style={{ color: "var(--dark-section)", width: 36, height: 36 }} role="status" />
+    <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: 600 }}>Loading dashboard...</span>
   </div>
 );
 
@@ -22,9 +22,9 @@ function StatCard({ label, value, icon, color, sub }: any) {
   return (
     <div
       style={{
-        background: "#fff",
+        background: "var(--bg-card)",
         borderRadius: "12px",
-        border: "1px solid #e2e8f0",
+        border: "1px solid var(--border-color)",
         padding: "16px 18px",
         display: "flex",
         alignItems: "center",
@@ -35,12 +35,12 @@ function StatCard({ label, value, icon, color, sub }: any) {
       }}
       onMouseEnter={e => {
         e.currentTarget.style.transform = "translateY(-2px)";
-        e.currentTarget.style.borderColor = "#014aad";
+        e.currentTarget.style.borderColor = "var(--dark-section)";
         e.currentTarget.style.boxShadow = "0 8px 24px rgba(1, 74, 173, 0.12)";
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = "none";
-        e.currentTarget.style.borderColor = "#e2e8f0";
+        e.currentTarget.style.borderColor = "var(--border-color)";
         e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,0.06)";
       }}
     >
@@ -48,9 +48,9 @@ function StatCard({ label, value, icon, color, sub }: any) {
         <i className={`bi ${icon}`} style={{ color, fontSize: "1.2rem" }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
+        <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</div>
         <div style={{ fontSize: "1.35rem", fontWeight: 800, color: "#1e293b", lineHeight: 1.2 }}>{value}</div>
-        {sub && <div style={{ fontSize: "0.68rem", color: "#94a3b8", marginTop: 1 }}>{sub}</div>}
+        {sub && <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 1 }}>{sub}</div>}
       </div>
     </div>
   );
@@ -60,10 +60,10 @@ function MiniBar({ label, val, max, color }: any) {
   const pct = max > 0 ? Math.min(100, Math.round((val / max) * 100)) : 0;
   return (
     <div style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 600, color: "#475569", marginBottom: 3 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>
         <span>{label}</span><span>{pct}%</span>
       </div>
-      <div style={{ background: "#f1f5f9", borderRadius: 6, height: 7 }}>
+      <div style={{ background: "var(--border-color)", borderRadius: 6, height: 7 }}>
         <div style={{ width: `${pct}%`, height: "100%", borderRadius: 6, background: color, transition: "width 0.6s ease" }} />
       </div>
     </div>
@@ -76,14 +76,14 @@ function RevenueBar({ items }: { items: { label: string; revenue: number }[] }) 
     <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 120, paddingTop: 8 }}>
       {items.map((item, i) => (
         <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <div style={{ fontSize: "0.6rem", color: "#94a3b8", fontWeight: 700 }}>
+          <div style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 700 }}>
             {item.revenue > 0 ? `₹${(item.revenue / 1000).toFixed(0)}K` : "—"}
           </div>
           <div style={{
-            width: "100%", background: i === items.length - 1 ? "#014aad" : "#bfdbfe", borderRadius: "4px 4px 0 0",
+            width: "100%", background: i === items.length - 1 ? "var(--dark-section)" : "#bfdbfe", borderRadius: "4px 4px 0 0",
             height: `${Math.max(6, (item.revenue / max) * 100)}px`, transition: "height 0.5s ease"
           }} />
-          <div style={{ fontSize: "0.6rem", color: "#64748b", fontWeight: 600, whiteSpace: "nowrap" }}>{item.label}</div>
+          <div style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{item.label}</div>
         </div>
       ))}
     </div>
@@ -101,16 +101,16 @@ function VisitorLine({ items }: { items: { label: string; count: number }[] }) {
   return (
     <div>
       <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
-        <polyline fill="none" stroke="#014aad" strokeWidth="2.5" strokeLinejoin="round" points={pts} />
+        <polyline fill="none" stroke="var(--dark-section)" strokeWidth="2.5" strokeLinejoin="round" points={pts} />
         {items.map((item, i) => {
           const x = pad + (i / (items.length - 1 || 1)) * (w - 2 * pad);
           const y = pad + (1 - item.count / max) * (h - 2 * pad);
-          return <circle key={i} cx={x} cy={y} r="3.5" fill="#014aad" />;
+          return <circle key={i} cx={x} cy={y} r="3.5" fill="var(--dark-section)" />;
         })}
       </svg>
       <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
         {items.map((item, i) => (
-          <div key={i} style={{ fontSize: "0.58rem", color: "#94a3b8", fontWeight: 600, textAlign: "center", flex: 1 }}>{item.label}</div>
+          <div key={i} style={{ fontSize: "0.58rem", color: "var(--text-muted)", fontWeight: 600, textAlign: "center", flex: 1 }}>{item.label}</div>
         ))}
       </div>
     </div>
@@ -120,7 +120,7 @@ function VisitorLine({ items }: { items: { label: string; count: number }[] }) {
 const STATUS_PILL: Record<string, { bg: string; cl: string }> = {
   Pending: { bg: "#fef9c3", cl: "#854d0e" }, Approved: { bg: "#dcfce7", cl: "#166534" },
   Rejected: { bg: "#fee2e2", cl: "#991b1b" }, "Checked-In": { bg: "#dbeafe", cl: "#1e40af" },
-  "Checked-Out": { bg: "#f1f5f9", cl: "#475569" }, Cleared: { bg: "#dbeafe", cl: "#1e40af" },
+  "Checked-Out": { bg: "var(--border-color)", cl: "var(--text-primary)" }, Cleared: { bg: "#dbeafe", cl: "#1e40af" },
 };
 
 export default function DashboardPage() {
@@ -190,8 +190,8 @@ export default function DashboardPage() {
   }
 
   const isSA = user?.role === "SUPER_ADMIN" || user?.role === "Admin" || user?.role === "STAFF_ADMIN";
-  const th: React.CSSProperties = { background: "#1e293b", color: "#fff", fontSize: "0.68rem", fontWeight: 700, padding: "10px 12px", textTransform: "uppercase", letterSpacing: "0.05em", border: "none", whiteSpace: "nowrap" };
-  const td: React.CSSProperties = { padding: "9px 12px", fontSize: "0.82rem", color: "#1e293b", borderBottom: "1px solid #f1f5f9" };
+  const th: React.CSSProperties = { background: "#1e293b", color: "var(--bg-card)", fontSize: "0.68rem", fontWeight: 700, padding: "10px 12px", textTransform: "uppercase", letterSpacing: "0.05em", border: "none", whiteSpace: "nowrap", position: "sticky", top: 0, zIndex: 1 };
+  const td: React.CSSProperties = { padding: "9px 12px", fontSize: "0.82rem", color: "#1e293b", borderBottom: "1px solid var(--border-color)" };
 
   const getHeaderSubtitle = () => {
     const propObj = propertiesList.find(p => p._id === selectedProperty);
@@ -211,8 +211,8 @@ export default function DashboardPage() {
 
   if (loading) return (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "60vh", flexDirection: "column", gap: 16 }}>
-      <div className="spinner-border" style={{ color: "#014aad", width: 36, height: 36 }} role="status" />
-      <span style={{ color: "#64748b", fontSize: "0.9rem", fontWeight: 600 }}>Loading dashboard...</span>
+      <div className="spinner-border" style={{ color: "var(--dark-section)", width: 36, height: 36 }} role="status" />
+      <span style={{ color: "var(--text-muted)", fontSize: "0.9rem", fontWeight: 600 }}>Loading dashboard...</span>
     </div>
   );
 
@@ -222,26 +222,26 @@ export default function DashboardPage() {
         .dash-grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; }
         .dash-grid-3 { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
         .dash-grid-2 { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; }
-        .panel { background:#fff; border-radius:12px; border:1px solid #e2e8f0; overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+        .panel { background:var(--bg-card); border-radius:12px; border:1px solid var(--border-color); overflow:hidden; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
         .panel-head { background:#1e293b; padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
-        .panel-title { color:#fff; font-size:0.8rem; font-weight:700; margin:0; letter-spacing:0.02em; }
+        .panel-title { color:var(--bg-card); font-size:0.8rem; font-weight:700; margin:0; letter-spacing:0.02em; }
         .panel-body { padding:16px; }
-        .qa-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; border:1.5px solid #e2e8f0; border-radius:10px; background:#fff; cursor:pointer; text-decoration:none; transition:all 0.15s; color:#1e293b; }
-        .qa-btn:hover { background:#014aad; border-color:#014aad; color:#fff; transform:translateY(-2px); box-shadow:0 6px 16px #014aad30; }
-        .qa-btn:hover .qa-icon { background:rgba(255,255,255,0.2); color:#fff; }
-        .qa-icon { width:38px; height:38px; border-radius:9px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
+        .qa-btn { display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 10px; border:1.5px solid var(--border-color); border-radius:10px; background:var(--bg-card); cursor:pointer; text-decoration:none; transition:all 0.15s; color:#1e293b; }
+        .qa-btn:hover { background:var(--dark-section); border-color:var(--dark-section); color:var(--bg-card); transform:translateY(-2px); box-shadow:0 6px 16px var(--dark-section)30; }
+        .qa-btn:hover .qa-icon { background:rgba(255,255,255,0.2); color:var(--bg-card); }
+        .qa-icon { width:38px; height:38px; border-radius:9px; background:var(--border-color); display:flex; align-items:center; justify-content:center; transition:all 0.15s; }
         @media(max-width:900px){.dash-grid-4{grid-template-columns:repeat(2,1fr)}.dash-grid-3{grid-template-columns:1fr}.dash-grid-2{grid-template-columns:1fr}}
       `}</style>
 
 
 
       {/* ── Filter Controls ── */}
-      <div className="panel mb-4" style={{ backgroundColor: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "12px" }}>
+      <div className="panel mb-4" style={{ backgroundColor: "var(--bg-app)", border: "1px solid var(--border-color)", borderRadius: "12px" }}>
         <div className="panel-body" style={{ padding: "10px 14px" }}>
-          <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "#014aad", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
+          <div style={{ fontSize: "0.65rem", fontWeight: 800, color: "var(--dark-section)", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: "2px" }}>
             Property Analytics Dashboard
           </div>
-          <div style={{ fontSize: "0.78rem", fontWeight: 500, color: "#64748b", marginBottom: "8px" }}>
+          <div style={{ fontSize: "0.78rem", fontWeight: 500, color: "var(--text-muted)", marginBottom: "8px" }}>
             Filter by Property, Month, Year, and Status
           </div>
           <div className="row g-2">
@@ -369,7 +369,7 @@ export default function DashboardPage() {
               { label: "Add Staff", icon: "bi-person-badge", href: "/admin/users" },
             ].map(a => (
               <Link key={a.label} href={a.href} className="qa-btn">
-                <div className="qa-icon"><i className={`bi ${a.icon}`} style={{ fontSize: "1.1rem", color: "#014aad" }} /></div>
+                <div className="qa-icon"><i className={`bi ${a.icon}`} style={{ fontSize: "1.1rem", color: "var(--dark-section)" }} /></div>
                 <span style={{ fontSize: "0.68rem", fontWeight: 700, textAlign: "center", lineHeight: 1.3 }}>{a.label}</span>
               </Link>
             ))}
@@ -384,13 +384,13 @@ export default function DashboardPage() {
         <div className="panel">
           <div className="panel-head">
             <h6 className="panel-title"><i className="bi bi-bar-chart-fill me-2" style={{ color: "#34d399" }} />Revenue Trend</h6>
-            <span style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Last 6 months</span>
+            <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Last 6 months</span>
           </div>
           <div className="panel-body">
-            {rev.length > 0 ? <RevenueBar items={rev} /> : <p style={{ color: "#94a3b8", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No revenue data</p>}
+            {rev.length > 0 ? <RevenueBar items={rev} /> : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No revenue data</p>}
             <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-              <div><div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Rent</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.leaseRevenue || 0) / 1000).toFixed(0)}K</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>CAM</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.camRevenue || 0) / 1000).toFixed(0)}K</div></div>
+              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Rent</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.leaseRevenue || 0) / 1000).toFixed(0)}K</div></div>
+              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>CAM</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.camRevenue || 0) / 1000).toFixed(0)}K</div></div>
             </div>
           </div>
         </div>
@@ -399,14 +399,14 @@ export default function DashboardPage() {
         <div className="panel">
           <div className="panel-head">
             <h6 className="panel-title"><i className="bi bi-graph-up-arrow me-2" style={{ color: "#60a5fa" }} />Visitor Analytics</h6>
-            <span style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Last 7 days</span>
+            <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Last 7 days</span>
           </div>
           <div className="panel-body">
-            {vis.length > 0 ? <VisitorLine items={vis} /> : <p style={{ color: "#94a3b8", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No visitor data</p>}
+            {vis.length > 0 ? <VisitorLine items={vis} /> : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No visitor data</p>}
             <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-              <div><div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Today</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>{m.visitorsToday ?? 0}</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Pending</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#d97706" }}>{m.visitorsPending ?? 0}</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "#94a3b8" }}>Inside</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#016a34" }}>{m.visitorsCheckedIn ?? 0}</div></div>
+              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Today</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>{m.visitorsToday ?? 0}</div></div>
+              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Pending</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#d97706" }}>{m.visitorsPending ?? 0}</div></div>
+              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Inside</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#016a34" }}>{m.visitorsCheckedIn ?? 0}</div></div>
             </div>
           </div>
         </div>
@@ -419,7 +419,7 @@ export default function DashboardPage() {
           <div className="panel-body">
             <div style={{ textAlign: "center", marginBottom: 16 }}>
               <div style={{ fontSize: "2.4rem", fontWeight: 800, color: COLOR.blue }}>{m.occupancyPct ?? 0}<span style={{ fontSize: "1.2rem" }}>%</span></div>
-              <div style={{ fontSize: "0.72rem", color: "#94a3b8", fontWeight: 600 }}>Overall Occupancy Rate</div>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>Overall Occupancy Rate</div>
             </div>
             <MiniBar label="Occupied SFT" val={m.occupiedSft || 0} max={m.totalSft || 1} color={COLOR.blue} />
             <MiniBar label="Available SFT" val={m.availableSft || 0} max={m.totalSft || 1} color={COLOR.orange} />
@@ -446,9 +446,9 @@ export default function DashboardPage() {
                 { label: "Pending", value: m.gatePassPending ?? 0, color: COLOR.yellow },
                 { label: "Approved", value: m.gatePassApproved ?? 0, color: COLOR.green },
               ].map((s, i) => (
-                <div key={i} style={{ background: "#f8fafc", borderRadius: 10, padding: "12px", textAlign: "center", border: "1px solid #e2e8f0" }}>
+                <div key={i} style={{ background: "var(--bg-app)", borderRadius: 10, padding: "12px", textAlign: "center", border: "1px solid var(--border-color)" }}>
                   <div style={{ fontSize: "1.4rem", fontWeight: 800, color: s.color }}>{s.value}</div>
-                  <div style={{ fontSize: "0.62rem", color: "#94a3b8", fontWeight: 700, textTransform: "uppercase" }}>{s.label}</div>
+                  <div style={{ fontSize: "0.62rem", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase" }}>{s.label}</div>
                 </div>
               ))}
             </div>
@@ -470,7 +470,7 @@ export default function DashboardPage() {
                   })}
                 </tbody>
               </table>
-            ) : <p style={{ color: "#94a3b8", fontSize: "0.8rem", textAlign: "center", margin: "20px 0" }}>No gate passes yet</p>}
+            ) : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "20px 0" }}>No gate passes yet</p>}
           </div>
         </div>
 
@@ -496,8 +496,8 @@ export default function DashboardPage() {
                         <td style={td}>
                           <span style={{
                             fontSize: "0.7rem", padding: "2px 8px", borderRadius: 20, fontWeight: 700,
-                            background: daysLeft <= 10 ? "#fee2e2" : daysLeft <= 30 ? "#fef9c3" : "#f1f5f9",
-                            color: daysLeft <= 10 ? "#991b1b" : daysLeft <= 30 ? "#854d0e" : "#475569"
+                            background: daysLeft <= 10 ? "#fee2e2" : daysLeft <= 30 ? "#fef9c3" : "var(--border-color)",
+                            color: daysLeft <= 10 ? "#991b1b" : daysLeft <= 30 ? "#854d0e" : "var(--text-primary)"
                           }}>
                             {daysLeft}d left
                           </span>
@@ -507,7 +507,7 @@ export default function DashboardPage() {
                   })}
                 </tbody>
               </table>
-            ) : <div style={{ textAlign: "center", padding: "24px 0", color: "#94a3b8" }}>
+            ) : <div style={{ textAlign: "center", padding: "24px 0", color: "var(--text-muted)" }}>
               <i className="bi bi-check2-circle" style={{ fontSize: "2rem", display: "block", marginBottom: 8, color: "#16a34a" }} />
               <span style={{ fontSize: "0.8rem" }}>No leases expiring within 60 days</span>
             </div>}
@@ -521,7 +521,7 @@ export default function DashboardPage() {
           <h6 className="panel-title"><i className="bi bi-person-badge me-2" style={{ color: "#38bdf8" }} />Recent Visitors</h6>
           <Link href="/admin/visitors" style={{ fontSize: "0.7rem", color: "#60a5fa", textDecoration: "none", fontWeight: 700 }}>View All →</Link>
         </div>
-        <div className="panel-body" style={{ padding: 0 }}>
+        <div className="panel-body" style={{ padding: 0, maxHeight: "480px", overflowY: "auto", position: "relative" }}>
           {recentV.length > 0 ? (
             <table style={{ width: "100%", borderCollapse: "collapse" }}>
               <thead><tr>
@@ -532,19 +532,19 @@ export default function DashboardPage() {
                 {recentV.map((v: any, i: number) => {
                   const sp = STATUS_PILL[v.status] || STATUS_PILL.Pending;
                   return (
-                    <tr key={i} style={{ background: i % 2 === 0 ? "#fff" : "#f8fafc" }}>
+                    <tr key={i} style={{ background: i % 2 === 0 ? "var(--bg-card)" : "var(--bg-app)" }}>
                       <td style={td}><span style={{ fontWeight: 700 }}>{v.name}</span></td>
-                      <td style={{ ...td, fontFamily: "monospace", color: "#64748b" }}>{v.contact}</td>
+                      <td style={{ ...td, fontFamily: "monospace", color: "var(--text-muted)" }}>{v.contact}</td>
                       <td style={td}>{v.property}</td>
                       <td style={td}>{v.date}</td>
-                      <td style={td}><span style={{ fontSize: "0.75rem", color: "#64748b" }}>{v.createdBy}</span></td>
+                      <td style={td}><span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>{v.createdBy}</span></td>
                       <td style={td}><span style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: 20, fontWeight: 700, background: sp.bg, color: sp.cl }}>{v.status}</span></td>
                     </tr>
                   );
                 })}
               </tbody>
             </table>
-          ) : <p style={{ color: "#94a3b8", fontSize: "0.8rem", textAlign: "center", margin: "24px 0" }}>No visitors registered yet</p>}
+          ) : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "24px 0" }}>No visitors registered yet</p>}
         </div>
       </div>
     </div>

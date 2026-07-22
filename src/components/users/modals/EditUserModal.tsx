@@ -114,7 +114,7 @@ export default function EditUserModal({
               style={{
                 width: 32, height: 32, borderRadius: "50%", border: "none",
                 background: "transparent", cursor: "pointer", fontSize: "1.1rem",
-                color: "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
               ×
@@ -212,7 +212,7 @@ export default function EditUserModal({
               <button
                 type="submit"
                 className="btn btn-primary rounded-pill px-4 fw-bold"
-                style={{ backgroundColor: "#014aad", borderColor: "#014aad" }}
+                style={{ backgroundColor: "var(--dark-section)", borderColor: "var(--dark-section)" }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

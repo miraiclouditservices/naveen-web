@@ -64,7 +64,7 @@ export default function VendorFilterDrawer({
           right: 0,
           height: "100vh",
           width: "320px",
-          background: "#fff",
+          background: "var(--bg-card)",
           zIndex: 1050,
           boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
@@ -77,7 +77,7 @@ export default function VendorFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--border-color)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -104,11 +104,11 @@ export default function VendorFilterDrawer({
             style={{
               width: 32, height: 32, borderRadius: "50%", border: "none",
               background: "transparent", cursor: "pointer",
-              fontSize: "1.1rem", color: "#94a3b8",
+              fontSize: "1.1rem", color: "var(--text-muted)",
               display: "flex", alignItems: "center", justifyContent: "center",
               transition: "background 0.15s ease",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--border-color)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             ×
@@ -130,7 +130,7 @@ export default function VendorFilterDrawer({
                 placeholder="Name, code, contact..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", paddingRight: "36px" }}
+                style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem", paddingRight: "36px" }}
               />
               <i className="hgi-stroke hgi-search-01 position-absolute text-muted"
                 style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }} />
@@ -166,7 +166,7 @@ export default function VendorFilterDrawer({
               className="form-select"
               value={scopeFilter}
               onChange={e => setScopeFilter(e.target.value)}
-              style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem" }}
+              style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem" }}
             >
               {SCOPE_OPTIONS.map(s => (
                 <option key={s} value={s}>{s === "All" ? "All Categories" : s}</option>
@@ -179,7 +179,7 @@ export default function VendorFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderTop: "1px solid #f1f5f9",
+            borderTop: "1px solid var(--border-color)",
             display: "flex", gap: "8px", flexShrink: 0,
           }}
         >
@@ -196,7 +196,7 @@ export default function VendorFilterDrawer({
             type="button"
             onClick={onClose}
             className="btn flex-fill rounded-3 fw-semibold text-white"
-            style={{ backgroundColor: "#014aad", border: "none", fontSize: "0.82rem" }}
+            style={{ backgroundColor: "var(--dark-section)", border: "none", fontSize: "0.82rem" }}
           >
             Apply Filters
           </button>

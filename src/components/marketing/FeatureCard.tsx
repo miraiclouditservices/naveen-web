@@ -12,7 +12,7 @@ export default function FeatureCard({ icon, title, description }: { icon: string
       </div>
       <style jsx>{`
         .feature-card-3d {
-          background: #ffffff;
+          background: var(--bg-card);
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
           border-radius: 1.25rem;
           transform-style: preserve-3d;
@@ -23,7 +23,7 @@ export default function FeatureCard({ icon, title, description }: { icon: string
           box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
           border: 1px solid rgba(1, 74, 173, 0.2);
         }
-        .text-primary { color: #014aad !important; }
+        .text-primary { color: var(--dark-section) !important; }
         .transition-all { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
       `}</style>
     </div>

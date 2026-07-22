@@ -73,8 +73,8 @@ export default function HowItWorks() {
         }
 
         .timeline-card {
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           border-radius: 20px;
           padding: 30px 24px;
           transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -94,7 +94,7 @@ export default function HowItWorks() {
           height: 28px;
           border-radius: 50%;
           background: #ff6f00;
-          color: #ffffff;
+          color: var(--bg-card);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -104,13 +104,13 @@ export default function HowItWorks() {
 
         .step-label {
           font-size: 0.72rem;
-          color: #94a3b8;
+          color: var(--text-muted);
           letter-spacing: 0.05em;
         }
 
         .step-title {
           font-size: 0.98rem;
-          color: #0f172a;
+          color: var(--text-main);
           letter-spacing: -0.01em;
         }
 

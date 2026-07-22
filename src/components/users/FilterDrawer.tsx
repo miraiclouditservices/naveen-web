@@ -54,7 +54,7 @@ export default function FilterDrawer({
         zIndex: 1060,
         top: 0,
         left: 0,
-        backgroundColor: isOpen ? "rgba(15, 23, 42, 0.3)" : "rgba(15, 23, 42, 0)",
+        backgroundColor: isOpen ? "rgba(4, 4, 4, 0.3)" : "rgba(4, 4, 4, 0)",
         backdropFilter: isOpen ? "blur(3px)" : "none",
         transition: "all 0.3s ease-in-out",
         pointerEvents: isOpen ? "auto" : "none",
@@ -62,8 +62,9 @@ export default function FilterDrawer({
       onClick={onClose}
     >
       <div
-        className="h-100 bg-white border-start d-flex flex-column"
+        className="h-100 border-start d-flex flex-column"
         style={{
+          backgroundColor: 'var(--bg-card)',
           width: "100%",
           maxWidth: "380px",
           boxShadow: "-10px 0 25px -5px rgba(0, 0, 0, 0.08)",
@@ -74,14 +75,14 @@ export default function FilterDrawer({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="px-4 py-3 border-bottom d-flex justify-content-between align-items-center bg-light flex-shrink-0">
+        <div className="px-4 py-3 border-bottom d-flex justify-content-between align-items-center flex-shrink-0" style={{ backgroundColor: 'var(--bg-app)' }}>
           <div className="d-flex align-items-center gap-2">
-            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>
+            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '32px', height: '32px', backgroundColor: 'var(--border-color)', color: 'var(--text-primary)' }}>
               <i className="hgi-stroke hgi-filter" style={{ fontSize: "1rem" }} />
             </div>
             <div>
-              <h5 className="fw-bold text-dark mb-0" style={{ fontSize: "1rem" }}>Advanced Filters</h5>
-              <p className="text-muted small mb-0" style={{ fontSize: "0.72rem" }}>Configure table results and filters</p>
+              <h5 className="fw-bold mb-0" style={{ fontSize: "1rem", color: 'var(--text-main)' }}>Advanced Filters</h5>
+              <p className="small mb-0" style={{ fontSize: "0.72rem", color: 'var(--text-muted)' }}>Configure table results and filters</p>
             </div>
           </div>
           <button
@@ -104,7 +105,7 @@ export default function FilterDrawer({
               transition: 'background 0.15s ease, color 0.15s ease',
             }}
             onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = '#f1f5f9';
+              (e.currentTarget as HTMLButtonElement).style.background = 'var(--border-color)';
               (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-main)';
             }}
             onMouseLeave={e => {
@@ -120,26 +121,26 @@ export default function FilterDrawer({
         <div className="flex-grow-1 overflow-y-auto px-4 py-4" style={{ fontSize: '0.85rem' }}>
           {/* Quick Search */}
           <div className="mb-4">
-            <label className="form-label fw-bold text-secondary text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em' }}>Search</label>
+            <label className="form-label fw-bold text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Search</label>
             <div className="position-relative">
               <input
                 type="text"
                 className="form-control px-3 py-2 shadow-none"
                 placeholder="Search name, email, phone..."
-                style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem' }}
+                style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)' }}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <i className="hgi-stroke hgi-search-01 position-absolute text-muted" style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem' }}></i>
+              <i className="hgi-stroke hgi-search-01 position-absolute" style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem', color: 'var(--text-muted)' }}></i>
             </div>
           </div>
 
           {/* Access Role */}
           <div className="mb-4">
-            <label className="form-label fw-bold text-secondary text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em' }}>Access Role</label>
+            <label className="form-label fw-bold text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Access Role</label>
             <select
               className="form-select px-3 py-2 shadow-none"
-              style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)' }}
               value={roleFilter}
               onChange={(e) => setRoleFilter(e.target.value)}
             >
@@ -153,10 +154,10 @@ export default function FilterDrawer({
 
           {/* User Status */}
           <div className="mb-4">
-            <label className="form-label fw-bold text-secondary text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em' }}>User Status</label>
+            <label className="form-label fw-bold text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>User Status</label>
             <select
               className="form-select px-3 py-2 shadow-none"
-              style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: '#ffffff' }}
+              style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)' }}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
@@ -171,10 +172,10 @@ export default function FilterDrawer({
           {/* Staff Category */}
           {roleFilter === "STAFF_ADMIN" && (
             <div className="mb-4">
-              <label className="form-label fw-bold text-secondary text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em' }}>Staff Category</label>
+              <label className="form-label fw-bold text-uppercase mb-2" style={{ fontSize: '0.72rem', letterSpacing: '0.05em', color: 'var(--text-muted)' }}>Staff Category</label>
               <select
                 className="form-select px-3 py-2 shadow-none"
-                style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: '#ffffff' }}
+                style={{ borderRadius: '6px', border: '1px solid var(--border-color)', fontSize: '0.85rem', backgroundColor: 'var(--bg-card)' }}
                 value={staffCategoryFilter}
                 onChange={(e) => setStaffCategoryFilter(e.target.value)}
               >
@@ -190,19 +191,19 @@ export default function FilterDrawer({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 border-top d-flex gap-2 bg-light flex-shrink-0">
+        <div className="px-4 py-3 border-top d-flex gap-2 flex-shrink-0" style={{ backgroundColor: 'var(--bg-app)' }}>
           <button
             type="button"
-            className="btn btn-outline-secondary w-50 d-flex align-items-center justify-content-center gap-2"
-            style={{ borderRadius: '6px', fontSize: '0.85rem' }}
+            className="btn w-50 d-flex align-items-center justify-content-center gap-2"
+            style={{ borderRadius: '6px', fontSize: '0.85rem', border: '1px solid var(--border-color)', color: 'var(--text-primary)', backgroundColor: 'var(--bg-card)' }}
             onClick={onReset}
           >
             <i className="hgi-stroke hgi-reload-01" /> Reset All
           </button>
           <button
             type="button"
-            className="btn btn-primary w-50 d-flex align-items-center justify-content-center gap-2 text-white border-0"
-            style={{ borderRadius: '6px', fontSize: '0.85rem', backgroundColor: 'var(--primary)' }}
+            className="btn w-50 d-flex align-items-center justify-content-center gap-2 border-0"
+            style={{ borderRadius: '6px', fontSize: '0.85rem', backgroundColor: 'var(--dark-section)', color: 'var(--bg-card)', fontWeight: '600' }}
             onClick={onClose}
           >
             Apply Filters

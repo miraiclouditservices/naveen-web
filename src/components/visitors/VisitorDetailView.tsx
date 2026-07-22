@@ -40,7 +40,7 @@ const formatDateTime = (dateStr?: string, timeStr?: string) => {
       const displayMinutes = minutes.toString().padStart(2, "0");
       return `${datePart}, ${displayHours}:${displayMinutes} ${ampm}`;
     }
-  } catch {}
+  } catch { }
 
   return `${datePart}, ${timeStr}`;
 };
@@ -61,13 +61,13 @@ const formatValue = (label: string, value: any) => {
 
   if (isPhone && /^\+?[0-9\s\-()]{7,20}$/.test(stringVal)) {
     return (
-      <a href={`tel:${stringVal}`} style={{ color: "#014aad", textDecoration: "none", fontWeight: 600 }}>
+      <a href={`tel:${stringVal}`} style={{ color: "var(--dark-section)", textDecoration: "none", fontWeight: 600 }}>
         <i className="bi bi-telephone me-1" />{value}
       </a>
     );
   } else if (isEmail && stringVal.includes("@")) {
     return (
-      <a href={`mailto:${stringVal}`} style={{ color: "#014aad", textDecoration: "none", fontWeight: 600 }}>
+      <a href={`mailto:${stringVal}`} style={{ color: "var(--dark-section)", textDecoration: "none", fontWeight: 600 }}>
         <i className="bi bi-envelope me-1" />{value}
       </a>
     );
@@ -82,12 +82,12 @@ const ROW = ({ label, value }: { label: string; value: any }) => (
       gridTemplateColumns: "170px 16px 1fr",
       alignItems: "flex-start",
       padding: "10px 0",
-      borderBottom: "1px solid #f1f5f9",
+      borderBottom: "1px solid var(--border-color)",
     }}
   >
-    <span style={{ fontSize: "0.83rem", color: "#6b7280", fontWeight: 500 }}>{label}</span>
-    <span style={{ color: "#d1d5db" }}>:</span>
-    <span style={{ fontSize: "0.85rem", color: "#1f2937", fontWeight: 500 }}>{formatValue(label, value)}</span>
+    <span style={{ fontSize: "0.83rem", color: "var(--text-muted)", fontWeight: 500 }}>{label}</span>
+    <span style={{ color: "var(--text-muted)" }}>:</span>
+    <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 500 }}>{formatValue(label, value)}</span>
   </div>
 );
 
@@ -103,8 +103,8 @@ export default function VisitorDetailView({
   const statusText = viewItem.status === "Checked-Out" ? "Checked-Out" : "Checked-In";
 
   const cfg: Record<string, { bg: string; cl: string; icon: string; msg: string }> = {
-    "Checked-In":  { bg: "#dbeafe", cl: "#1e40af", icon: "bi-door-open-fill",    msg: "Visitor is currently inside the building." },
-    "Checked-Out": { bg: "#f1f5f9", cl: "#475569", icon: "bi-door-closed-fill",  msg: "Visitor has checked out." },
+    "Checked-In": { bg: "#dbeafe", cl: "#1e40af", icon: "bi-door-open-fill", msg: "Visitor is currently inside the building." },
+    "Checked-Out": { bg: "var(--border-color)", cl: "var(--text-primary)", icon: "bi-door-closed-fill", msg: "Visitor has checked out." },
   };
   const ss = cfg[statusText];
 
@@ -120,39 +120,45 @@ export default function VisitorDetailView({
         >
           {/* Header */}
           <div
-            className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            className="d-flex align-items-center justify-content-between px-4 py-2"
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
-            <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
+            <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "0.95rem" }}>
               View Visitor Details
             </h5>
             <button
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", lineHeight: 1, cursor: "pointer",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--text-main)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
           </div>
 
           {/* Body */}
-          <div style={{ padding: "24px", maxHeight: "calc(100vh - 180px)", overflowY: "auto" }}>
+          <div style={{ padding: "24px", maxHeight: "calc(100vh - 180px)", overflowY: "auto", backgroundColor: "var(--bg-card)" }}>
             {/* Center Avatar Badge */}
             <div className="text-center mb-4">
               <div
-                className="d-inline-flex align-items-center justify-content-center mb-2 rounded-circle text-white fw-bold"
-                style={{ width: 56, height: 56, backgroundColor: "#014aad", fontSize: "1.3rem" }}
+                className="d-inline-flex align-items-center justify-content-center mb-2 rounded-circle text-primary fw-bold"
+                style={{
+                  width: 56,
+                  height: 56,
+                  backgroundColor: "#eff6ff",
+                  fontSize: "1.3rem",
+                  border: "1px solid #dbeafe"
+                }}
               >
                 <i className="bi bi-person-badge"></i>
               </div>
               <div>
-                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "#1f2937" }}>
+                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "var(--text-main)" }}>
                   {viewItem.visitorName}
                 </h5>
                 <span
@@ -161,8 +167,8 @@ export default function VisitorDetailView({
                     backgroundColor: ss.bg,
                     color: ss.cl,
                     border: `1px solid ${ss.cl}30`,
-                    borderRadius: 6,
-                    fontSize: "0.85rem",
+                    borderRadius: "var(--radius-full)",
+                    fontSize: "0.825rem",
                   }}
                 >
                   <i className={`bi ${ss.icon} me-1`} />
@@ -173,7 +179,7 @@ export default function VisitorDetailView({
 
             {/* Section 1: Visitor Information */}
             <div className="mb-4">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <i className="bi bi-person-badge-fill text-primary me-2"></i>
                 Visitor Information
               </h6>
@@ -188,7 +194,7 @@ export default function VisitorDetailView({
             {/* Section 2: Visiting Location */}
             {(viewItem.property || viewItem.floor || viewItem.unit) && (
               <div className="mb-4 pt-2">
-                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                   <i className="bi bi-geo-alt-fill text-primary me-2"></i>
                   Visiting Location
                 </h6>
@@ -224,7 +230,7 @@ export default function VisitorDetailView({
 
             {/* Section 3: Visit Details */}
             <div className="mb-4 pt-2">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <i className="bi bi-calendar-check-fill text-primary me-2"></i>
                 Visit Details
               </h6>
@@ -236,11 +242,11 @@ export default function VisitorDetailView({
 
             {/* Section 4: Security Approval & Audit */}
             <div className="mb-2 pt-2">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.85rem", color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
                 <i className="bi bi-shield-fill-check text-primary me-2"></i>
                 Audit Details
               </h6>
-              
+
               <ROW label="Created By" value={viewItem.createdBy ? `${viewItem.createdBy.name} (${viewItem.createdBy.role || "—"})${viewItem.createdBy.email ? ` — ${viewItem.createdBy.email}` : ""}` : "—"} />
               <ROW label="Registered At" value={fmt(viewItem.createdAt)} />
 
@@ -255,17 +261,23 @@ export default function VisitorDetailView({
 
           {/* Footer */}
           <div
-            className="d-flex justify-content-end gap-3 px-4 py-3"
-            style={{ borderTop: "1px solid #f1f5f9", background: "#f8fafc" }}
+            className="d-flex justify-content-end gap-3 px-4 py-2"
+            style={{
+              borderTop: "1px solid var(--border-color)",
+              background: "var(--bg-app)"
+            }}
           >
-             <button
+            <button
               type="button"
               disabled={isCheckingOut}
               onClick={onClose}
-              className="btn px-4 py-2 fw-semibold"
+              className="btn px-4 py-2 fw-semibold btn-light border"
               style={{
-                border: "1px solid #d1d5db", borderRadius: "6px",
-                fontSize: "0.85rem", color: "#374151", backgroundColor: "#fff",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.85rem",
+                color: "var(--text-main)",
+                backgroundColor: "var(--bg-card)",
+                borderColor: "var(--border-color)"
               }}
             >
               Close
@@ -277,7 +289,12 @@ export default function VisitorDetailView({
                 disabled={isCheckingOut}
                 onClick={() => onCheckOut(viewItem._id)}
                 className="btn px-4 py-2 fw-semibold text-white d-flex align-items-center gap-2"
-                style={{ backgroundColor: "#dc2626", border: "none", borderRadius: "6px", fontSize: "0.85rem" }}
+                style={{
+                  backgroundColor: "#dc2626",
+                  border: "none",
+                  borderRadius: "var(--radius-md)",
+                  fontSize: "0.85rem"
+                }}
               >
                 {isCheckingOut ? (
                   <>
@@ -296,7 +313,12 @@ export default function VisitorDetailView({
               disabled={isCheckingOut}
               onClick={() => onEdit(viewItem)}
               className="btn px-4 py-2 fw-semibold text-white"
-              style={{ backgroundColor: "#014aad", border: "none", borderRadius: "6px", fontSize: "0.85rem" }}
+              style={{
+                backgroundColor: "var(--dark-section)",
+                border: "none",
+                borderRadius: "var(--radius-md)",
+                fontSize: "0.85rem"
+              }}
             >
               Edit Details
             </button>

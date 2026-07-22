@@ -192,7 +192,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
           {/* Header */}
           <div
             className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             <div className="d-flex align-items-center gap-2">
               <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
@@ -208,11 +208,11 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", cursor: "pointer", lineHeight: 1,
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -241,7 +241,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                       {approvalLevel === "Office Level"   && "Gate Pass request notification → Office Owner"}
                     </div>
                   </div>
-                  <span style={{ background: apc.color, color: "#fff", borderRadius: "20px", padding: "3px 12px", fontSize: "0.68rem", fontWeight: 700, whiteSpace: "nowrap" }}>
+                  <span style={{ background: apc.color, color: "var(--bg-card)", borderRadius: "20px", padding: "3px 12px", fontSize: "0.68rem", fontWeight: 700, whiteSpace: "nowrap" }}>
                     {approvalLevel}
                   </span>
                 </div>
@@ -250,7 +250,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
               <div className="row g-3">
                 {/* Section 1: Material Details */}
                 <div className="col-12">
-                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-box-seam text-primary me-2"></i>
                     Material Details
                   </h6>
@@ -340,7 +340,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
 
                 {/* Section 2: Visiting Location */}
                 <div className="col-12 mt-4">
-                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-geo-alt-fill text-primary me-2"></i>
                     Visiting Location
                   </h6>
@@ -417,20 +417,20 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                                 className="px-3 py-2 rounded-2 small"
                                 style={{
                                   cursor: "pointer",
-                                  backgroundColor: isSelected ? "#f1f5f9" : "transparent",
-                                  color: isSelected ? "#014aad" : "#334155",
+                                  backgroundColor: isSelected ? "var(--border-color)" : "transparent",
+                                  color: isSelected ? "var(--dark-section)" : "var(--text-primary)",
                                   fontWeight: isSelected ? 600 : 400,
                                 }}
                                 onMouseEnter={e => {
                                   if (!isSelected) {
-                                    e.currentTarget.style.backgroundColor = "#f8fafc";
-                                    e.currentTarget.style.color = "#000";
+                                    e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                    e.currentTarget.style.color = "var(--text-main)";
                                   }
                                 }}
                                 onMouseLeave={e => {
                                   if (!isSelected) {
                                     e.currentTarget.style.backgroundColor = "transparent";
-                                    e.currentTarget.style.color = "#334155";
+                                    e.currentTarget.style.color = "var(--text-primary)";
                                   }
                                 }}
                               >
@@ -444,8 +444,8 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                   )}
 
                   {selPropertyObj && (
-                    <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
-                      <i className="bi bi-geo-alt me-1" style={{ color: "#014aad" }} />
+                    <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
+                      <i className="bi bi-geo-alt me-1" style={{ color: "var(--dark-section)" }} />
                       {selPropertyObj.propertyAddress} · {selPropertyObj.propertyType}
                     </div>
                   )}
@@ -535,20 +535,20 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                                   className="px-3 py-2 rounded-2 small"
                                   style={{
                                     cursor: "pointer",
-                                    backgroundColor: isSelected ? "#f1f5f9" : "transparent",
-                                    color: isSelected ? "#014aad" : "#334155",
+                                    backgroundColor: isSelected ? "var(--border-color)" : "transparent",
+                                    color: isSelected ? "var(--dark-section)" : "var(--text-primary)",
                                     fontWeight: isSelected ? 600 : 400,
                                   }}
                                   onMouseEnter={e => {
                                     if (!isSelected) {
-                                      e.currentTarget.style.backgroundColor = "#f8fafc";
-                                      e.currentTarget.style.color = "#000";
+                                      e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                      e.currentTarget.style.color = "var(--text-main)";
                                     }
                                   }}
                                   onMouseLeave={e => {
                                     if (!isSelected) {
                                       e.currentTarget.style.backgroundColor = "transparent";
-                                      e.currentTarget.style.color = "#334155";
+                                      e.currentTarget.style.color = "var(--text-primary)";
                                     }
                                   }}
                                 >
@@ -562,7 +562,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                     )}
 
                     {selFloorObj && (
-                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
+                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
                         <i className="bi bi-info-circle me-1" />
                         {selFloorObj.totalUnits} units · {selFloorObj.totalSft} sqft
                       </div>
@@ -654,20 +654,20 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                                   className="px-3 py-2 rounded-2 small"
                                   style={{
                                     cursor: "pointer",
-                                    backgroundColor: isSelected ? "#f1f5f9" : "transparent",
-                                    color: isSelected ? "#014aad" : "#334155",
+                                    backgroundColor: isSelected ? "var(--border-color)" : "transparent",
+                                    color: isSelected ? "var(--dark-section)" : "var(--text-primary)",
                                     fontWeight: isSelected ? 600 : 400,
                                   }}
                                   onMouseEnter={e => {
                                     if (!isSelected) {
-                                      e.currentTarget.style.backgroundColor = "#f8fafc";
-                                      e.currentTarget.style.color = "#000";
+                                      e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                      e.currentTarget.style.color = "var(--text-main)";
                                     }
                                   }}
                                   onMouseLeave={e => {
                                     if (!isSelected) {
                                       e.currentTarget.style.backgroundColor = "transparent";
-                                      e.currentTarget.style.color = "#334155";
+                                      e.currentTarget.style.color = "var(--text-primary)";
                                     }
                                   }}
                                 >
@@ -681,7 +681,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                     )}
 
                     {selUnitObj && (
-                      <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "4px" }}>
+                      <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
                         <i className="bi bi-person me-1" />
                         {selUnitObj.ownerName || "No owner"} · {selUnitObj.unitType} · {selUnitObj.sqft} sqft
                       </div>
@@ -691,7 +691,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
 
                 {/* Section 3: Movement Details */}
                 <div className="col-12 mt-4">
-                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-truck text-primary me-2"></i>
                     Movement Information
                   </h6>
@@ -752,7 +752,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                 {mode !== "create" && (
                   <>
                     <div className="col-12 mt-4">
-                      <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                      <h6 className="fw-bold mb-1 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                         <i className="bi bi-shield-lock-fill text-primary me-2"></i>
                         Security Approval Status
                       </h6>
@@ -795,7 +795,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
             </div>
 
             {/* Footer */}
-            <div className="d-flex justify-content-between align-items-center px-4 py-4" style={{ borderTop: "1px solid #f1f5f9", background: "#f8fafc" }}>
+            <div className="d-flex justify-content-between align-items-center px-4 py-4" style={{ borderTop: "1px solid var(--border-color)", background: "var(--bg-app)" }}>
               <div className="d-flex align-items-center gap-2">
                 <i className={`bi ${apc.icon}`} style={{ color: apc.color, fontSize: "0.9rem" }} />
                 <span style={{ fontSize: "0.75rem", fontWeight: 700, color: apc.color }}>
@@ -817,7 +817,7 @@ export default function MaterialFormModal({ isOpen, onClose, onSave, editData, m
                     type="submit"
                     className="btn btn-primary px-5 fw-bold text-white shadow-sm border-0"
                     disabled={isSubmitting}
-                    style={{ backgroundColor: "#014aad", fontSize: "0.85rem", borderRadius: "6px" }}
+                    style={{ backgroundColor: "var(--dark-section)", fontSize: "0.85rem", borderRadius: "6px" }}
                   >
                     {isSubmitting ? (
                       <>

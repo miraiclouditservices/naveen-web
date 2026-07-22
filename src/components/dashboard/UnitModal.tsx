@@ -5,13 +5,13 @@ import { api } from "@/utils/api";
 
 const FIELD_STYLE: React.CSSProperties = {
   borderRadius: "6px",
-  border: "1px solid #d1d5db",
+  border: "1px solid var(--text-muted)",
   fontSize: "0.88rem",
   padding: "8px 12px",
   width: "100%",
   outline: "none",
-  backgroundColor: "#fff",
-  color: "#111827",
+  backgroundColor: "var(--bg-card)",
+  color: "var(--text-main)",
 };
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -256,7 +256,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                       type="text" 
                       value={remainingFloorSft.toLocaleString()} 
                       readOnly 
-                      style={{ ...FIELD_STYLE, backgroundColor: "#f9fafb", color: remainingFloorSft < 0 ? "#ef4444" : "#4b5563", fontWeight: 700 }} 
+                      style={{ ...FIELD_STYLE, backgroundColor: "var(--bg-app)", color: remainingFloorSft < 0 ? "#ef4444" : "#4b5563", fontWeight: 700 }} 
                     />
                     <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
                   </div>
@@ -288,7 +288,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
               type="submit" 
               className="btn btn-sm fw-bold text-white px-4 py-2" 
               disabled={isSubmitting || unitSqft > trueAvailableFloorSft || !formData.floor}
-              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: '#014aad' }}
+              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: 'var(--dark-section)' }}
             >
               {isSubmitting ? "Saving..." : (editData ? 'Update Unit' : 'Create Unit')}
             </button>

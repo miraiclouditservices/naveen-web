@@ -167,7 +167,7 @@ export default function MeetingRoomFormModal({
           {/* Header */}
           <div
             className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
               {mode === "create" ? "Add Meeting Room / Hall" : "Update Room Details"}
@@ -176,11 +176,11 @@ export default function MeetingRoomFormModal({
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", cursor: "pointer", lineHeight: 1,
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -258,20 +258,20 @@ export default function MeetingRoomFormModal({
                               className="px-3 py-2 rounded-2 small"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.property === p._id ? "#f1f5f9" : "transparent",
-                                color: formData.property === p._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.property === p._id ? "var(--border-color)" : "transparent",
+                                color: formData.property === p._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.property === p._id ? 600 : 400,
                               }}
                               onMouseEnter={e => {
                                 if (formData.property !== p._id) {
-                                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                                  e.currentTarget.style.color = "#000";
+                                  e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                  e.currentTarget.style.color = "var(--text-main)";
                                 }
                               }}
                               onMouseLeave={e => {
                                 if (formData.property !== p._id) {
                                   e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#334155";
+                                  e.currentTarget.style.color = "var(--text-primary)";
                                 }
                               }}
                             >
@@ -359,20 +359,20 @@ export default function MeetingRoomFormModal({
                               className="px-3 py-2 rounded-2 small"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.floor === f._id ? "#f1f5f9" : "transparent",
-                                color: formData.floor === f._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.floor === f._id ? "var(--border-color)" : "transparent",
+                                color: formData.floor === f._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.floor === f._id ? 600 : 400,
                               }}
                               onMouseEnter={e => {
                                 if (formData.floor !== f._id) {
-                                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                                  e.currentTarget.style.color = "#000";
+                                  e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                  e.currentTarget.style.color = "var(--text-main)";
                                 }
                               }}
                               onMouseLeave={e => {
                                 if (formData.floor !== f._id) {
                                   e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#334155";
+                                  e.currentTarget.style.color = "var(--text-primary)";
                                 }
                               }}
                             >
@@ -450,7 +450,7 @@ export default function MeetingRoomFormModal({
                           }}
                           className="px-3 py-2 rounded-2 small text-secondary"
                           style={{ cursor: "pointer" }}
-                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#f8fafc")}
+                          onMouseEnter={e => (e.currentTarget.style.backgroundColor = "var(--bg-app)")}
                           onMouseLeave={e => (e.currentTarget.style.backgroundColor = "transparent")}
                         >
                           -- Standalone Meeting Room (No Unit Link) --
@@ -471,20 +471,20 @@ export default function MeetingRoomFormModal({
                               className="px-3 py-2 rounded-2 small"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.unit === u._id ? "#f1f5f9" : "transparent",
-                                color: formData.unit === u._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.unit === u._id ? "var(--border-color)" : "transparent",
+                                color: formData.unit === u._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.unit === u._id ? 600 : 400,
                               }}
                               onMouseEnter={e => {
                                 if (formData.unit !== u._id) {
-                                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                                  e.currentTarget.style.color = "#000";
+                                  e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                  e.currentTarget.style.color = "var(--text-main)";
                                 }
                               }}
                               onMouseLeave={e => {
                                 if (formData.unit !== u._id) {
                                   e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#334155";
+                                  e.currentTarget.style.color = "var(--text-primary)";
                                 }
                               }}
                             >
@@ -569,7 +569,7 @@ export default function MeetingRoomFormModal({
               <button
                 type="submit"
                 className="btn btn-sm px-3 fw-bold text-white shadow-sm border-0 rounded-3"
-                style={{ backgroundColor: "#014aad" }}
+                style={{ backgroundColor: "var(--dark-section)" }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

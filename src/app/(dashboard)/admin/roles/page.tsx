@@ -8,7 +8,7 @@ export default function RolesPage() {
     {
       name: "SUPER_ADMIN",
       description: "Global system administrator with unrestricted access.",
-      color: "#014aad", // Emerald
+      color: "var(--dark-section)", // Emerald
       bgClass: "bg-success bg-opacity-10 text-success",
       permissions: [
         "Create & Manage Properties",
@@ -56,7 +56,7 @@ export default function RolesPage() {
     {
       name: "Tenant",
       description: "Individual occupant within an Office Owner's space.",
-      color: "#64748B", // Slate
+      color: "var(--text-muted)", // Slate
       bgClass: "bg-secondary bg-opacity-10 text-secondary",
       permissions: [
         "View Personal Lease",
@@ -78,7 +78,7 @@ export default function RolesPage() {
       <div className="row g-4 mt-2">
         {roles.map((role) => (
           <div key={role.name} className="col-lg-6">
-            <div className="card shadow-sm border-0 rounded-4 h-100 p-4" style={{ backgroundColor: '#ffffff' }}>
+            <div className="card shadow-sm border-0 rounded-4 h-100 p-4" style={{ backgroundColor: 'var(--bg-card)' }}>
               <div className="d-flex justify-content-between align-items-start mb-3">
                 <div className="d-flex align-items-center gap-3">
                   <div className={`rounded-circle d-flex align-items-center justify-content-center ${role.bgClass}`} style={{ width: '50px', height: '50px' }}>

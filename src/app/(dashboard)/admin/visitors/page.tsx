@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
 import VisitorFormModal from "@/components/visitors/VisitorFormModal";
 import VisitorDetailView from "@/components/visitors/VisitorDetailView";
@@ -8,9 +8,10 @@ import VisitorFilterDrawer from "@/components/visitors/VisitorFilterDrawer";
 import Table, { TableColumn } from "@/components/common/Table";
 import { ModalMode } from "@/components/dashboard/AssetModal";
 
+
 const formatDateTime = (dateStr?: string, timeStr?: string) => {
   if (!timeStr || timeStr === "-" || timeStr === "") {
-    return <span className="text-muted" style={{ fontSize: "0.85rem" }}>—</span>;
+    return <span className="text-muted" style={{ fontSize: "0.8rem" }}>—</span>;
   }
   let datePart = "";
   try {
@@ -47,10 +48,10 @@ const formatDateTime = (dateStr?: string, timeStr?: string) => {
 
   return (
     <div>
-      <div className="fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
+      <div className="fw-semibold text-dark" style={{ fontSize: "0.82rem" }}>
         {datePart}
       </div>
-      <div className="text-muted" style={{ fontSize: "0.74rem", marginTop: "2px" }}>
+      <div className="text-muted" style={{ fontSize: "0.72rem", marginTop: "1px" }}>
         {timePart}
       </div>
     </div>
@@ -58,123 +59,137 @@ const formatDateTime = (dateStr?: string, timeStr?: string) => {
 };
 
 export default function VisitorsPage() {
+  // ── States ────────────────────────────────────────────────────────────────
+  const [visitors, setVisitors] = useState<any[]>([]);
+  const [properties, setProperties] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, todayCount: 0, checkedIn: 0, pending: 0, approved: 0, checkedOut: 0, rejected: 0 });
+  
+  // Filters
   const [searchTerm, setSearchTerm] = useState("");
-  const [dateFilter, setDateFilter] = useState("Select Date");
-  const [purposeFilter, setPurposeFilter] = useState("Purpose: All");
-  const [statusFilter, setStatusFilter] = useState("Visit Status: All");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [locationFilter, setLocationFilter] = useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [dateFilter, setDateFilter] = useState(""); // YYYY-MM-DD format
+  const [purposeFilter, setPurposeFilter] = useState("All");
+  
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
 
+  // Modals & Details
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<ModalMode>("create");
   const [selectedVisitor, setSelectedVisitor] = useState<any>(null);
-
-  const [visitors, setVisitors] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [stats, setStats] = useState({ total: 0, todayCount: 0, checkedIn: 0, pending: 0, approved: 0, checkedOut: 0, rejected: 0 });
   const [viewItem, setViewItem] = useState<any>(null);
   const [confirmCheckOutId, setConfirmCheckOutId] = useState<string | null>(null);
   const [checkingOutId, setCheckingOutId] = useState<string | null>(null);
-  const [showFilters, setShowFilters] = useState(false);
 
-  const [currentUser, setCurrentUser] = useState<any>(null);
-
-  // Pagination states
+  // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
 
+  // Debounce Search input (300ms)
+  const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const handleSearchChange = (val: string) => {
+    setSearchQuery(val);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      setDebouncedSearch(val);
+      setCurrentPage(1);
+    }, 300);
+  };
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // ── Fetch Auth / Profile ──────────────────────────────────────────────────
+  const [currentUser, setCurrentUser] = useState<any>(null);
   useEffect(() => {
     api.get("/auth/me").then(res => {
-      if (res.success) {
-        setCurrentUser(res.data);
-      } else {
-        if (typeof window !== "undefined") {
-          const stored = localStorage.getItem("user");
-          if (stored) {
-            try {
-              setCurrentUser(JSON.parse(stored));
-            } catch { }
-          }
-        }
-      }
+      if (res.success) setCurrentUser(res.data);
     }).catch(() => {
       if (typeof window !== "undefined") {
         const stored = localStorage.getItem("user");
         if (stored) {
-          try {
-            setCurrentUser(JSON.parse(stored));
-          } catch { }
+          try { setCurrentUser(JSON.parse(stored)); } catch {}
         }
       }
     });
   }, []);
 
-  const fetchVisitors = async (page = currentPage) => {
+  // ── Fetch Properties ──────────────────────────────────────────────────────
+  useEffect(() => {
+    api.get("/properties").then(res => {
+      if (res.success) setProperties(res.data);
+    }).catch(err => console.error("Error loading properties:", err));
+  }, []);
+
+  // ── Fetch Stats ───────────────────────────────────────────────────────────
+  const fetchStats = async () => {
+    try {
+      const res = await api.get("/visitors/stats");
+      if (res.success) setStats(res.data);
+    } catch (err) {
+      console.error("Failed to fetch visitor stats:", err);
+    }
+  };
+
+  // ── Fetch Visitors from Backend ───────────────────────────────────────────
+  const fetchVisitors = useCallback(async () => {
     setIsLoading(true);
     try {
-      let queryParams = [];
-      queryParams.push(`page=${page}`);
+      const queryParams = [];
+      queryParams.push(`page=${currentPage}`);
       queryParams.push(`limit=${limit}`);
-      if (searchTerm) {
-        queryParams.push(`search=${encodeURIComponent(searchTerm)}`);
+      
+      if (debouncedSearch) {
+        queryParams.push(`search=${encodeURIComponent(debouncedSearch)}`);
       }
-      if (dateFilter && dateFilter !== "Select Date") {
+      if (dateFilter) {
         queryParams.push(`dateFilter=${encodeURIComponent(dateFilter)}`);
       }
-      if (purposeFilter && purposeFilter !== "Purpose: All") {
+      if (purposeFilter !== "All") {
         queryParams.push(`purpose=${encodeURIComponent(purposeFilter)}`);
       }
-      if (statusFilter && statusFilter !== "Visit Status: All") {
-        queryParams.push(`status=${encodeURIComponent(statusFilter)}`);
+      
+      // Wire Status Filter to backend statuses
+      if (statusFilter !== "All") {
+        let apiStatus = statusFilter;
+        if (statusFilter === "Inside") apiStatus = "Checked-In";
+        if (statusFilter === "Checked Out") apiStatus = "Checked-Out";
+        queryParams.push(`status=${encodeURIComponent(apiStatus)}`);
       }
 
       const queryString = queryParams.length > 0 ? `?${queryParams.join("&")}` : "";
-      const response = await api.get(`/visitors${queryString}`);
-      if (response.success) {
-        setVisitors(response.data);
-        setTotalItems(response.total || response.count || 0);
-        setTotalPages(response.pages || 1);
+      const res = await api.get(`/visitors${queryString}`);
+      if (res.success) {
+        setVisitors(res.data);
+        setTotalItems(res.total || res.count || res.data.length);
+        setTotalPages(res.pages || 1);
       }
     } catch (err) {
       console.error("Failed to fetch visitors:", err);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [currentPage, debouncedSearch, dateFilter, purposeFilter, statusFilter]);
 
-  const fetchStats = async () => {
-    try {
-      const response = await api.get("/visitors/stats");
-      if (response.success) setStats(response.data);
-    } catch (err) {
-      console.error("Failed to fetch visitor stats:", err);
-    }
-  };
-
-  // Fetch visitors when pagination/filters/search changes
   useEffect(() => {
-    fetchVisitors(currentPage);
+    fetchVisitors();
     fetchStats();
-  }, [currentPage, searchTerm, dateFilter, purposeFilter, statusFilter]);
+  }, [fetchVisitors]);
 
-  // Reset to page 1 when filters or search change
+  // Reset to page 1 on filter changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchTerm, dateFilter, purposeFilter, statusFilter]);
+  }, [debouncedSearch, dateFilter, purposeFilter, statusFilter, locationFilter]);
 
-  const handleOpenModal = (mode: ModalMode, visitor: any = null) => {
-    if (mode === "view") { setViewItem(visitor); return; }
-    setModalMode(mode);
-    setSelectedVisitor(visitor);
-    setIsModalOpen(true);
-  };
-
+  // ── Save Visitor ──────────────────────────────────────────────────────────
   const handleSaveVisitor = async (savedData: any) => {
     try {
-      const response =
-        modalMode === "edit"
-          ? await api.put(`/visitors/${savedData._id}`, savedData)
-          : await api.post("/visitors", savedData);
+      const response = modalMode === "edit"
+        ? await api.put(`/visitors/${savedData._id}`, savedData)
+        : await api.post("/visitors", savedData);
       if (response.success) {
         fetchVisitors();
         fetchStats();
@@ -185,6 +200,7 @@ export default function VisitorsPage() {
     setIsModalOpen(false);
   };
 
+  // ── Checkout Visitor ──────────────────────────────────────────────────────
   const handleCheckOut = async (id: string) => {
     setCheckingOutId(id);
     try {
@@ -205,143 +221,180 @@ export default function VisitorsPage() {
     return false;
   };
 
-
-
+  // ── Reset Filters ─────────────────────────────────────────────────────────
   const handleReset = () => {
-    setSearchTerm("");
-    setDateFilter("Select Date");
-    setPurposeFilter("Purpose: All");
-    setStatusFilter("Visit Status: All");
+    setSearchQuery("");
+    setDebouncedSearch("");
+    setLocationFilter("All");
+    setStatusFilter("All");
+    setDateFilter("");
+    setPurposeFilter("All");
     setCurrentPage(1);
+    setSelectedRows([]);
   };
 
-  const activeFilters = [
-    searchTerm.trim() !== "",
-    dateFilter !== "Select Date",
-    purposeFilter !== "Purpose: All" && purposeFilter !== "All",
-    statusFilter !== "Visit Status: All" && statusFilter !== "All",
-  ].filter(Boolean).length;
+  // ── Row selection helpers ─────────────────────────────────────────────────
+  const handleSelectRow = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRows(prev => [...prev, id]);
+    } else {
+      setSelectedRows(prev => prev.filter(x => x !== id));
+    }
+  };
+
+  const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedRows(filteredVisitors.map(v => v._id));
+    } else {
+      setSelectedRows([]);
+    }
+  };
+
+  // Client-side sub-filter for Location/Property
+  const filteredVisitors = visitors.filter(v => {
+    if (locationFilter !== "All") {
+      const propName = v.property?.propertyName || v.placeOfVisit || "Head Office";
+      if (propName !== locationFilter) return false;
+    }
+    return true;
+  });
+
+  const handleOpenModal = (mode: ModalMode, visitor: any = null) => {
+    if (mode === "view") { setViewItem(visitor); return; }
+    setModalMode(mode);
+    setSelectedVisitor(visitor);
+    setIsModalOpen(true);
+  };
 
   const isSuperAdmin = currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "Admin" || currentUser?.role === "Super Admin";
   const isStaffAdmin = currentUser?.role === "STAFF_ADMIN" || currentUser?.role === "Staff Admin" || currentUser?.role === "Staff";
-  const showAddButton = isSuperAdmin || isStaffAdmin;
+  const isFloorAdmin = currentUser?.role === "FLOOR_ADMIN" || currentUser?.role === "Floor Admin";
+  const isOfficeOwner = currentUser?.role === "OFFICE_OWNER" || currentUser?.role === "Office Owner" || currentUser?.role === "Owner";
+  const isSecurity = currentUser?.role === "Watchman" || currentUser?.role === "Security" || currentUser?.role === "WATCHMAN";
 
+  const permissions = currentUser?.permissions || [];
+  const hasAccess = (permission: string) => isSuperAdmin || permissions.includes(permission);
+
+  const showAddButton = isSuperAdmin || isStaffAdmin || isFloorAdmin || isOfficeOwner || isSecurity || hasAccess("manage_visitors");
+
+  // ── Table Columns (Matching high fidelity mockup) ────────────────────────
   const columns: TableColumn<any>[] = [
     {
-      header: "Visitor Name",
-      render: (visitor: any) => (
-        <div>
-          <div className="fw-bold text-dark" style={{ fontSize: "0.88rem" }}>
-            {visitor.visitorName}
-          </div>
-          <div className="text-muted" style={{ fontSize: "0.78rem", marginTop: "2px" }}>
-            {visitor.visitorContactNumber}
-          </div>
-        </div>
+      header: (
+        <input
+          type="checkbox"
+          className="form-check-input"
+          checked={filteredVisitors.length > 0 && selectedRows.length === filteredVisitors.length}
+          onChange={handleSelectAll}
+        />
+      ),
+      style: { width: 40 },
+      render: (v: any) => (
+        <input
+          type="checkbox"
+          className="form-check-input"
+          checked={selectedRows.includes(v._id)}
+          onChange={e => handleSelectRow(v._id, e)}
+          onClick={e => e.stopPropagation()}
+        />
       ),
     },
     {
-      header: "Property / Flat",
-      render: (visitor: any) => (
-        <div style={{ minWidth: "180px" }}>
-          <div style={{ fontSize: "0.82rem", fontWeight: 700, color: "#1e293b" }}>
-            {visitor.property?.propertyName || visitor.placeOfVisit || "—"}
-          </div>
-          {visitor.floor && (
-            <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "2px" }}>
-              <i className="bi bi-layers me-1" style={{ color: "#014aad" }} />
-              Floor {visitor.floor?.floorNumber || "—"}
-              {visitor.floor?.floorName ? ` (${visitor.floor.floorName})` : ""}
-            </div>
-          )}
-          {visitor.unit && (
-            <div style={{ fontSize: "0.72rem", color: "#64748b", marginTop: "1px" }}>
-              <i className="bi bi-door-open me-1" style={{ color: "#16a34a" }} />
-              Unit {visitor.unit?.unitNumber || "—"}
-              {visitor.unit?.unitType ? (
-                <span
-                  className="ms-1 badge rounded-pill"
-                  style={{ fontSize: "0.62rem", backgroundColor: "#f1f5f9", color: "#475569", padding: "1px 6px" }}
-                >
-                  {visitor.unit.unitType}
-                </span>
-              ) : null}
-            </div>
-          )}
-        </div>
-      ),
-    },
-    {
-      header: "Person to Meet",
-      render: (visitor: any) => (
-        <span className="fw-medium text-dark" style={{ fontSize: "0.85rem" }}>
-          {visitor.personToMeet || "—"}
+      header: "Visitor ID",
+      render: (v: any) => (
+        <span className="fw-semibold text-secondary" style={{ fontSize: "0.8rem" }}>
+          {v.visitorCode || `VIS-${v._id.toString().slice(-5).toUpperCase()}`}
         </span>
-      ),
+      )
     },
     {
-      header: "In Time",
-      render: (visitor: any) => formatDateTime(visitor.visitDate, visitor.inTime),
+      header: "Visitor Name",
+      render: (v: any) => {
+        const initials = v.visitorName ? v.visitorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "VI";
+        const colors = ["#4f46e5", "#0ea5e9", "#06b6d4", "#10b981", "#8b5cf6", "#ec4899"];
+        const charCodeSum = v.visitorName ? v.visitorName.split("").reduce((sum: number, c: string) => sum + c.charCodeAt(0), 0) : 0;
+        const color = colors[charCodeSum % colors.length];
+
+        return (
+          <div className="d-flex align-items-center gap-2">
+            <div
+              className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white shadow-sm"
+              style={{ width: "32px", height: "32px", backgroundColor: color, fontSize: "0.75rem", letterSpacing: "0.02em" }}
+            >
+              {initials}
+            </div>
+            <div className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>{v.visitorName}</div>
+          </div>
+        );
+      }
     },
     {
-      header: "Out Time",
-      render: (visitor: any) => formatDateTime(visitor.outDate || visitor.visitDate, visitor.outTime),
+      header: "Phone",
+      render: (v: any) => <span className="text-muted" style={{ fontSize: "0.8rem" }}>{v.visitorContactNumber || "—"}</span>
+    },
+    {
+      header: "Purpose",
+      render: (v: any) => (
+        <span className="badge bg-light text-dark border px-2 py-1 fw-semibold" style={{ fontSize: "0.72rem" }}>
+          {v.purpose || v.visitPurpose || "Meeting"}
+        </span>
+      )
+    },
+    {
+      header: "Host",
+      render: (v: any) => <span className="text-dark fw-bold" style={{ fontSize: "0.82rem" }}>{v.personToMeet || "—"}</span>
+    },
+    {
+      header: "Location",
+      render: (v: any) => <span className="text-secondary fw-semibold" style={{ fontSize: "0.8rem" }}>{v.property?.propertyName || v.placeOfVisit || "Head Office"}</span>
+    },
+    {
+      header: "Check In",
+      render: (v: any) => formatDateTime(v.visitDate, v.inTime)
+    },
+    {
+      header: "Check Out",
+      render: (v: any) => formatDateTime(v.outDate || v.visitDate, v.outTime)
     },
     {
       header: "Status",
-      render: (visitor: any) => {
-        const s = visitor.status;
-        const cfg: Record<string, { bg: string; color: string; label: string }> = {
-          "Checked-In": { bg: "#dbeafe", color: "#1e40af", label: "🟢 Checked In" },
-          "Checked-Out": { bg: "#f1f5f9", color: "#475569", label: "Checked Out" },
-        };
-        const { bg, color, label } = cfg[s] || cfg["Checked-In"];
+      render: (v: any) => {
+        const isInside = v.status === "Checked-In" || v.status === "Inside" || !v.outTime;
+        const bg = isInside ? "#e0f2fe" : "#e8f7f0";
+        const color = isInside ? "#0284c7" : "#10b981";
+        const label = isInside ? "Inside" : "Checked Out";
         return (
           <span
-            className="badge rounded-pill fw-bold px-2 py-1"
-            style={{ backgroundColor: bg, color, fontSize: "0.7rem" }}
+            className="badge rounded-pill fw-bold px-2.5 py-1"
+            style={{ backgroundColor: bg, color, fontSize: "0.7rem", border: `1px solid ${isInside ? "#bae6fd" : "#a7f3d0"}` }}
           >
             {label}
           </span>
         );
-      },
+      }
     },
     {
       header: "Actions",
-      style: { textAlign: "right" as const },
-      render: (visitor: any) => (
-        <div className="d-flex gap-2 justify-content-end align-items-center" onClick={(e) => e.stopPropagation()}>
+      style: { textAlign: "center" as const },
+      render: (v: any) => (
+        <div className="d-flex justify-content-center gap-1" onClick={e => e.stopPropagation()}>
           <button
             title="View Details"
-            onClick={() => handleOpenModal("view", visitor)}
-            style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
-              alignItems: "center", justifyContent: "center", color: "#1e293b",
-              transition: "background 0.15s",
-            }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            onClick={() => handleOpenModal("view", v)}
+            className="btn btn-sm btn-light border p-1 d-flex align-items-center justify-content-center"
+            style={{ width: 26, height: 26 }}
           >
-            <i className="bi bi-eye" style={{ fontSize: "0.9rem" }} />
+            <i className="bi bi-eye" style={{ fontSize: "0.75rem" }} />
           </button>
-          {visitor.status !== "Checked-Out" && (
+          {v.status !== "Checked-Out" && v.status !== "Checked Out" && v.outTime !== "-" && (
             <button
               title="Check Out"
-              disabled={checkingOutId === visitor._id}
-              onClick={() => setConfirmCheckOutId(visitor._id)}
-              style={{
-                width: 32, height: 32, borderRadius: "6px", border: checkingOutId === visitor._id ? "1px solid #e2e8f0" : "1px solid #fee2e2",
-                background: checkingOutId === visitor._id ? "#f1f5f9" : "#fee2e2", cursor: checkingOutId === visitor._id ? "not-allowed" : "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center", color: checkingOutId === visitor._id ? "#94a3b8" : "#991b1b",
-                transition: "background 0.15s",
-              }}
+              disabled={checkingOutId === v._id}
+              onClick={() => setConfirmCheckOutId(v._id)}
+              className="btn btn-sm btn-light border p-1 d-flex align-items-center justify-content-center"
+              style={{ width: 26, height: 26, color: "#dc2626", backgroundColor: "#fee2e2", borderColor: "#fecaca" }}
             >
-              {checkingOutId === visitor._id ? (
-                <span className="spinner-border spinner-border-sm" style={{ width: "0.85rem", height: "0.85rem" }} />
-              ) : (
-                <i className="bi bi-box-arrow-right" style={{ fontSize: "0.9rem" }} />
-              )}
+              <i className="bi bi-box-arrow-right" style={{ fontSize: "0.75rem" }} />
             </button>
           )}
         </div>
@@ -349,158 +402,304 @@ export default function VisitorsPage() {
     }
   ];
 
+
+
   return (
     <div
-      className="p-0 d-flex flex-column bg-white border rounded-4"
-      style={{ height: "calc(100vh - 104px)", fontFamily: "var(--font-geist-sans)", overflow: "hidden" }}
+      style={{
+        backgroundColor: "#F9F7F3",
+        minHeight: "100vh",
+        padding: "24px",
+        fontFamily: "var(--font-geist-sans), Inter, sans-serif",
+        color: "#202020",
+      }}
     >
-      {/* ── Header ────────────────────────────────────────────────────────── */}
-      <div
-        className="d-flex justify-content-between align-items-center pb-2 pt-3 px-4 flex-shrink-0"
-        style={{ backgroundColor: "#ffffff" }}
-      >
+      {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>Visitor Management</span>
-          {/* VERY SMALL STATS UI */}
-          <div className="d-flex gap-3 mt-1 text-muted" style={{ fontSize: "0.72rem" }}>
-            <span>Total: <strong className="text-dark">{stats.total}</strong></span>
-            <span>·</span>
-            <span className="text-success">Today's: <strong>{stats.todayCount}</strong></span>
-            <span className="text-primary">Checked In: <strong>{stats.checkedIn}</strong></span>
-            <span>·</span>
-            <span className="text-secondary">Checked Out: <strong>{stats.checkedOut}</strong></span>
-          </div>
+          <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
+            Visitor Management System
+          </h2>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+            Monitor, Manage & Secure Your Visitors
+          </p>
         </div>
-
-        <div className="d-flex gap-3 align-items-center">
-          {/* Search */}
-          <div className="position-relative" style={{ width: 260 }}>
-            <input
-              type="text"
-              className="form-control px-3 py-2"
-              placeholder="Search name, contact, purpose..."
-              value={searchTerm}
-              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              style={{ borderRadius: "4px", border: "1px solid #e0e0e0", fontSize: "0.85rem" }}
-            />
-            {searchTerm ? (
-              <button
-                onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
-                style={{
-                  position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer", color: "#94a3b8",
-                  fontSize: "0.85rem", lineHeight: 1,
-                }}
-              >×</button>
-            ) : (
-              <i className="bi bi-search position-absolute text-muted"
-                style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem" }} />
-            )}
-          </div>
-
-          {/* Filter Toggle */}
-          <button
-            className={`btn border d-flex align-items-center justify-content-center position-relative ${showFilters ? "text-white border-primary" : "bg-white text-dark border-light"
-              }`}
-            onClick={() => setShowFilters(true)}
-            style={{
-              width: 40, height: 40, borderRadius: "4px",
-              backgroundColor: showFilters ? "#014aad" : "#fff",
-            }}
-            title="Advanced Filters"
-          >
-            <i className={`bi bi-funnel ${showFilters ? "text-white" : "text-dark"}`} />
-            {activeFilters > 0 && (
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                style={{ fontSize: "0.6rem", padding: "2px 5px" }}
-              >
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          {/* Export */}
-          <button
-            className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-            style={{ height: 40, fontSize: "0.85rem", borderRadius: "4px", fontWeight: 500 }}
-          >
-            <i className="bi bi-download me-2" /> Export
-          </button>
-
-          {/* Add Visitor */}
+        
+        <div className="d-flex gap-2 align-items-center">
           {showAddButton && (
             <button
-              className="btn d-flex align-items-center gap-2 px-4"
-              style={{
-                backgroundColor: "#014aad", color: "#fff", fontWeight: 500,
-                borderRadius: "4px", height: 40, fontSize: "0.85rem", border: "none",
-              }}
               onClick={() => handleOpenModal("create")}
+              className="btn btn-dark btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
+              style={{ backgroundColor: "#040404", borderColor: "#040404", borderRadius: "8px", fontSize: "0.8rem", height: "38px" }}
             >
-              <i className="bi bi-plus-lg" /> Visitor
+              <i className="bi bi-plus-lg"></i> Register Visitor
             </button>
           )}
+          <button
+            className="btn btn-sm btn-white border fw-bold px-3 py-2"
+            style={{ borderRadius: "8px", fontSize: "0.8rem", backgroundColor: "#ffffff", height: "38px" }}
+            onClick={() => alert("Importing CSV...")}
+          >
+            Import
+          </button>
+          <button
+            className="btn btn-sm btn-white border fw-bold px-3 py-2"
+            style={{ borderRadius: "8px", fontSize: "0.8rem", backgroundColor: "#ffffff", height: "38px" }}
+            onClick={() => alert("Exporting data as CSV...")}
+          >
+            Export
+          </button>
         </div>
       </div>
 
-      {/* Active filter chips */}
-      {activeFilters > 0 && (
-        <div className="d-flex align-items-center gap-2 px-4 pb-2 flex-shrink-0 flex-wrap">
-          {searchTerm && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Search: <strong>{searchTerm}</strong>
-              <button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {dateFilter !== "Select Date" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Date: <strong>{dateFilter}</strong>
-              <button onClick={() => { setDateFilter("Select Date"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {purposeFilter !== "Purpose: All" && purposeFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Purpose: <strong>{purposeFilter.replace("Purpose: ", "")}</strong>
-              <button onClick={() => { setPurposeFilter("Purpose: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {statusFilter !== "Visit Status: All" && statusFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Status: <strong>{statusFilter}</strong>
-              <button onClick={() => { setStatusFilter("Visit Status: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          <button
-            onClick={handleReset}
-            className="btn btn-link p-0 text-danger"
-            style={{ fontSize: "0.75rem", textDecoration: "none" }}
-          >
-            Clear all
-          </button>
+      {/* ── 2. BENTO STATS ROW (5 cards) ──────────────────────────────────── */}
+      <div className="row g-3 mb-4">
+        {/* Card 1: Total Visitors */}
+        <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-people text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Total Visitors
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+              {(stats.total || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              All-Time Registered
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* ── Table ─────────────────────────────────────────────────────────── */}
-      <Table
-        columns={columns}
-        data={visitors}
-        isLoading={isLoading}
-        loadingMessage="Fetching visitors..."
-        emptyMessage={
-          activeFilters > 0
-            ? "No visitors match the current filters."
-            : "No visitor records found."
-        }
-        containerClassName="table-responsive-container table-responsive flex-grow-1"
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={limit}
-        onPageChange={setCurrentPage}
-      />
+        {/* Card 2: Today's Visitors */}
+        <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-calendar2-check text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Today's Visitors
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+              {(stats.todayCount || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Check-ins Today
+            </div>
+          </div>
+        </div>
 
-      {/* ── Visitor Form Modal ─────────────────────────────────────────────── */}
+        {/* Card 3: Currently Inside */}
+        <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-door-open text-primary" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Currently Inside
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-primary animate-pulse" style={{ fontSize: "1.1rem" }}>
+              {stats.checkedIn || 0}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              🟢 Live inside properties
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Pre-Registrations */}
+        <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-journal-check text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Pre-Registrations
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+              {(stats.approved + stats.pending || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Upcoming expected
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Blacklisted */}
+        <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-shield-slash text-danger" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Blacklisted
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-danger" style={{ fontSize: "1.1rem" }}>
+              {stats.rejected || 0}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Restricted access
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        {/* Left tabs */}
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+          {[
+            { label: "All Visitors", value: "All" },
+            { label: "Inside", value: "Inside" },
+            { label: "Checked Out", value: "Checked Out" }
+          ].map((tab) => {
+            const isAct = statusFilter === tab.value;
+            return (
+              <button
+                key={tab.label}
+                onClick={() => {
+                  setStatusFilter(tab.value);
+                  setCurrentPage(1);
+                }}
+                className="btn btn-sm"
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: "600",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  backgroundColor: isAct ? "#040404" : "transparent",
+                  color: isAct ? "#FFFFFF" : "#787878",
+                  border: "none",
+                  transition: "all 0.2s",
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right selectors */}
+        <div className="d-flex gap-2 flex-wrap">
+          {/* Property Filter */}
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={locationFilter}
+            onChange={(e) => {
+              setLocationFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Locations</option>
+            {properties.map((p, idx) => (
+              <option key={idx} value={p.propertyName}>{p.propertyName}</option>
+            ))}
+            <option value="Head Office">Head Office</option>
+            <option value="Building A">Building A</option>
+            <option value="Building B">Building B</option>
+            <option value="Building C">Building C</option>
+          </select>
+
+          {/* Purpose Filter */}
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={purposeFilter}
+            onChange={(e) => {
+              setPurposeFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Purposes</option>
+            <option value="Business Meeting">Business Meeting</option>
+            <option value="Client Visit">Client Visit</option>
+            <option value="Interview">Interview</option>
+            <option value="Service">Service</option>
+            <option value="Training">Training</option>
+            <option value="Delivery">Delivery</option>
+          </select>
+
+          {/* Date Input */}
+          <input
+            type="date"
+            className="form-control bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none", color: "#6b7280" }}
+            value={dateFilter}
+            onChange={(e) => {
+              setDateFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          />
+        </div>
+      </div>
+
+      {/* ── 4. BOTTOM DIRECTORY: Visitors Table ───────────────────────────── */}
+      <div className="row g-4 mb-4">
+        <div className="col-lg-12">
+          <div
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: "12px",
+              border: "1px solid #E8E6E3",
+              overflow: "hidden",
+            }}
+          >
+            {/* Table Header controls */}
+            <div className="p-3 bg-white d-flex justify-content-between align-items-center gap-3 flex-wrap border-bottom border-light">
+              <h6 className="fw-bold m-0" style={{ fontSize: "0.95rem" }}>
+                Visitor Directory
+              </h6>
+              <div className="d-flex gap-2 align-items-center">
+                <div className="position-relative">
+                  <input
+                    type="text"
+                    placeholder="Search visitor, host, purpose..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="form-control form-control-sm"
+                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                  />
+                </div>
+                {(searchTerm || searchQuery || locationFilter !== "All" || statusFilter !== "All" || dateFilter || purposeFilter !== "All") && (
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    style={{ borderRadius: "6px", fontSize: "0.78rem" }}
+                    onClick={handleReset}
+                  >
+                    Reset
+                  </button>
+                )}
+                {/* Advanced Filter Drawer toggle */}
+                <button
+                  className="btn btn-sm btn-white border"
+                  style={{ borderRadius: "6px", backgroundColor: "#ffffff" }}
+                  onClick={() => setShowAdvancedFilters(true)}
+                  title="Advanced Filters"
+                >
+                  <i className="bi bi-funnel" style={{ fontSize: "0.85rem" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Table Component */}
+            <Table
+              columns={columns}
+              data={filteredVisitors}
+              isLoading={isLoading}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={limit}
+              onPageChange={setCurrentPage}
+              emptyMessage="No visitors match the current filters."
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. VISITOR REGISTRATION FORM MODAL ────────────────────────────── */}
       {isModalOpen && (
         <VisitorFormModal
           isOpen={isModalOpen}
@@ -511,7 +710,7 @@ export default function VisitorsPage() {
         />
       )}
 
-      {/* ── View Detail Drawer ────────────────────────────────────────────── */}
+      {/* ── 6. VISITOR DETAIL DRAWER / OVERLAY ────────────────────────────── */}
       {viewItem && (
         <VisitorDetailView
           viewItem={viewItem}
@@ -527,12 +726,12 @@ export default function VisitorsPage() {
         />
       )}
 
-      {/* ── Filter Drawer ─────────────────────────────────────────────────── */}
+      {/* ── 7. ADVANCED FILTERS DRAWER ────────────────────────────────────── */}
       <VisitorFilterDrawer
-        isOpen={showFilters}
-        onClose={() => setShowFilters(false)}
+        isOpen={showAdvancedFilters}
+        onClose={() => setShowAdvancedFilters(false)}
         searchTerm={searchTerm}
-        setSearchTerm={v => { setSearchTerm(v); setCurrentPage(1); }}
+        setSearchTerm={v => { setSearchTerm(v); setSearchQuery(v); setDebouncedSearch(v); setCurrentPage(1); }}
         dateFilter={dateFilter}
         setDateFilter={v => { setDateFilter(v); setCurrentPage(1); }}
         purposeFilter={purposeFilter}
@@ -541,9 +740,11 @@ export default function VisitorsPage() {
         setStatusFilter={v => { setStatusFilter(v); setCurrentPage(1); }}
         onReset={handleReset}
       />
+
+      {/* ── 8. CONFIRM CHECK-OUT DIALOG MODAL ─────────────────────────────── */}
       {confirmCheckOutId && (
         <div
-          className="modal show d-block"
+          className="modal show d-block animate-fade-in"
           style={{ backgroundColor: "rgba(0,0,0,0.55)", zIndex: 1200, backdropFilter: "blur(4px)" }}
         >
           <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 400 }}>
@@ -554,7 +755,7 @@ export default function VisitorsPage() {
                 >
                   <i className="bi bi-exclamation-triangle" style={{ fontSize: "1.6rem" }}></i>
                 </div>
-                <h5 className="fw-bold mb-2" style={{ fontSize: "1.1rem", color: "#1f2937" }}>Confirm Check-Out</h5>
+                <h5 className="fw-bold mb-2" style={{ fontSize: "1.1rem", color: "#202020" }}>Confirm Check-Out</h5>
                 <p className="text-muted mb-4" style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
                   Are you sure you want to check out this visitor? This will update their status, out date, and out time.
                 </p>
@@ -564,7 +765,7 @@ export default function VisitorsPage() {
                     className="btn px-4 py-2 fw-semibold"
                     disabled={!!checkingOutId}
                     onClick={() => setConfirmCheckOutId(null)}
-                    style={{ border: "1px solid #d1d5db", borderRadius: "6px", fontSize: "0.85rem", color: "#374151", backgroundColor: "#fff" }}
+                    style={{ border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.85rem", color: "#374151", backgroundColor: "#ffffff" }}
                   >
                     Cancel
                   </button>

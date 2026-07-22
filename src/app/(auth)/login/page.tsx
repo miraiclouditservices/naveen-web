@@ -30,10 +30,12 @@ export default function LoginPage() {
         password
       });
 
-      if (response.success) {
+      if (response && response.success) {
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response.user));
         router.replace('/admin/dashboard');
+      } else if (response && response.error) {
+        setError(response.error);
       }
     } catch (err: any) {
       setError(err.message || "Invalid credentials. Please try again.");
@@ -43,7 +45,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
+    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
 
       {/* Left Panel: Brand & Info with Full Background Image */}
       <div
@@ -223,9 +225,9 @@ export default function LoginPage() {
         }
 
         .custom-input-group {
-          border: 1px solid #cbd5e1;
+          border: 1px solid var(--border-color);
           transition: all 0.2s ease-in-out;
-          background-color: #ffffff;
+          background-color: var(--bg-card);
         }
 
         .custom-input-group:focus-within {
@@ -236,7 +238,7 @@ export default function LoginPage() {
         .custom-checkbox {
           width: 16px;
           height: 16px;
-          border: 1px solid #cbd5e1;
+          border: 1px solid var(--border-color);
           border-radius: 4px;
           cursor: pointer;
         }
@@ -249,7 +251,7 @@ export default function LoginPage() {
         .btn-orange-auth {
           background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%) !important;
           border: none !important;
-          color: #ffffff !important;
+          color: var(--bg-card) !important;
           box-shadow: 0 8px 15px -3px rgba(255, 111, 0, 0.3);
         }
 
@@ -260,24 +262,24 @@ export default function LoginPage() {
         }
 
         .btn-outline-sso {
-          border: 1px solid #cbd5e1;
-          background: #ffffff;
+          border: 1px solid var(--border-color);
+          background: var(--bg-card);
           border-radius: 8px;
-          color: #334155;
+          color: var(--text-primary);
           font-size: 0.8rem;
           font-weight: 600;
           transition: all 0.2s ease;
         }
 
         .btn-outline-sso:hover {
-          background: #f8fafc;
-          border-color: #94a3b8;
+          background: var(--bg-app);
+          border-color: var(--text-muted);
         }
 
         .form-label-custom {
           font-size: 0.72rem;
           font-weight: 700;
-          color: #475569;
+          color: var(--text-primary);
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
@@ -304,7 +306,7 @@ export default function LoginPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #ffffff;
+          color: var(--bg-card);
           font-size: 0.95rem;
         }
         .feature-circle.bg-blue { background: #2563eb; }
@@ -313,7 +315,7 @@ export default function LoginPage() {
         .feature-circle.bg-purple { background: #8b5cf6; }
         .feature-text {
           font-size: 0.62rem;
-          color: #ffffff;
+          color: var(--bg-card);
           font-weight: 600;
         }
 

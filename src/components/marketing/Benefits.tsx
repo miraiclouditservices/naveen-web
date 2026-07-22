@@ -3,110 +3,146 @@
 export default function Benefits() {
   const benefits = [
     {
-      num: "01",
-      title: "Save Time",
-      description: "Automate daily property operations and recurring workflows."
+      icon: "bi-key",
+      title: "One Login",
+      description: "Everything managed from one account."
     },
     {
-      num: "02",
-      title: "Reduce Paperwork",
-      description: "Digital records, agreements and documents in one secure place."
+      icon: "bi-grid-1x2",
+      title: "Modern Dashboard",
+      description: "Real-time business insights."
     },
     {
-      num: "03",
-      title: "Improve Communication",
-      description: "Connect owners, tenants, and staff on a single channel."
+      icon: "bi-people",
+      title: "Role Based Access",
+      description: "Control every employee's permissions."
     },
     {
-      num: "04",
-      title: "Increase Transparency",
-      description: "Real-time reports and audit-ready financial tracking."
+      icon: "bi-cloud",
+      title: "Cloud Based",
+      description: "Access from anywhere, anytime."
+    },
+    {
+      icon: "bi-shield-check",
+      title: "Enterprise Security",
+      description: "Bank-grade encryption & compliance."
+    },
+    {
+      icon: "bi-lightning-charge",
+      title: "Blazing Fast",
+      description: "Engineered for speed at any scale."
     }
   ];
 
   return (
-    <section id="benefits" className="bg-white position-relative" style={{ paddingTop: '25px', paddingBottom: '25px' }}>
+    <section id="benefits" className="benefits-section position-relative overflow-hidden">
       <div className="container">
         {/* Section Header */}
         <div className="text-center mb-5">
           <div className="d-inline-block mb-3">
-            <span className="benefits-badge">Benefits</span>
+            <span className="benefits-badge">WHY ANVAYA360</span>
           </div>
           <h2 className="section-title fw-bold text-dark">
-            Why teams switch to ANVAYA360
+            Built for teams that want to<br className="d-none d-sm-block" /> move fast.
           </h2>
         </div>
-        
+
         {/* Benefits Grid */}
         <div className="row g-4 justify-content-center">
           {benefits.map((item, index) => (
-            <div className="col-lg-3 col-md-6 col-sm-12 animate__animated animate__fadeInUp" key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-              <div className="benefit-card h-100">
-                {/* Faint watermark number */}
-                <div className="watermark-num">{item.num}</div>
-                
+            <div className="col-lg-4 col-md-6 col-sm-12 animate__animated animate__fadeInUp" key={index} style={{ animationDelay: `${index * 0.05}s` }}>
+              <div className="benefit-card">
+                {/* Icon Container */}
+                <div className="icon-circle mb-3">
+                  <i className={`bi ${item.icon}`}></i>
+                </div>
+
                 {/* Title */}
                 <h5 className="benefit-title fw-bold mb-2">{item.title}</h5>
-                
+
                 {/* Description */}
-                <p className="benefit-desc text-muted mb-0">{item.description}</p>
+                <p className="benefit-desc mb-0">{item.description}</p>
               </div>
             </div>
           ))}
         </div>
       </div>
-      
+
       <style jsx global>{`
+        .benefits-section {
+          padding-top: 60px;
+          padding-bottom: 60px;
+          background-color: var(--bg-card);
+          border-top: 1px solid var(--border-color);
+          border-bottom: 1px solid var(--border-color);
+        }
+
         .benefits-badge {
-          background: #eff6ff;
-          border: 1px solid #dbeafe;
-          color: #2563eb;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          color: var(--text-muted);
           font-size: 0.72rem;
           font-weight: 700;
           padding: 6px 16px;
           border-radius: 9999px;
-          text-transform: uppercase;
           letter-spacing: 0.05em;
         }
 
+        .benefits-section .section-title {
+          font-size: 2.2rem;
+          color: var(--text-main);
+          letter-spacing: -0.02em;
+          line-height: 1.2;
+        }
+
+        /* Benefit Cards */
         .benefit-card {
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
-          border-radius: 20px;
-          padding: 30px 24px;
-          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
+          border-radius: 16px;
+          padding: 24px;
+          transition: all 0.2s ease;
           height: 100%;
-          box-shadow: 0 4px 15px -3px rgba(15, 23, 42, 0.01);
+          box-shadow: var(--shadow-sm);
           text-align: left;
-          position: relative;
         }
 
         .benefit-card:hover {
-          transform: translateY(-5px);
-          border-color: #ff7a00;
-          box-shadow: 0 10px 25px -5px rgba(255, 111, 0, 0.06);
+          transform: translateY(-2px);
+          border-color: var(--text-muted);
         }
 
-        .watermark-num {
-          font-size: 3.2rem;
-          font-weight: 800;
-          color: #2563eb;
-          opacity: 0.08;
-          line-height: 1.1;
-          margin-bottom: 6px;
-          user-select: none;
-          letter-spacing: -0.02em;
+        .icon-circle {
+          width: 32px;
+          height: 32px;
+          border-radius: 50%;
+          background-color: var(--border-color);
+          color: var(--dark-section);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 0.9rem;
         }
 
         .benefit-title {
-          font-size: 0.98rem;
-          color: #0f172a;
+          font-size: 0.95rem;
+          color: var(--text-main);
           letter-spacing: -0.01em;
         }
 
         .benefit-desc {
-          font-size: 0.82rem;
+          font-size: 0.8rem;
+          color: var(--text-muted);
           line-height: 1.5;
+        }
+
+        @media (max-width: 991.98px) {
+          .benefits-section .section-title {
+            font-size: 1.8rem;
+          }
+          .benefit-card {
+            padding: 20px;
+          }
         }
       `}</style>
     </section>

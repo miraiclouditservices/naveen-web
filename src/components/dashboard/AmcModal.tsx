@@ -85,7 +85,7 @@ export default function AmcModal({ isOpen, onClose, onSave, editData }: AmcModal
         <div className="modal-content border-0 rounded-4 shadow-2xl bg-white overflow-hidden">
           <div className="modal-header p-4 border-bottom bg-light d-flex justify-content-between align-items-center">
             <div>
-              <h5 className="modal-title fw-bold mb-0" style={{ color: '#0F172A' }}>{editData ? 'Edit AMC Agreement' : 'Add New AMC'}</h5>
+              <h5 className="modal-title fw-bold mb-0" style={{ color: 'var(--text-main)' }}>{editData ? 'Edit AMC Agreement' : 'Add New AMC'}</h5>
               <p className="text-muted small mb-0">Define maintenance contract terms</p>
             </div>
             <button type="button" className="btn-close shadow-none" onClick={onClose}></button>
@@ -170,7 +170,7 @@ export default function AmcModal({ isOpen, onClose, onSave, editData }: AmcModal
               <button 
                 type="submit" className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm border-0"
                 disabled={isSubmitting}
-                style={{ backgroundColor: '#014aad' }}
+                style={{ backgroundColor: 'var(--dark-section)' }}
               >
                 {isSubmitting ? 'Saving...' : 'Save AMC'}
               </button>

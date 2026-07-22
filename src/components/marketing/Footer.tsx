@@ -11,7 +11,7 @@ export default function Footer() {
           {/* Column 1 - Brand */}
           <div className="col-lg-3 col-md-6">
             <Link href="/" className="text-decoration-none d-flex align-items-center mb-4">
-              <span className="brand-text-kalki-footer">ANVAYA360</span>
+              <img src="/anvaya360-logo.png" alt="Anvaya360 Logo" className="footer-logo-img" />
             </Link>
             <p className="text-white-50 mb-4 pe-lg-3 small">
               Smarter property operations. Connected digital ecosystems. Built for global portfolios.
@@ -66,7 +66,7 @@ export default function Footer() {
                 placeholder="Enter email" 
                 style={{ height: '44px', fontSize: '0.85rem' }}
               />
-              <button className="btn btn-orange-nav rounded-end-pill px-4 fw-bold text-white text-nowrap" style={{ fontSize: '0.75rem' }} type="button">Subscribe</button>
+              <button className="btn btn-footer-subscribe rounded-end-pill px-4 fw-bold text-nowrap" style={{ fontSize: '0.75rem' }} type="button">Subscribe</button>
             </div>
           </div>
         </div>
@@ -79,10 +79,10 @@ export default function Footer() {
             </div>
             <div className="col-md-6 text-center text-md-end">
               <div className="d-flex justify-content-center justify-content-md-end gap-4">
-                <a href="#" className="text-white-50 text-decoration-none small hover-text-orange">Privacy</a>
-                <a href="#" className="text-white-50 text-decoration-none small hover-text-orange">Terms</a>
-                <a href="#" className="text-white-50 text-decoration-none small hover-text-orange">Security</a>
-                <a href="#" className="text-white-50 text-decoration-none small hover-text-orange">Status</a>
+                <a href="#" className="text-white-50 text-decoration-none small hover-text-white">Privacy</a>
+                <a href="#" className="text-white-50 text-decoration-none small hover-text-white">Terms</a>
+                <a href="#" className="text-white-50 text-decoration-none small hover-text-white">Security</a>
+                <a href="#" className="text-white-50 text-decoration-none small hover-text-white">Status</a>
               </div>
             </div>
           </div>
@@ -90,28 +90,32 @@ export default function Footer() {
       </div>
 
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@900&family=Orbitron:wght@900&display=swap');
-
         .footer-section {
-          background-color: #0b0f19;
+          background-color: var(--dark-section, #040404);
           border-top: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        .brand-text-kalki-footer {
-          font-family: 'Cinzel', 'Orbitron', serif;
-          font-weight: 900;
-          font-size: 1.3rem;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          background: linear-gradient(135deg, #ffe066 0%, #ff7a00 40%, #ff5500 75%, #cc2200 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0px 2px 4px rgba(255, 85, 0, 0.15));
+        .footer-logo-img {
+          width: 28px;
+          height: 28px;
+          object-fit: contain;
+          margin-right: 8px;
+        }
+
+        .footer-logo-text {
+          font-weight: 800;
+          font-size: 1.2rem;
+          color: #ffffff;
+          letter-spacing: -0.02em;
+        }
+
+        .footer-logo-text span {
+          color: var(--text-muted, #787878);
         }
 
         .footer-header {
           font-size: 0.75rem;
-          color: #ffffff !important;
+          color: var(--bg-card) !important;
           letter-spacing: 0.08em;
         }
 
@@ -120,8 +124,8 @@ export default function Footer() {
           transition: all 0.2s ease-in-out;
         }
 
-        .footer-link:hover, .hover-text-orange:hover {
-          color: #ff7a00 !important;
+        .footer-link:hover, .hover-text-white:hover {
+          color: var(--bg-card, #ffffff) !important;
         }
 
         .social-link {
@@ -139,17 +143,28 @@ export default function Footer() {
         }
 
         .social-link:hover {
-          background: #ff7a00;
-          color: #ffffff;
-          border-color: #ff7a00;
+          background: var(--bg-card, #ffffff);
+          color: var(--dark-section, #040404);
+          border-color: var(--bg-card, #ffffff);
           transform: translateY(-2px);
         }
 
         .newsletter-box input:focus {
           background-color: rgba(255, 255, 255, 0.08) !important;
-          border-color: #ff7a00 !important;
-          color: #ffffff !important;
+          border-color: var(--bg-card, #ffffff) !important;
+          color: var(--bg-card) !important;
           box-shadow: none !important;
+        }
+
+        .btn-footer-subscribe {
+          background-color: var(--bg-card, #ffffff) !important;
+          border: none !important;
+          color: var(--dark-section, #040404) !important;
+          transition: background-color 0.2s ease;
+        }
+
+        .btn-footer-subscribe:hover {
+          background-color: var(--border-color, #E8E6E3) !important;
         }
 
         .mb-2.5 {

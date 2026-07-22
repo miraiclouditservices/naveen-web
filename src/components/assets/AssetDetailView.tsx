@@ -30,12 +30,12 @@ const ROW = ({ label, value }: { label: string; value: React.ReactNode }) => (
       gridTemplateColumns: "170px 16px 1fr",
       alignItems: "flex-start",
       padding: "10px 0",
-      borderBottom: "1px solid #f1f5f9",
+      borderBottom: "1px solid var(--border-color)",
     }}
   >
-    <span style={{ fontSize: "0.83rem", color: "#6b7280", fontWeight: 500 }}>{label}</span>
-    <span style={{ color: "#d1d5db" }}>:</span>
-    <span style={{ fontSize: "0.85rem", color: "#1f2937", fontWeight: 500 }}>{value || "—"}</span>
+    <span style={{ fontSize: "0.83rem", color: "var(--text-muted)", fontWeight: 500 }}>{label}</span>
+    <span style={{ color: "var(--text-muted)" }}>:</span>
+    <span style={{ fontSize: "0.85rem", color: "var(--text-main)", fontWeight: 500 }}>{value || "—"}</span>
   </div>
 );
 
@@ -101,7 +101,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
           {/* ── Dark Header ─────────────────────────────────────────────── */}
           <div
             className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
               View Asset
@@ -110,12 +110,12 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", lineHeight: 1, cursor: "pointer",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -136,7 +136,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
                 <div className="text-center mb-4">
                   <div
                     className="d-inline-flex align-items-center justify-content-center mb-2 rounded-circle text-white fw-bold"
-                    style={{ width: 56, height: 56, backgroundColor: "#014aad", fontSize: "1.3rem" }}
+                    style={{ width: 56, height: 56, backgroundColor: "var(--dark-section)", fontSize: "1.3rem" }}
                   >
                     <i className="bi bi-box-seam"></i>
                   </div>
@@ -145,7 +145,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
                       className="badge px-3 py-1 fw-bold"
                       style={{
                         backgroundColor: "rgba(1,74,173,0.1)",
-                        color: "#014aad",
+                        color: "var(--dark-section)",
                         border: "1px solid rgba(1,74,173,0.25)",
                         borderRadius: 6,
                         fontSize: "0.85rem",
@@ -167,7 +167,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
                 
                 {/* General Info */}
                 <div className="mb-4">
-                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-info-circle-fill text-primary me-2"></i>
                     General Information
                   </h6>
@@ -196,7 +196,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
 
                 {/* Location Info */}
                 <div className="mb-4 pt-2">
-                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-geo-alt-fill text-primary me-2"></i>
                     Location Details
                   </h6>
@@ -268,7 +268,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
 
                 {/* Financial & Warranty Info */}
                 <div className="mb-4 pt-2">
-                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-credit-card-2-back-fill text-primary me-2"></i>
                     Financial & Warranty
                   </h6>
@@ -285,7 +285,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
 
                 {/* Vendor Info */}
                 <div className="mb-4 pt-2">
-                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-person-badge-fill text-primary me-2"></i>
                     Vendor & Support Information
                   </h6>
@@ -296,7 +296,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
 
                 {/* System Audit */}
                 <div className="mb-2 pt-2">
-                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                  <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                     <i className="bi bi-shield-fill-check text-primary me-2"></i>
                     System Information
                   </h6>
@@ -311,15 +311,15 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
           {!loading && asset && (
             <div
               className="d-flex justify-content-end gap-3 px-4 py-3"
-              style={{ borderTop: "1px solid #f1f5f9" }}
+              style={{ borderTop: "1px solid var(--border-color)" }}
             >
               <button
                 type="button"
                 onClick={onClose}
                 className="btn px-4 py-2 fw-semibold"
                 style={{
-                  border: "1px solid #d1d5db", borderRadius: "6px",
-                  fontSize: "0.85rem", color: "#374151", backgroundColor: "#fff",
+                  border: "1px solid var(--text-muted)", borderRadius: "6px",
+                  fontSize: "0.85rem", color: "#374151", backgroundColor: "var(--bg-card)",
                 }}
               >
                 Close
@@ -328,7 +328,7 @@ export default function AssetDetailView({ assetId, onClose, onEdit }: AssetDetai
                 type="button"
                 onClick={onEdit}
                 className="btn px-5 py-2 fw-bold text-white"
-                style={{ backgroundColor: "#014aad", border: "none", borderRadius: "6px", fontSize: "0.85rem" }}
+                style={{ backgroundColor: "var(--dark-section)", border: "none", borderRadius: "6px", fontSize: "0.85rem" }}
               >
                 Edit Asset
               </button>

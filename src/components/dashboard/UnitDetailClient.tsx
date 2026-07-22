@@ -149,12 +149,12 @@ export default function UnitDetailClient({ unitId }: { unitId: string }) {
                 <div
                   key={row.label}
                   className="d-flex justify-content-between align-items-center py-2"
-                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid #f1f5f9" }}
+                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}
                 >
                   <div className="d-flex align-items-center gap-2">
                     <div
                       className="d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 6, color: '#1a73e8' }}
+                      style={{ width: 28, height: 28, backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 6, color: '#1a73e8' }}
                     >
                       <i className={`bi ${row.icon}`} style={{ fontSize: "0.85rem" }}></i>
                     </div>
@@ -172,7 +172,7 @@ export default function UnitDetailClient({ unitId }: { unitId: string }) {
           <div className="bg-white border rounded-4 p-4 h-100 d-flex flex-column justify-content-between" style={{ minHeight: 360 }}>
             <div>
               <h6 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-                <i className="bi bi-person-fill" style={{ color: "#014aad" }}></i> Occupant & Lease Details
+                <i className="bi bi-person-fill" style={{ color: "var(--dark-section)" }}></i> Occupant & Lease Details
               </h6>
 
               {occ ? (

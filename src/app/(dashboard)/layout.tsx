@@ -10,7 +10,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideSidebar = pathname === "/admin/users/create" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/"));
+  const hideSidebar = pathname === "/admin/users/create" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/")) || pathname?.includes("/print") || pathname?.startsWith("/me");
 
   return (
     <div className="d-flex" style={{ backgroundColor: 'var(--color-bg-dashboard)', minHeight: '100vh', fontFamily: 'var(--font-geist-sans)' }}>

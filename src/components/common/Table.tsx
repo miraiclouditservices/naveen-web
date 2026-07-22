@@ -1,7 +1,7 @@
 import React from 'react';
 
 export interface TableColumn<T> {
-  header: string;
+  header: React.ReactNode;
   render: (item: T, index: number) => React.ReactNode;
   style?: React.CSSProperties;
 }
@@ -16,6 +16,7 @@ interface TableProps<T> {
   rowClassName?: (item: T, index: number) => string;
   containerClassName?: string;
   containerStyle?: React.CSSProperties;
+  disableScroll?: boolean;
 
   // Pagination parameters
   currentPage?: number;
@@ -35,6 +36,7 @@ export default function Table<T>({
   rowClassName,
   containerClassName = "table-responsive-container table-responsive mt-3",
   containerStyle,
+  disableScroll = false,
 
   currentPage,
   totalPages,
@@ -43,25 +45,33 @@ export default function Table<T>({
   onPageChange
 }: TableProps<T>) {
   return (
-    <div className="d-flex flex-column flex-grow-1 w-100" style={{ minHeight: 0, overflow: 'hidden' }}>
-      <div className={containerClassName} style={{ ...containerStyle, flexGrow: 1, overflowY: 'auto' }}>
-        <table className="table mb-0 align-middle text-nowrap" style={{ width: "100%", borderCollapse: "separate", borderSpacing: '0 5px' }}>
+    <div
+      className={disableScroll ? "w-100" : "d-flex flex-column flex-grow-1 w-100"}
+      style={disableScroll ? {} : { minHeight: 0, overflow: 'hidden' }}
+    >
+      <div
+        className={containerClassName}
+        style={disableScroll ? { ...containerStyle } : { minHeight: '320px', maxHeight: '500px', ...containerStyle, flexGrow: 1, overflowY: 'auto' }}
+      >
+        <table className="table mb-0 align-middle text-nowrap" style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr className="border-0">
               {columns.map((col, i) => (
                 <th
-                  key={col.header}
-                  className="py-3 px-4 fw-bold text-start"
+                  key={typeof col.header === 'string' ? col.header : i}
+                  className="py-2 px-4 fw-bold text-start"
                   style={{
                     position: 'sticky',
                     top: '0',
-                    zIndex: 9,
-                    backgroundColor: 'var(--table-header-bg)',
                     color: 'var(--bg-card)',
-                    fontSize: '0.8rem',
+                    fontSize: '0.75rem',
+                    letterSpacing: '0.05em',
                     border: 'none',
+                    borderBottom: '1px solid var(--border-color)',
                     textTransform: 'uppercase',
-                    ...col.style
+                    ...col.style,
+                    backgroundColor: 'var(--dark-section)',
+                    zIndex: col.style?.position === 'sticky' ? 10 : 9
                   }}
                 >
                   {col.header}
@@ -76,8 +86,8 @@ export default function Table<T>({
                   {columns.map((col, colIdx) => (
                     <td
                       key={`shimmer-cell-${rowIndex}-${colIdx}`}
-                      className="py-3 px-4"
-                      style={{ border: 'none', backgroundColor: rowIndex % 2 === 0 ? 'var(--bg-app)' : 'var(--bg-card)' }}
+                      className="py-2 px-4"
+                      style={{ border: 'none', borderBottom: '1px solid var(--border-color)', backgroundColor: rowIndex % 2 === 0 ? 'var(--bg-app)' : 'var(--bg-card)' }}
                     >
                       <div
                         className="shimmer-wrapper shimmer-line"
@@ -101,7 +111,7 @@ export default function Table<T>({
               </tr>
             ) : (
               data.map((item, idx) => {
-                const rowBgColor = idx % 2 === 0 ? 'var(--bg-app)' : 'var(--bg-card)';
+                const rowBgColor = idx % 2 === 0 ? 'var(--bg-card)' : 'var(--bg-app)';
                 const customStyle = rowStyle ? rowStyle(item, idx) : {};
                 const className = rowClassName ? rowClassName(item, idx) : '';
                 return (
@@ -109,11 +119,12 @@ export default function Table<T>({
                     {columns.map((col, colIdx) => (
                       <td
                         key={colIdx}
-                        className="py-2 px-3"
+                        className="py-2 px-4"
                         style={{
                           border: 'none',
+                          borderBottom: '1px solid var(--border-color)',
                           backgroundColor: customStyle.backgroundColor || rowBgColor,
-
+                          ...col.style
                         }}
                       >
                         {col.render(item, idx)}
@@ -129,8 +140,8 @@ export default function Table<T>({
 
       {/* Pagination Footer */}
       {currentPage !== undefined && totalPages !== undefined && onPageChange !== undefined && (
-        <div className="px-4 py-2 border-top d-flex justify-content-between align-items-center bg-white flex-shrink-0 rounded-bottom-4">
-          <span className="text-muted small">
+        <div className="px-4 py-3 border-top d-flex justify-content-between align-items-center flex-shrink-0 rounded-bottom-4" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--border-color)' }}>
+          <span className="small" style={{ color: 'var(--text-muted)' }}>
             {totalItems !== undefined && itemsPerPage !== undefined ? (
               <>
                 Showing {totalItems > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0}–{Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} entries
@@ -141,10 +152,10 @@ export default function Table<T>({
               </>
             )}
           </span>
-          <div className="d-flex gap-1 align-items-center">
+          <div className="d-flex gap-2 align-items-center">
             <button
-              className="btn btn-sm btn-light border px-2 shadow-none d-flex align-items-center justify-content-center"
-              style={{ width: '32px', height: '32px', borderRadius: '6px' }}
+              className="btn btn-sm border px-2 shadow-none d-flex align-items-center justify-content-center"
+              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
               disabled={currentPage === 1}
             >
@@ -157,16 +168,18 @@ export default function Table<T>({
                 const elements = [];
                 if (idx > 0 && page - arr[idx - 1] > 1) {
                   elements.push(
-                    <span key={`ellipsis-${page}`} className="text-muted px-2">...</span>
+                    <span key={`ellipsis-${page}`} className="px-2" style={{ color: 'var(--text-muted)' }}>...</span>
                   );
                 }
                 elements.push(
                   <button
                     key={page}
                     onClick={() => onPageChange(page)}
-                    className={`btn btn-sm shadow-none fw-bold d-inline-flex align-items-center justify-content-center ${currentPage === page ? 'text-white' : 'text-dark border-0 bg-transparent'}`}
+                    className={`btn btn-sm shadow-none fw-bold d-inline-flex align-items-center justify-content-center`}
                     style={{
-                      backgroundColor: currentPage === page ? 'var(--primary)' : 'transparent',
+                      backgroundColor: currentPage === page ? 'var(--dark-section)' : 'transparent',
+                      color: currentPage === page ? 'var(--bg-card)' : 'var(--text-primary)',
+                      border: 'none',
                       borderRadius: '6px',
                       height: '32px',
                       width: '32px',
@@ -180,8 +193,8 @@ export default function Table<T>({
               })}
 
             <button
-              className="btn btn-sm btn-light border px-2 shadow-none d-flex align-items-center justify-content-center"
-              style={{ width: '32px', height: '32px', borderRadius: '6px' }}
+              className="btn btn-sm border px-2 shadow-none d-flex align-items-center justify-content-center"
+              style={{ width: '32px', height: '32px', borderRadius: '6px', backgroundColor: 'var(--bg-app)', borderColor: 'var(--border-color)', color: 'var(--text-primary)' }}
               onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
               disabled={currentPage === totalPages}
             >

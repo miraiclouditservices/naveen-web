@@ -106,16 +106,16 @@ export default function SettingsPage() {
     }
   };
 
-  if (loading) return <div className="d-flex align-items-center justify-content-center" style={{ height: "60vh" }}><div className="spinner-border" style={{ color: "#014aad" }} /></div>;
+  if (loading) return <div className="d-flex align-items-center justify-content-center" style={{ height: "60vh" }}><div className="spinner-border" style={{ color: "var(--dark-section)" }} /></div>;
 
   const displayRole = currentUser?.role === "Owner" ? "OFFICE_OWNER" : currentUser?.role === "Admin" ? "SUPER_ADMIN" : currentUser?.role || "User";
 
   return (
     <div className="container-fluid p-0 pb-5">
       {/* Dynamic Header */}
-      <div className="d-flex flex-column mb-4 p-4 rounded-xl border text-white shadow-sm" style={{ background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)" }}>
+      <div className="d-flex flex-column mb-4 p-4 rounded-xl border text-white shadow-sm" style={{ background: "linear-gradient(135deg, #1e293b 0%, var(--text-main) 100%)" }}>
         <div className="d-flex align-items-center gap-3">
-          <div className="rounded-circle bg-primary bg-opacity-25 border border-primary d-flex align-items-center justify-content-center text-white fw-bold fs-3" style={{ width: '68px', height: '68px', background: '#014aad' }}>
+          <div className="rounded-circle bg-primary bg-opacity-25 border border-primary d-flex align-items-center justify-content-center text-white fw-bold fs-3" style={{ width: '68px', height: '68px', background: 'var(--dark-section)' }}>
             {currentUser?.name?.charAt(0).toUpperCase() || "U"}
           </div>
           <div>
@@ -141,7 +141,7 @@ export default function SettingsPage() {
               <button 
                 onClick={() => { setActiveTab('profile'); setUpdateMsg(null); }}
                 className={`list-group-item list-group-item-action border-0 px-4 py-3 d-flex align-items-center gap-3 fw-bold ${activeTab === 'profile' ? 'bg-primary bg-opacity-10 text-primary' : 'text-muted'}`}
-                style={activeTab === 'profile' ? { color: '#014aad', borderLeft: '3px solid #014aad' } : {}}
+                style={activeTab === 'profile' ? { color: 'var(--dark-section)', borderLeft: '3px solid var(--dark-section)' } : {}}
               >
                 <i className="bi bi-person-circle fs-5"></i>
                 <span className="small">Personal Information</span>
@@ -150,7 +150,7 @@ export default function SettingsPage() {
               <button 
                 onClick={() => { setActiveTab('spaces'); setUpdateMsg(null); }}
                 className={`list-group-item list-group-item-action border-0 px-4 py-3 d-flex align-items-center gap-3 fw-bold ${activeTab === 'spaces' ? 'bg-primary bg-opacity-10 text-primary' : 'text-muted'}`}
-                style={activeTab === 'spaces' ? { color: '#014aad', borderLeft: '3px solid #014aad' } : {}}
+                style={activeTab === 'spaces' ? { color: 'var(--dark-section)', borderLeft: '3px solid var(--dark-section)' } : {}}
               >
                 <i className="bi bi-building fs-5"></i>
                 <span className="small">Spatial Assignments</span>
@@ -160,7 +160,7 @@ export default function SettingsPage() {
                 <button 
                   onClick={() => { setActiveTab('ownerProfile'); setUpdateMsg(null); }}
                   className={`list-group-item list-group-item-action border-0 px-4 py-3 d-flex align-items-center gap-3 fw-bold ${activeTab === 'ownerProfile' ? 'bg-primary bg-opacity-10 text-primary' : 'text-muted'}`}
-                  style={activeTab === 'ownerProfile' ? { color: '#014aad', borderLeft: '3px solid #014aad' } : {}}
+                  style={activeTab === 'ownerProfile' ? { color: 'var(--dark-section)', borderLeft: '3px solid var(--dark-section)' } : {}}
                 >
                   <i className="bi bi-briefcase fs-5"></i>
                   <span className="small">Owner Business Profile</span>
@@ -171,7 +171,7 @@ export default function SettingsPage() {
                 <button 
                   onClick={() => { setActiveTab('leases'); setUpdateMsg(null); }}
                   className={`list-group-item list-group-item-action border-0 px-4 py-3 d-flex align-items-center gap-3 fw-bold ${activeTab === 'leases' ? 'bg-primary bg-opacity-10 text-primary' : 'text-muted'}`}
-                  style={activeTab === 'leases' ? { color: '#014aad', borderLeft: '3px solid #014aad' } : {}}
+                  style={activeTab === 'leases' ? { color: 'var(--dark-section)', borderLeft: '3px solid var(--dark-section)' } : {}}
                 >
                   <i className="bi bi-wallet2 fs-5"></i>
                   <span className="small">Office Leases & Payments</span>
@@ -181,7 +181,7 @@ export default function SettingsPage() {
               <button 
                 onClick={() => { setActiveTab('security'); setUpdateMsg(null); }}
                 className={`list-group-item list-group-item-action border-0 px-4 py-3 d-flex align-items-center gap-3 fw-bold ${activeTab === 'security' ? 'bg-primary bg-opacity-10 text-primary' : 'text-muted'}`}
-                style={activeTab === 'security' ? { color: '#014aad', borderLeft: '3px solid #014aad' } : {}}
+                style={activeTab === 'security' ? { color: 'var(--dark-section)', borderLeft: '3px solid var(--dark-section)' } : {}}
               >
                 <i className="bi bi-shield-lock fs-5"></i>
                 <span className="small">Security & Password</span>
@@ -230,7 +230,7 @@ export default function SettingsPage() {
                 </div>
                 <hr className="my-4 opacity-10" />
                 <div className="d-flex justify-content-end">
-                  <button type="submit" className="btn btn-primary rounded-pill px-4 shadow-sm text-white border-0 fw-bold" style={{ backgroundColor: '#014aad' }}>
+                  <button type="submit" className="btn btn-primary rounded-pill px-4 shadow-sm text-white border-0 fw-bold" style={{ backgroundColor: 'var(--dark-section)' }}>
                     Save Profile Details
                   </button>
                 </div>
@@ -483,7 +483,7 @@ export default function SettingsPage() {
                         <div className="col-md-3">
                           <div className="p-3 border rounded-xl bg-light shadow-sm text-center">
                             <span className="small text-muted fw-bold text-uppercase d-block" style={{ fontSize: '0.62rem' }}>Total Monthly Due</span>
-                            <span className="fw-bold text-primary fs-5" style={{ color: '#014aad' }}>₹{(lease.totalMonthlyAmount || ((lease.monthlyRent || 0) + (lease.maintenanceCharges || 0))).toLocaleString()}</span>
+                            <span className="fw-bold text-primary fs-5" style={{ color: 'var(--dark-section)' }}>₹{(lease.totalMonthlyAmount || ((lease.monthlyRent || 0) + (lease.maintenanceCharges || 0))).toLocaleString()}</span>
                           </div>
                         </div>
                         <div className="col-md-3">
@@ -551,7 +551,7 @@ export default function SettingsPage() {
                                     <span className="fw-bold text-dark d-block" style={{ fontSize: '0.8rem' }}>Unit {unit.unitNumber}</span>
                                     <span className="text-muted" style={{ fontSize: '0.68rem' }}>{unit.unitType || 'Office'} · {unit.sqft || 0} sqft</span>
                                   </div>
-                                  <span className="badge bg-primary rounded px-2 py-1 text-white small" style={{ fontSize: '0.65rem', backgroundColor: '#014aad' }}>Active Leased</span>
+                                  <span className="badge bg-primary rounded px-2 py-1 text-white small" style={{ fontSize: '0.65rem', backgroundColor: 'var(--dark-section)' }}>Active Leased</span>
                                 </div>
                               </div>
                             ))
@@ -611,7 +611,7 @@ export default function SettingsPage() {
                 </div>
                 <hr className="my-4 opacity-10" />
                 <div className="d-flex justify-content-end">
-                  <button type="submit" className="btn btn-primary rounded-pill px-4 shadow-sm text-white border-0 fw-bold" style={{ backgroundColor: '#014aad' }}>
+                  <button type="submit" className="btn btn-primary rounded-pill px-4 shadow-sm text-white border-0 fw-bold" style={{ backgroundColor: 'var(--dark-section)' }}>
                     Change Password
                   </button>
                 </div>

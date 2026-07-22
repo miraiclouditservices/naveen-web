@@ -83,7 +83,7 @@ export default function RecordPaymentModal({
             width: "100%",
             maxWidth: 560,
             maxHeight: "90vh",
-            backgroundColor: "#ffffff",
+            backgroundColor: "var(--bg-card)",
             borderRadius: 20,
             boxShadow: "0 24px 60px rgba(0,0,0,0.18)",
             overflow: "hidden",
@@ -97,7 +97,7 @@ export default function RecordPaymentModal({
           {/* ── HEADER ── */}
           <div
             style={{
-              background: "#343a40",
+              background: "var(--dark-section)",
               padding: "16px 24px",
               display: "flex",
               alignItems: "center",
@@ -110,7 +110,7 @@ export default function RecordPaymentModal({
                   margin: 0,
                   fontWeight: 700,
                   fontSize: "1.05rem",
-                  color: "#fff",
+                  color: "var(--bg-card)",
                   letterSpacing: "-0.01em",
                 }}
               >
@@ -136,7 +136,7 @@ export default function RecordPaymentModal({
                 border: "none",
                 background: "transparent",
                 cursor: "pointer",
-                color: "#fff",
+                color: "var(--bg-card)",
                 fontSize: "1.2rem",
                 display: "flex",
                 alignItems: "center",
@@ -154,8 +154,8 @@ export default function RecordPaymentModal({
           {/* ── FINANCIAL SUMMARY BANNER ── */}
           <div
             style={{
-              background: "#f8faff",
-              borderBottom: "1px solid #e8eef8",
+              background: "var(--bg-app)",
+              borderBottom: "1px solid var(--border-color)",
               padding: "16px 24px",
             }}
           >
@@ -171,8 +171,8 @@ export default function RecordPaymentModal({
               {/* Total */}
               <div
                 style={{
-                  background: "#fff",
-                  border: "1px solid #e2e8f0",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border-color)",
                   borderRadius: 8,
                   padding: "10px 14px",
                 }}
@@ -181,7 +181,7 @@ export default function RecordPaymentModal({
                   style={{
                     fontSize: "0.65rem",
                     fontWeight: 700,
-                    color: "#94a3b8",
+                    color: "var(--text-muted)",
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
                     marginBottom: 3,
@@ -275,14 +275,14 @@ export default function RecordPaymentModal({
                   marginBottom: 6,
                 }}
               >
-                <span style={{ fontSize: "0.72rem", color: "#64748b", fontWeight: 600 }}>
+                <span style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>
                   Payment Progress
                 </span>
                 <span
                   style={{
                     fontSize: "0.72rem",
                     fontWeight: 700,
-                    color: paidPct >= 100 ? "#16a34a" : paidPct >= 50 ? "#0266e8" : "#ea580c",
+                    color: paidPct >= 100 ? "#16a34a" : paidPct >= 50 ? "var(--dark-section)" : "#ea580c",
                   }}
                 >
                   {paidPct}% Paid
@@ -291,7 +291,7 @@ export default function RecordPaymentModal({
               <div
                 style={{
                   height: 7,
-                  background: "#e2e8f0",
+                  background: "var(--border-color)",
                   borderRadius: 99,
                   overflow: "hidden",
                 }}
@@ -304,8 +304,8 @@ export default function RecordPaymentModal({
                       paidPct >= 100
                         ? "linear-gradient(90deg,#16a34a,#22c55e)"
                         : paidPct >= 50
-                        ? "linear-gradient(90deg,#0266e8,#60a5fa)"
-                        : "linear-gradient(90deg,#f97316,#fb923c)",
+                          ? "linear-gradient(90deg,var(--dark-section),var(--text-muted))"
+                          : "linear-gradient(90deg,#f97316,#fb923c)",
                     borderRadius: 99,
                     transition: "width 0.5s ease",
                   }}
@@ -342,7 +342,7 @@ export default function RecordPaymentModal({
                         top: "50%",
                         transform: "translateY(-50%)",
                         fontWeight: 600,
-                        color: "#64748b",
+                        color: "var(--text-muted)",
                         fontSize: "0.9rem",
                         pointerEvents: "none",
                       }}
@@ -368,16 +368,16 @@ export default function RecordPaymentModal({
                         border: "1px solid #cbd5e0",
                         borderRadius: 8,
                         outline: "none",
-                        background: "#ffffff",
+                        background: "var(--bg-card)",
                         color: "#1e293b",
                         boxSizing: "border-box",
                         transition: "border-color 0.2s",
                       }}
-                      onFocus={e => (e.target.style.borderColor = "#0266e8")}
-                      onBlur={e => (e.target.style.borderColor = "#cbd5e0")}
+                      onFocus={e => (e.target.style.borderColor = "var(--dark-section)")}
+                      onBlur={e => (e.target.style.borderColor = "var(--border-color)")}
                     />
                   </div>
-                  <div style={{ fontSize: "0.68rem", color: "#94a3b8", marginTop: 4 }}>
+                  <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 4 }}>
                     Max: {fmt(pending)}
                   </div>
                 </div>
@@ -405,16 +405,16 @@ export default function RecordPaymentModal({
                       width: "100%",
                       padding: "8px 12px",
                       fontSize: "0.9rem",
-                      border: "1px solid #cbd5e0",
+                      border: "1px solid var(--border-color)",
                       borderRadius: 8,
                       outline: "none",
-                      background: "#ffffff",
+                      background: "var(--bg-card)",
                       color: "#1e293b",
                       boxSizing: "border-box",
                       transition: "border-color 0.2s",
                     }}
-                    onFocus={e => (e.target.style.borderColor = "#0266e8")}
-                    onBlur={e => (e.target.style.borderColor = "#cbd5e0")}
+                    onFocus={e => (e.target.style.borderColor = "var(--dark-section)")}
+                    onBlur={e => (e.target.style.borderColor = "var(--border-color)")}
                   />
                 </div>
               </div>
@@ -446,9 +446,9 @@ export default function RecordPaymentModal({
                           gap: 6,
                           padding: "6px 12px",
                           borderRadius: 8,
-                          border: isActive ? "1.5px solid #0266e8" : "1px solid #cbd5e0",
-                          background: isActive ? "#eff6ff" : "#fff",
-                          color: isActive ? "#0266e8" : "#4a5568",
+                          border: isActive ? "1.5px solid var(--dark-section)" : "1px solid var(--border-color)",
+                          background: isActive ? "var(--bg-app)" : "var(--bg-card)",
+                          color: isActive ? "var(--dark-section)" : "#4a5568",
                           fontSize: "0.8rem",
                           fontWeight: isActive ? 700 : 500,
                           cursor: "pointer",
@@ -485,18 +485,18 @@ export default function RecordPaymentModal({
                     width: "100%",
                     padding: "8px 12px",
                     fontSize: "0.9rem",
-                    border: "1px solid #cbd5e0",
+                    border: "1px solid var(--border-color)",
                     borderRadius: 8,
                     outline: "none",
-                    background: "#ffffff",
+                    background: "var(--bg-card)",
                     color: "#1e293b",
                     boxSizing: "border-box",
                     transition: "border-color 0.2s",
                   }}
-                  onFocus={e => (e.target.style.borderColor = "#0266e8")}
-                  onBlur={e => (e.target.style.borderColor = "#cbd5e0")}
+                  onFocus={e => (e.target.style.borderColor = "var(--dark-section)")}
+                  onBlur={e => (e.target.style.borderColor = "var(--border-color)")}
                 />
-                <div style={{ fontSize: "0.68rem", color: "#94a3b8", marginTop: 4 }}>
+                <div style={{ fontSize: "0.68rem", color: "var(--text-muted)", marginTop: 4 }}>
                   Auto-generated receipt ID if left blank.
                 </div>
               </div>
@@ -523,18 +523,18 @@ export default function RecordPaymentModal({
                     width: "100%",
                     padding: "8px 12px",
                     fontSize: "0.9rem",
-                    border: "1px solid #cbd5e0",
+                    border: "1px solid var(--border-color)",
                     borderRadius: 8,
                     outline: "none",
-                    background: "#ffffff",
+                    background: "var(--bg-card)",
                     color: "#1e293b",
                     resize: "vertical",
                     fontFamily: "inherit",
                     boxSizing: "border-box",
                     transition: "border-color 0.2s",
                   }}
-                  onFocus={e => (e.target.style.borderColor = "#0266e8")}
-                  onBlur={e => (e.target.style.borderColor = "#cbd5e0")}
+                  onFocus={e => (e.target.style.borderColor = "var(--dark-section)")}
+                  onBlur={e => (e.target.style.borderColor = "var(--border-color)")}
                 />
               </div>
             </div>
@@ -542,8 +542,8 @@ export default function RecordPaymentModal({
             {/* ── FOOTER ── */}
             <div
               style={{
-                background: "#f8faff",
-                borderTop: "1px solid #cbd5e0",
+                background: "var(--bg-app)",
+                borderTop: "1px solid var(--border-color)",
                 padding: "14px 24px",
                 display: "flex",
                 alignItems: "center",
@@ -552,7 +552,7 @@ export default function RecordPaymentModal({
               }}
             >
               {/* Left hint */}
-              <div style={{ fontSize: "0.72rem", color: "#94a3b8" }}>
+              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 🔒 Payment is recorded securely
               </div>
 
@@ -564,8 +564,8 @@ export default function RecordPaymentModal({
                   style={{
                     padding: "8px 18px",
                     borderRadius: 8,
-                    border: "1px solid #cbd5e0",
-                    background: "#fff",
+                    border: "1px solid var(--border-color)",
+                    background: "var(--bg-card)",
                     color: "#4a5568",
                     fontWeight: 600,
                     fontSize: "0.85rem",
@@ -573,10 +573,10 @@ export default function RecordPaymentModal({
                     transition: "all 0.15s ease",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.background = "#f1f5f9";
+                    e.currentTarget.style.background = "var(--border-color)";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.background = "#fff";
+                    e.currentTarget.style.background = "var(--bg-card)";
                   }}
                 >
                   Cancel
@@ -588,8 +588,8 @@ export default function RecordPaymentModal({
                     padding: "8px 20px",
                     borderRadius: 8,
                     border: "none",
-                    background: isSubmitting ? "#94a3b8" : "#0266e8",
-                    color: "#fff",
+                    background: isSubmitting ? "var(--text-muted)" : "var(--dark-section)",
+                    color: "var(--bg-card)",
                     fontWeight: 700,
                     fontSize: "0.85rem",
                     cursor: isSubmitting ? "not-allowed" : "pointer",
@@ -607,7 +607,7 @@ export default function RecordPaymentModal({
                           width: 14,
                           height: 14,
                           border: "2px solid rgba(255,255,255,0.4)",
-                          borderTopColor: "#fff",
+                          borderTopColor: "var(--bg-card)",
                           borderRadius: "50%",
                           animation: "spin 0.7s linear infinite",
                         }}

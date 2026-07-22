@@ -38,6 +38,7 @@ export default function HelpdeskPage() {
   const [totalItems, setTotalItems] = useState(0);
 
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [properties, setProperties] = useState<any[]>([]);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -50,6 +51,15 @@ export default function HelpdeskPage() {
         }
       }
     }
+  }, []);
+
+  // Fetch properties list on mount
+  useEffect(() => {
+    api.get("/properties").then((res) => {
+      if (res.success) {
+        setProperties(res.data);
+      }
+    });
   }, []);
 
   // Fetch metrics and tickets whenever filters or page change
@@ -123,8 +133,6 @@ export default function HelpdeskPage() {
     }
   };
 
-
-
   const handleReset = () => {
     setSearchTerm("");
     setStatusFilter("All");
@@ -146,7 +154,7 @@ export default function HelpdeskPage() {
     {
       header: "Ticket ID",
       render: (item) => (
-        <span className="fw-bold text-primary cursor-pointer" onClick={() => handleOpenModal("view", item)}>
+        <span className="fw-bold cursor-pointer" onClick={() => handleOpenModal("view", item)} style={{ color: "#000000" }}>
           {item.ticketId}
         </span>
       )
@@ -154,7 +162,7 @@ export default function HelpdeskPage() {
     {
       header: "Title",
       render: (item) => (
-        <div style={{ maxWidth: "200px", overflow: "hidden", textOverflow: "ellipsis" }}>
+        <div style={{ maxWidth: "220px", overflow: "hidden", textOverflow: "ellipsis" }}>
           <span className="fw-bold text-dark d-block">{item.title}</span>
           <span className="text-muted extra-small">{item.category}</span>
         </div>
@@ -198,6 +206,15 @@ export default function HelpdeskPage() {
       )
     },
     {
+      header: "Raised By",
+      render: (item) => (
+        <div>
+          <span className="fw-bold text-dark d-block" style={{ fontSize: "0.78rem" }}>{item.raisedBy || "-"}</span>
+          <span className="text-muted extra-small">{item.raisedRole || "-"}</span>
+        </div>
+      )
+    },
+    {
       header: "Actions",
       style: { textAlign: "right" as const },
       render: (item) => (
@@ -206,13 +223,13 @@ export default function HelpdeskPage() {
             title="Open Workspace"
             onClick={() => handleOpenModal("view", item)}
             style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
+              width: 32, height: 32, borderRadius: "6px", border: "1px solid #E8E6E3",
+              background: "#ffffff", cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center", color: "#1e293b",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            onMouseEnter={e => (e.currentTarget.style.background = "#f9f7f3")}
+            onMouseLeave={e => (e.currentTarget.style.background = "#ffffff")}
           >
             <i className="bi bi-eye text-secondary" style={{ fontSize: "0.9rem" }}></i>
           </button>
@@ -225,165 +242,326 @@ export default function HelpdeskPage() {
 
   return (
     <div
-      className="p-0 d-flex flex-column bg-white border rounded-4"
-      style={{ height: "calc(100vh - 104px)", fontFamily: "var(--font-geist-sans)", overflow: "hidden" }}
+      style={{
+        backgroundColor: "#F9F7F3",
+        minHeight: "100vh",
+        padding: "24px",
+        fontFamily: "var(--font-geist-sans), Inter, sans-serif",
+        color: "#202020",
+      }}
     >
-      {/* Header */}
-      <div
-        className="d-flex justify-content-between align-items-center pb-2 pt-3 px-4 flex-shrink-0"
-        style={{ backgroundColor: "#ffffff" }}
-      >
+      {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         <div>
-          <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>Helpdesk & Complaints</span>
-          {/* Very small stats list */}
-          <div className="d-flex gap-3 mt-1 text-muted" style={{ fontSize: "0.72rem" }}>
-            <span>Total: <strong className="text-dark">{metrics.total}</strong></span>
-            <span>·</span>
-            <span className="text-danger">Open: <strong>{metrics.open}</strong></span>
-            <span className="text-primary">Assigned: <strong>{metrics.assigned}</strong></span>
-            <span className="text-warning">In Progress: <strong>{metrics.inProgress}</strong></span>
-            <span>·</span>
-            <span className="text-success">Resolved: <strong>{metrics.resolved}</strong></span>
-          </div>
+          <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
+            Helpdesk & Complaints
+          </h2>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+            Manage occupant issues, maintenance requests & support tickets
+          </p>
         </div>
-
-        <div className="d-flex gap-3 align-items-center">
-          {/* Search bar */}
-          <div className="position-relative" style={{ width: 260 }}>
-            <input
-              type="text"
-              className="form-control px-3 py-2"
-              placeholder="Search by title, ID, category..."
-              value={searchTerm}
-              onChange={e => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              style={{ borderRadius: "4px", border: "1px solid #e0e0e0", fontSize: "0.85rem" }}
-            />
-            {searchTerm ? (
-              <button
-                onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
-                style={{
-                  position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer", color: "#94a3b8",
-                  fontSize: "0.85rem", lineHeight: 1,
-                }}
-              >×</button>
-            ) : (
-              <i className="bi bi-search position-absolute text-muted"
-                style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontSize: "0.8rem" }} />
-            )}
-          </div>
-
-          {/* Filter Trigger Button */}
-          <button
-            className={`btn border d-flex align-items-center justify-content-center position-relative ${showFilters ? "text-white border-primary" : "bg-white text-dark border-light"}`}
-            onClick={() => setShowFilters(true)}
-            style={{
-              width: 40, height: 40, borderRadius: "4px",
-              backgroundColor: showFilters ? "#014aad" : "#fff",
-            }}
-            title="Advanced Filters"
-          >
-            <i className={`bi bi-funnel ${showFilters ? "text-white" : "text-dark"}`} />
-            {activeFilters > 0 && (
-              <span
-                className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary"
-                style={{ fontSize: "0.6rem", padding: "2px 5px" }}
-              >
-                {activeFilters}
-              </span>
-            )}
-          </button>
-
-          {/* Export Button */}
-          <button
-            className="btn btn-outline-secondary d-flex align-items-center justify-content-center"
-            style={{ height: 40, fontSize: "0.85rem", borderRadius: "4px", fontWeight: 500 }}
-          >
-            <i className="bi bi-download me-2" /> Export
-          </button>
-
-          {/* Create Button */}
+        
+        <div className="d-flex gap-2 align-items-center">
           {canCreateTicket && (
             <button
-              className="btn d-flex align-items-center gap-2 px-4"
-              style={{
-                backgroundColor: "#014aad", color: "#fff", fontWeight: 500,
-                borderRadius: "4px", height: 40, fontSize: "0.85rem", border: "none",
-              }}
               onClick={() => handleOpenModal("create")}
+              className="btn btn-dark btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
+              style={{ backgroundColor: "#040404", borderColor: "#040404", borderRadius: "8px", fontSize: "0.8rem", height: "38px" }}
             >
-              <i className="bi bi-plus-lg" /> Ticket
+              <i className="bi bi-plus-lg"></i> Raise Ticket
             </button>
           )}
+          <button
+            className="btn btn-sm btn-white border fw-bold px-3 py-2"
+            style={{ borderRadius: "8px", fontSize: "0.8rem", backgroundColor: "#ffffff", height: "38px" }}
+            onClick={() => alert("Exporting data as CSV...")}
+          >
+            Export
+          </button>
         </div>
       </div>
 
-      {/* Active filters chips bar */}
-      {activeFilters > 0 && (
-        <div className="d-flex align-items-center gap-2 px-4 pb-2 flex-shrink-0 flex-wrap">
-          {searchTerm && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Search: <strong>{searchTerm}</strong>
-              <button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {statusFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Status: <strong>{statusFilter}</strong>
-              <button onClick={() => { setStatusFilter("All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {priorityFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Priority: <strong>{priorityFilter}</strong>
-              <button onClick={() => { setPriorityFilter("All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {categoryFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Category: <strong>{categoryFilter}</strong>
-              <button onClick={() => { setCategoryFilter("All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          {propertyFilter !== "All" && (
-            <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
-              Property Selected
-              <button onClick={() => { setPropertyFilter("All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
-            </span>
-          )}
-          <button
-            onClick={handleReset}
-            className="btn btn-link btn-sm p-0 text-decoration-none fw-bold"
-            style={{ fontSize: "0.75rem", color: "#ef4444" }}
-          >
-            Clear All
-          </button>
+      {/* ── 2. BENTO STATS ROW (6 cards) ──────────────────────────────────── */}
+      <div className="row g-3 mb-4">
+        {/* Card 1: Total Tickets */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-ticket-perforated text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Total Tickets
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+              {(metrics.total || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Support Ledger Total
+            </div>
+          </div>
         </div>
-      )}
 
-      {/* Main Table */}
-      <Table
-        columns={columns}
-        data={tickets}
-        isLoading={isLoading}
-        loadingMessage="Loading support tickets ledger..."
-        emptyMessage="No tickets found matching your filter criteria."
-        containerClassName="table-responsive-container table-responsive flex-grow-1"
-        currentPage={currentPage}
-        totalPages={totalPages}
-        totalItems={totalItems}
-        itemsPerPage={10}
-        onPageChange={(page) => setCurrentPage(page)}
-      />
+        {/* Card 2: Open Tickets */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-folder-symlink text-danger" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Open Tickets
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-danger" style={{ fontSize: "1.1rem" }}>
+              {(metrics.open || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Immediate Attention
+            </div>
+          </div>
+        </div>
 
-      {/* decupled Form Modal */}
+        {/* Card 3: Assigned */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-person-workspace text-info" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Assigned
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-info" style={{ fontSize: "1.1rem" }}>
+              {(metrics.assigned || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Awaiting Action
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: In Progress */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                In Progress
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-warning" style={{ fontSize: "1.1rem" }}>
+              {(metrics.inProgress || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Active Resolution
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: Resolved */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-check2-circle text-success" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Resolved
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-success" style={{ fontSize: "1.1rem" }}>
+              {(metrics.resolved || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Ready for Close
+            </div>
+          </div>
+        </div>
+
+        {/* Card 6: Closed */}
+        <div className="col-md-2 col-sm-4 col-6">
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+            <div className="d-flex align-items-center gap-2 mb-2">
+              <i className="bi bi-archive text-muted" style={{ fontSize: "1.1rem" }} />
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+                Closed
+              </span>
+            </div>
+            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+              {(metrics.closed || 0).toLocaleString("en-IN")}
+            </h5>
+            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+              Completed & Archived
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        {/* Left tabs */}
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+          {[
+            { label: "All Tickets", value: "All" },
+            { label: "Open", value: "OPEN" },
+            { label: "Assigned", value: "ASSIGNED" },
+            { label: "In Progress", value: "IN_PROGRESS" },
+            { label: "Resolved", value: "RESOLVED" },
+            { label: "Closed", value: "CLOSED" }
+          ].map((tab) => {
+            const isAct = statusFilter === tab.value;
+            return (
+              <button
+                key={tab.label}
+                onClick={() => {
+                  setStatusFilter(tab.value);
+                  setCurrentPage(1);
+                }}
+                className="btn btn-sm"
+                style={{
+                  fontSize: "0.75rem",
+                  fontWeight: "600",
+                  padding: "6px 12px",
+                  borderRadius: "6px",
+                  backgroundColor: isAct ? "#040404" : "transparent",
+                  color: isAct ? "#FFFFFF" : "#787878",
+                  border: "none",
+                  transition: "all 0.2s",
+                }}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Right selectors */}
+        <div className="d-flex gap-2 flex-wrap">
+          {/* Property Filter */}
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={propertyFilter}
+            onChange={(e) => {
+              setPropertyFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Properties</option>
+            {properties.map((p) => (
+              <option key={p._id} value={p._id}>{p.propertyName}</option>
+            ))}
+          </select>
+
+          {/* Category Filter */}
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={categoryFilter}
+            onChange={(e) => {
+              setCategoryFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Categories</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Electricity">Electricity</option>
+            <option value="Water">Water</option>
+            <option value="Payment">Payment</option>
+            <option value="Agreement">Agreement</option>
+            <option value="Security">Security</option>
+            <option value="Technical Issue">Technical Issue</option>
+            <option value="Complaint">Complaint</option>
+            <option value="Other">Other</option>
+          </select>
+
+          {/* Priority Filter */}
+          <select
+            className="form-select bg-white py-1 rounded-3"
+            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            value={priorityFilter}
+            onChange={(e) => {
+              setPriorityFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="All">All Priorities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+        </div>
+      </div>
+
+      {/* ── 4. BOTTOM DIRECTORY: Helpdesk Table ───────────────────────────── */}
+      <div className="row g-4 mb-4">
+        <div className="col-lg-12">
+          <div
+            style={{
+              backgroundColor: "#FFFFFF",
+              borderRadius: "12px",
+              border: "1px solid #E8E6E3",
+              overflow: "hidden",
+            }}
+          >
+            {/* Table Header controls */}
+            <div className="p-3 bg-white d-flex justify-content-between align-items-center gap-3 flex-wrap border-bottom border-light">
+              <h6 className="fw-bold m-0" style={{ fontSize: "0.95rem" }}>
+                Helpdesk Directory Ledger
+              </h6>
+              <div className="d-flex gap-2 align-items-center">
+                <div className="position-relative">
+                  <input
+                    type="text"
+                    placeholder="Search by title, ID, category..."
+                    value={searchTerm}
+                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    className="form-control form-control-sm"
+                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                  />
+                </div>
+                {(searchTerm || statusFilter !== "All" || priorityFilter !== "All" || categoryFilter !== "All" || propertyFilter !== "All") && (
+                  <button
+                    className="btn btn-sm btn-outline-danger"
+                    style={{ borderRadius: "6px", fontSize: "0.78rem" }}
+                    onClick={handleReset}
+                  >
+                    Reset
+                  </button>
+                )}
+                {/* Advanced Filter Drawer toggle */}
+                <button
+                  className="btn btn-sm btn-white border"
+                  style={{ borderRadius: "6px", backgroundColor: "#ffffff" }}
+                  onClick={() => setShowFilters(true)}
+                  title="Advanced Filters"
+                >
+                  <i className="bi bi-funnel" style={{ fontSize: "0.85rem" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Table Component */}
+            <Table
+              columns={columns}
+              data={tickets}
+              isLoading={isLoading}
+              loadingMessage="Loading support tickets ledger..."
+              emptyMessage="No tickets found matching your filter criteria."
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalItems}
+              itemsPerPage={10}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ── 5. HELPDESK FORM MODAL ────────────────────────────────────────── */}
       <HelpdeskFormModal 
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSave={handleSaveTicket}
       />
 
-      {/* decoupled Detail View Workspace */}
+      {/* ── 6. HELPDESK DETAIL DRAWER / OVERLAY ───────────────────────────── */}
       {isDetailOpen && selectedTicket && (
         <HelpdeskDetailView
           viewItem={selectedTicket}
@@ -393,7 +571,7 @@ export default function HelpdeskPage() {
         />
       )}
 
-      {/* decoupled Filter Drawer */}
+      {/* ── 7. ADVANCED FILTERS DRAWER ────────────────────────────────────── */}
       <HelpdeskFilterDrawer
         isOpen={showFilters}
         onClose={() => setShowFilters(false)}
@@ -411,10 +589,7 @@ export default function HelpdeskPage() {
       />
 
       <style jsx global>{`
-        .text-primary { color: #014aad !important; }
-        .rounded-xl { border-radius: 1rem !important; }
         .extra-small { font-size: 0.75rem !important; }
-        .hover-bg-light:hover { background-color: #f8f9fa; }
         .cursor-pointer { cursor: pointer; }
       `}</style>
     </div>

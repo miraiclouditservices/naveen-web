@@ -272,7 +272,7 @@ export default function MeetingRoomModal({
                 <button 
                   type="submit" className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm text-white border-0"
                   disabled={isSubmitting}
-                  style={{ backgroundColor: '#014aad', fontSize: '0.85rem' }}
+                  style={{ backgroundColor: 'var(--dark-section)', fontSize: '0.85rem' }}
                 >
                   {isSubmitting ? (
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

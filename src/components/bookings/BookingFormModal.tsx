@@ -215,7 +215,7 @@ export default function BookingFormModal({
           {/* Header */}
           <div
             className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
               {mode === "create" ? "Book a Meeting Room/Space" : "Update Booking Reservation"}
@@ -224,11 +224,11 @@ export default function BookingFormModal({
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", cursor: "pointer", lineHeight: 1,
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -321,20 +321,20 @@ export default function BookingFormModal({
                               className="px-3 py-2 rounded-2 small"
                               style={{
                                 cursor: "pointer",
-                                backgroundColor: formData.meetingRoom === r._id ? "#f1f5f9" : "transparent",
-                                color: formData.meetingRoom === r._id ? "#014aad" : "#334155",
+                                backgroundColor: formData.meetingRoom === r._id ? "var(--border-color)" : "transparent",
+                                color: formData.meetingRoom === r._id ? "var(--dark-section)" : "var(--text-primary)",
                                 fontWeight: formData.meetingRoom === r._id ? 600 : 400,
                               }}
                               onMouseEnter={e => {
                                 if (formData.meetingRoom !== r._id) {
-                                  e.currentTarget.style.backgroundColor = "#f8fafc";
-                                  e.currentTarget.style.color = "#000";
+                                  e.currentTarget.style.backgroundColor = "var(--bg-app)";
+                                  e.currentTarget.style.color = "var(--text-main)";
                                 }
                               }}
                               onMouseLeave={e => {
                                 if (formData.meetingRoom !== r._id) {
                                   e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "#334155";
+                                  e.currentTarget.style.color = "var(--text-primary)";
                                 }
                               }}
                             >
@@ -400,14 +400,14 @@ export default function BookingFormModal({
                             cursor: isBooked ? "not-allowed" : "pointer",
                             fontSize: "0.75rem",
                             minHeight: "56px",
-                            backgroundColor: isSelected ? "#014aad" : isBooked ? "#fee2e2" : "#f8fafc",
-                            color: isSelected ? "#fff" : isBooked ? "#991b1b" : "#334155",
-                            borderColor: isSelected ? "#014aad" : isBooked ? "#fee2e2" : "#e2e8f0"
+                            backgroundColor: isSelected ? "var(--dark-section)" : isBooked ? "#fee2e2" : "var(--bg-app)",
+                            color: isSelected ? "var(--bg-card)" : isBooked ? "#991b1b" : "var(--text-primary)",
+                            borderColor: isSelected ? "var(--dark-section)" : isBooked ? "#fee2e2" : "var(--border-color)"
                           }}
                         >
                           <span className="fw-bold">{format12Hour(slot.start)}</span>
                           <span className="small opacity-75">to {format12Hour(slot.end)}</span>
-                          <span className="mt-1 fw-bold" style={{ fontSize: "0.58rem", color: isSelected ? "#fff" : isBooked ? "#991b1b" : "#16a34a" }}>
+                          <span className="mt-1 fw-bold" style={{ fontSize: "0.58rem", color: isSelected ? "var(--bg-card)" : isBooked ? "#991b1b" : "#16a34a" }}>
                             {isBooked ? "🚫 Booked" : isSelected ? "✓ Selected" : "🟢 Open"}
                           </span>
                         </button>
@@ -445,7 +445,7 @@ export default function BookingFormModal({
               <button
                 type="submit"
                 className="btn btn-sm px-3 fw-bold text-white shadow-sm border-0 rounded-3"
-                style={{ backgroundColor: "#014aad" }}
+                style={{ backgroundColor: "var(--dark-section)" }}
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (

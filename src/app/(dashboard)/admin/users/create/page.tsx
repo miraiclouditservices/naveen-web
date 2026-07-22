@@ -20,76 +20,7 @@ const AVAILABLE_PERMISSIONS = [
   { id: 'manage_staff', label: 'Manage Staff', module: 'System', icon: 'hgi-user-shield-01' }
 ];
 
-// Custom MultiSelect Component with Hugeicons
-function MultiSelect({ options, selectedIds, onChange, placeholder }: any) {
-  const [isOpen, setIsOpen] = useState(false);
-  const wrapperRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSelect = (id: string) => {
-    if (selectedIds.includes(id)) {
-      onChange(selectedIds.filter((item: string) => item !== id));
-    } else {
-      onChange([...selectedIds, id]);
-    }
-  };
-
-  const selectedItems = options.filter((opt: any) => selectedIds.includes(opt._id));
-
-  return (
-    <div className="position-relative" ref={wrapperRef}>
-      <div
-        className="form-control bg-white d-flex flex-wrap align-items-center gap-2 px-3 py-2"
-        style={{ minHeight: '45px', cursor: 'pointer', border: '1px solid #cbd5e1', borderRadius: '8px' }}
-        onClick={() => setIsOpen(!isOpen)}
-      >
-        {selectedItems.length === 0 && <span className="text-muted small">{placeholder}</span>}
-        {selectedItems.map((item: any) => (
-          <span
-            key={item._id}
-            className="badge bg-light text-dark border d-flex align-items-center gap-1 py-1 px-2 rounded-pill shadow-sm"
-            style={{ fontWeight: '500', fontSize: '0.8rem' }}
-            onClick={(e) => { e.stopPropagation(); handleSelect(item._id); }}
-          >
-            {item.name} <i className="hgi-stroke hgi-cancel-01 text-muted" style={{ cursor: 'pointer', fontSize: '0.85rem' }}></i>
-          </span>
-        ))}
-        <i className="hgi-stroke hgi-arrow-down-01 ms-auto text-muted" style={{ fontSize: '0.9rem' }}></i>
-      </div>
-
-      {isOpen && (
-        <div className="position-absolute w-100 bg-white border shadow-sm rounded-3 mt-1 py-1" style={{ zIndex: 1000, maxHeight: '200px', overflowY: 'auto' }}>
-          {options.length === 0 ? <div className="p-3 text-muted small text-center">No items available.</div> : null}
-          {options.map((opt: any) => {
-            const isSelected = selectedIds.includes(opt._id);
-            return (
-              <div
-                key={opt._id}
-                className="px-3 py-2 d-flex align-items-center gap-2"
-                onClick={() => handleSelect(opt._id)}
-                style={{ cursor: 'pointer', borderBottom: '1px solid #f1f5f9' }}
-              >
-                <div className={`d-flex justify-content-center align-items-center rounded ${isSelected ? 'bg-primary border-primary' : 'bg-white border'}`} style={{ width: '16px', height: '16px', border: '1px solid #cbd5e1' }}>
-                  {isSelected && <i className="hgi-stroke hgi-checkmark-circle-01 text-white" style={{ fontSize: '0.85rem', lineHeight: 1 }}></i>}
-                </div>
-                <span className={`small ${isSelected ? 'text-dark fw-bold' : 'text-muted'}`}>{opt.name}</span>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </div>
-  );
-}
+import MultiSelect from "@/components/common/MultiSelect";
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -111,6 +42,7 @@ export default function CreateUserPage() {
   const [floors, setFloors] = useState<any[]>([]);
   const [units, setUnits] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitReady, setIsSubmitReady] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   // File states
@@ -125,10 +57,11 @@ export default function CreateUserPage() {
   const [showOtpDialog, setShowOtpDialog] = useState(false);
   const [otpCode, setOtpCode] = useState("");
   const [otpError, setOtpError] = useState("");
+  const [otpMessage, setOtpMessage] = useState("");
   const [otpSuccess, setOtpSuccess] = useState(false);
 
   // Current logged in user context
-  const [currentUser, setCurrentUser] = useState<{ name: string; role: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ _id?: string; name: string; role: string } | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -188,6 +121,15 @@ export default function CreateUserPage() {
     fetchFloors();
     fetchUnits();
   }, []);
+
+  // Prevent accidental double-click submission when transitioning to Step 5
+  useEffect(() => {
+    if (currentStep === 5) {
+      setIsSubmitReady(false);
+      const timer = setTimeout(() => setIsSubmitReady(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep]);
 
   // Auto-calculate end date if role changes and start date is present
   useEffect(() => {
@@ -430,8 +372,9 @@ export default function CreateUserPage() {
     const start = new Date(formData.floorAssignmentStartDate);
     const end = new Date(formData.floorAssignmentEndDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 12;
-    const diffMonths = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth()) + 1;
-    return Math.max(diffMonths, 1);
+    const diffTime = Math.abs(end.getTime() - start.getTime());
+    const exactDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    return Math.max(Math.round(exactDays / 30.4167), 1);
   };
 
   const getTermDays = () => {
@@ -440,12 +383,11 @@ export default function CreateUserPage() {
     const end = new Date(formData.floorAssignmentEndDate);
     if (isNaN(start.getTime()) || isNaN(end.getTime())) return 365;
     const diffTime = Math.abs(end.getTime() - start.getTime());
-    return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    return Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1);
   };
 
   const termMonths = getTermMonths();
   const termDays = getTermDays();
-  const termQuarters = Math.max(1, Math.ceil(termMonths / 3));
 
   const monthlyRate = formData.monthlyManagementAmount || 0;
   const isOwner = formData.role === 'OFFICE_OWNER';
@@ -455,7 +397,7 @@ export default function CreateUserPage() {
 
   const dailyAmt = totalAgreementAmt > 0 && termDays > 0 ? Math.round((totalAgreementAmt / termDays) * 100) / 100 : 0;
   const monthlyAmt = totalAgreementAmt > 0 && termMonths > 0 ? Math.round((totalAgreementAmt / termMonths) * 100) / 100 : 0;
-  const quarterlyAmt = totalAgreementAmt > 0 && termQuarters > 0 ? Math.round((totalAgreementAmt / termQuarters) * 100) / 100 : 0;
+  const quarterlyAmt = monthlyAmt * 3;
 
   const getCalculatedNextDueDate = () => {
     if (!formData.floorAssignmentStartDate) return "N/A";
@@ -520,120 +462,109 @@ export default function CreateUserPage() {
   }).length;
 
   return (
-    <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', fontFamily: 'var(--font-geist-sans)' }}>
-      <style jsx global>{`
-        @keyframes modalFade { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes cardSlide { from { transform: scale(0.9) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-        .dialog-overlay { animation: modalFade 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .dialog-card { animation: cardSlide 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-      `}</style>
+    <div style={{ backgroundColor: 'var(--bg-app)', minHeight: '100vh', fontFamily: 'var(--font-geist-sans)' }}>
 
       {/* Sticky Header Nav */}
-      <div className="position-sticky top-0 w-100 bg-white border-bottom" style={{ padding: '16px 24px', zIndex: 1000 }}>
-        <div className="d-flex align-items-center justify-content-between mx-auto" style={{ maxWidth: '1200px' }}>
+      <div className="position-sticky top-0 w-100 bg-white border-bottom" style={{ padding: '8px 16px', zIndex: 1000 }}>
+        <div className="d-flex align-items-center justify-content-between mx-auto" style={{ maxWidth: '1400px' }}>
           <div className="d-flex align-items-center gap-3">
-            <Link href="/admin/users" className="btn btn-light border rounded-circle d-flex align-items-center justify-content-center transition-all" style={{ width: '40px', height: '40px' }}>
-              <i className="hgi-stroke hgi-arrow-left-01 text-dark" style={{ fontSize: '1.1rem' }}></i>
+            <Link href="/admin/users" className="btn border d-flex align-items-center justify-content-center transition-all bg-white p-0" style={{ width: '36px', height: '36px', borderRadius: '10px', borderColor: 'var(--border-color)' }}>
+              <i className="hgi-stroke hgi-arrow-left-01 text-dark" style={{ fontSize: '1.2rem' }}></i>
             </Link>
             <div>
-              <h4 className="fw-bold mb-0 text-dark" style={{ letterSpacing: '-0.5px' }}>Create New User</h4>
-              <p className="text-muted mb-0 small" style={{ fontSize: '0.8rem' }}>Create a secure account and assign hierarchical access.</p>
+              <h6 className="fw-bold mb-0 text-dark" style={{ letterSpacing: '-0.5px' }}>Create New User</h6>
             </div>
-          </div>
-          <div>
-            <span className="badge bg-primary bg-opacity-10 text-primary py-2 px-3 rounded-pill fw-bold" style={{ fontSize: '0.85rem' }}>
-              Current Role: {formData.role}
-            </span>
           </div>
         </div>
       </div>
 
-      <div className="p-4 mx-auto" style={{ maxWidth: '1200px' }}>
-
-        {/* Desktop Header Stepper Wizard */}
-        <div className="card border rounded-4 mb-4 bg-white d-none d-md-block">
-          <div className="card-body p-4">
-            <div className="d-flex align-items-center justify-content-between">
-
-              {/* Step 1 */}
-              <div className="d-flex align-items-center gap-2">
-                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${currentStep === 1 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-10 text-muted'}`} style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>1</div>
-                <div>
-                  <div className={`small fw-bold ${currentStep === 1 ? 'text-dark' : 'text-muted'}`}>Personal Details</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Basic information</div>
-                </div>
-              </div>
-              <div className="flex-grow-1 mx-3 border-top border-dashed" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}></div>
-
-              {/* Step 2 */}
-              <div className="d-flex align-items-center gap-2">
-                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${currentStep === 2 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-10 text-muted'}`} style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>2</div>
-                <div>
-                  <div className={`small fw-bold ${currentStep === 2 ? 'text-dark' : 'text-muted'}`}>Office Setup</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Property & floor</div>
-                </div>
-              </div>
-              <div className="flex-grow-1 mx-3 border-top border-dashed" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}></div>
-
-              {/* Step 3 */}
-              <div className="d-flex align-items-center gap-2">
-                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${currentStep === 3 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-10 text-muted'}`} style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>3</div>
-                <div>
-                  <div className={`small fw-bold ${currentStep === 3 ? 'text-dark' : 'text-muted'}`}>Billing & Agreement</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Payment & terms</div>
-                </div>
-              </div>
-              <div className="flex-grow-1 mx-3 border-top border-dashed" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}></div>
-
-              {/* Step 4 */}
-              <div className="d-flex align-items-center gap-2">
-                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${currentStep === 4 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-10 text-muted'}`} style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>4</div>
-                <div>
-                  <div className={`small fw-bold ${currentStep === 4 ? 'text-dark' : 'text-muted'}`}>Permissions</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Role permissions</div>
-                </div>
-              </div>
-              <div className="flex-grow-1 mx-3 border-top border-dashed" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}></div>
-
-              {/* Step 5 */}
-              <div className="d-flex align-items-center gap-2">
-                <div className={`rounded-circle d-flex align-items-center justify-content-center fw-bold ${currentStep === 5 ? 'bg-primary text-white' : 'bg-secondary bg-opacity-10 text-muted'}`} style={{ width: '32px', height: '32px', fontSize: '0.9rem' }}>5</div>
-                <div>
-                  <div className={`small fw-bold ${currentStep === 5 ? 'text-dark' : 'text-muted'}`}>Review</div>
-                  <div className="text-muted" style={{ fontSize: '0.75rem' }}>Confirm & create</div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile/Tablet Header Stepper Wizard Progress */}
-        <div className="d-md-none mb-3 p-3 bg-white rounded-4 border">
-          <div className="d-flex justify-content-between align-items-center">
-            <span className="small text-muted fw-bold">Step {currentStep} of 5</span>
-            <span className="badge bg-primary rounded-pill py-1.5 px-3 fw-bold" style={{ fontSize: '0.75rem' }}>
-              {currentStep === 1 && 'Personal Details'}
-              {currentStep === 2 && 'Office Setup'}
-              {currentStep === 3 && 'Billing & Agreement'}
-              {currentStep === 4 && 'Permissions'}
-              {currentStep === 5 && 'Review & Confirm'}
-            </span>
-          </div>
-          <div className="progress mt-2" style={{ height: '6px', borderRadius: '3px' }}>
-            <div className="progress-bar bg-primary" role="progressbar" style={{ width: `${(currentStep / 5) * 100}%`, borderRadius: '3px' }}></div>
-          </div>
-        </div>
-
+      <div className="p-4 mx-auto" style={{ maxWidth: '1400px', paddingBottom: '140px' }}>
         <form onSubmit={handleSubmit}>
-          <div className="row g-4">
+          <div className="row g-4 align-items-start">
 
-            {/* Form Steps Card */}
-            <div className="col-lg-10 mx-auto">
+            {/* Left Sidebar: Vertical Stepper & Need Help */}
+            <div className="col-lg-3 d-none d-lg-block sticky-top" style={{ top: '100px' }}>
+              <div className="card border-0 bg-white mb-3" style={{ borderRadius: '10px' }}>
+                <div className="card-body p-4 d-flex flex-column gap-0">
+                  {/* Step 1 */}
+                  <div className="d-flex align-items-center gap-3 cursor-pointer" onClick={() => currentStep > 1 && setCurrentStep(1)}>
+                    <div className={`d-flex align-items-center justify-content-center fw-bold ${currentStep === 1 ? 'text-white' : 'text-muted'}`} style={{ width: '40px', height: '40px', minWidth: '40px', fontSize: '0.9rem', backgroundColor: currentStep === 1 ? '#b8860b' : '#f8f9fa', borderRadius: '10px' }}>01</div>
+                    <div>
+                      <div className={`fw-bold ${currentStep === 1 ? 'text-dark' : 'text-muted'}`} style={{ fontSize: '0.9rem' }}>Personal Details</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>Basic information</div>
+                    </div>
+                  </div>
+
+                  <div className="border-start" style={{ height: '24px', margin: '4px 0 4px 20px', borderColor: 'var(--border-color)' }}></div>
+
+                  {/* Step 2 */}
+                  <div className="d-flex align-items-center gap-3 cursor-pointer" onClick={() => currentStep > 2 && setCurrentStep(2)}>
+                    <div className={`d-flex align-items-center justify-content-center fw-bold ${currentStep === 2 ? 'text-white' : 'text-muted'}`} style={{ width: '40px', height: '40px', minWidth: '40px', fontSize: '0.9rem', backgroundColor: currentStep === 2 ? '#b8860b' : '#f8f9fa', borderRadius: '10px' }}>02</div>
+                    <div>
+                      <div className={`fw-bold ${currentStep === 2 ? 'text-dark' : 'text-muted'}`} style={{ fontSize: '0.9rem' }}>Workspace Setup</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>Property & floor</div>
+                    </div>
+                  </div>
+
+                  <div className="border-start" style={{ height: '24px', margin: '4px 0 4px 20px', borderColor: 'var(--border-color)' }}></div>
+
+                  {/* Step 3 */}
+                  <div className="d-flex align-items-center gap-3 cursor-pointer" onClick={() => currentStep > 3 && setCurrentStep(3)}>
+                    <div className={`d-flex align-items-center justify-content-center fw-bold ${currentStep === 3 ? 'text-white' : 'text-muted'}`} style={{ width: '40px', height: '40px', minWidth: '40px', fontSize: '0.9rem', backgroundColor: currentStep === 3 ? '#b8860b' : '#f8f9fa', borderRadius: '10px' }}>03</div>
+                    <div>
+                      <div className={`fw-bold ${currentStep === 3 ? 'text-dark' : 'text-muted'}`} style={{ fontSize: '0.9rem' }}>Billing & Agreement</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>Payment & terms</div>
+                    </div>
+                  </div>
+
+                  <div className="border-start" style={{ height: '24px', margin: '4px 0 4px 20px', borderColor: 'var(--border-color)' }}></div>
+
+                  {/* Step 4 */}
+                  <div className="d-flex align-items-center gap-3 cursor-pointer" onClick={() => currentStep > 4 && setCurrentStep(4)}>
+                    <div className={`d-flex align-items-center justify-content-center fw-bold ${currentStep === 4 ? 'text-white' : 'text-muted'}`} style={{ width: '40px', height: '40px', minWidth: '40px', fontSize: '0.9rem', backgroundColor: currentStep === 4 ? '#b8860b' : '#f8f9fa', borderRadius: '10px' }}>04</div>
+                    <div>
+                      <div className={`fw-bold ${currentStep === 4 ? 'text-dark' : 'text-muted'}`} style={{ fontSize: '0.9rem' }}>Permissions</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>Role permissions</div>
+                    </div>
+                  </div>
+
+                  <div className="border-start" style={{ height: '24px', margin: '4px 0 4px 20px', borderColor: 'var(--border-color)' }}></div>
+
+                  {/* Step 5 */}
+                  <div className="d-flex align-items-center gap-3 cursor-pointer" onClick={() => currentStep > 5 && setCurrentStep(5)}>
+                    <div className={`d-flex align-items-center justify-content-center fw-bold ${currentStep === 5 ? 'text-white' : 'text-muted'}`} style={{ width: '40px', height: '40px', minWidth: '40px', fontSize: '0.9rem', backgroundColor: currentStep === 5 ? '#b8860b' : '#f8f9fa', borderRadius: '10px' }}>05</div>
+                    <div>
+                      <div className={`fw-bold ${currentStep === 5 ? 'text-dark' : 'text-muted'}`} style={{ fontSize: '0.9rem' }}>Review</div>
+                      <div className="text-muted" style={{ fontSize: '0.75rem' }}>Confirm & create</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Main Form Content */}
+            <div className="col-lg-9 col-12">
+
+              {/* Mobile/Tablet Header Stepper Wizard Progress */}
+              <div className="d-lg-none mb-3 p-3 bg-white rounded-4 border">
+                <div className="d-flex justify-content-between align-items-center">
+                  <span className="small text-muted fw-bold">Step {currentStep} of 5</span>
+                  <span className="badge rounded-pill py-1.5 px-3 fw-bold text-white" style={{ fontSize: '0.75rem', backgroundColor: '#b8860b' }}>
+                    {currentStep === 1 && 'Personal Details'}
+                    {currentStep === 2 && 'Office Setup'}
+                    {currentStep === 3 && 'Billing & Agreement'}
+                    {currentStep === 4 && 'Permissions'}
+                    {currentStep === 5 && 'Review & Confirm'}
+                  </span>
+                </div>
+                <div className="progress mt-2" style={{ height: '6px', borderRadius: '3px' }}>
+                  <div className="progress-bar" role="progressbar" style={{ width: `${(currentStep / 5) * 100}%`, borderRadius: '3px', backgroundColor: '#b8860b' }}></div>
+                </div>
+              </div>
 
               {/* Step 1: Personal Details */}
               {currentStep === 1 && (
-                <div className="card border rounded-4 bg-white mb-4">
+                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center gap-3 mb-4">
                       <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style={{ width: '42px', height: '42px' }}>
@@ -648,7 +579,7 @@ export default function CreateUserPage() {
                     <div className="row g-3">
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Full Name *</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.name ? 'is-invalid' : ''}`} style={{ border: validationErrors.name ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.name ? 'is-invalid' : ''}`} style={{ border: validationErrors.name ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                           <i className="hgi-stroke hgi-user text-muted" style={{ fontSize: '1.1rem' }}></i>
                           <input type="text" className="border-0 p-0 w-100 shadow-none text-dark" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent' }} placeholder="e.g. Tungana Naveen" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
                         </div>
@@ -657,7 +588,7 @@ export default function CreateUserPage() {
 
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Official Email ID *</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.email ? 'is-invalid' : ''}`} style={{ border: validationErrors.email ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.email ? 'is-invalid' : ''}`} style={{ border: validationErrors.email ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                           <i className="hgi-stroke hgi-mail-01 text-muted" style={{ fontSize: '1.1rem' }}></i>
                           <input type="email" className="border-0 p-0 w-100 shadow-none text-dark" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent' }} placeholder="office@gmail.com" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })} />
                         </div>
@@ -666,7 +597,7 @@ export default function CreateUserPage() {
 
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Primary Role *</label>
-                        <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                        <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                           <i className="hgi-stroke hgi-user-shield-01 text-muted" style={{ fontSize: '1.1rem' }}></i>
                           <select className="border-0 p-0 w-100 shadow-none text-dark fw-medium" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent', cursor: 'pointer' }} required value={formData.role}
                             onChange={(e) => {
@@ -700,7 +631,7 @@ export default function CreateUserPage() {
                       {formData.role === 'STAFF_ADMIN' && (
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Staff Category *</label>
-                          <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                          <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                             <i className="hgi-stroke hgi-user text-muted" style={{ fontSize: '1.1rem' }}></i>
                             <select className="border-0 p-0 w-100 shadow-none text-dark fw-medium" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent', cursor: 'pointer' }} required value={formData.staffCategory}
                               onChange={(e) => setFormData({ ...formData, staffCategory: e.target.value })}
@@ -721,7 +652,7 @@ export default function CreateUserPage() {
 
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Temporary Password *</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.password ? 'is-invalid' : ''}`} style={{ border: validationErrors.password ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.password ? 'is-invalid' : ''}`} style={{ border: validationErrors.password ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                           <i className="hgi-stroke hgi-lock text-muted" style={{ fontSize: '1.1rem' }}></i>
                           <input type={showPassword ? "text" : "password"} className="border-0 p-0 w-100 shadow-none text-dark" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent' }} placeholder="123456" required minLength={6} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                           <i className={`hgi-stroke ${showPassword ? 'hgi-eye' : 'hgi-eye'} text-muted cursor-pointer`} onClick={() => setShowPassword(!showPassword)} style={{ fontSize: '1.1rem' }}></i>
@@ -731,7 +662,7 @@ export default function CreateUserPage() {
 
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Mobile Number *</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.phoneNumber ? 'is-invalid' : ''}`} style={{ border: validationErrors.phoneNumber ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.phoneNumber ? 'is-invalid' : ''}`} style={{ border: validationErrors.phoneNumber ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px' }}>
                           <span className="d-flex align-items-center gap-1 me-2 pe-2 border-end text-muted" style={{ fontSize: '0.9rem' }}>
                             <span>🇮🇳</span>
                             <span className="small fw-semibold text-dark">+91</span>
@@ -744,7 +675,7 @@ export default function CreateUserPage() {
 
                       <div className="col-md-6">
                         <label className="form-label small fw-bold text-dark mb-1">Alternate Contact Number</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.emergencyNumber ? 'is-invalid' : ''}`} style={{ border: validationErrors.emergencyNumber ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.emergencyNumber ? 'is-invalid' : ''}`} style={{ border: validationErrors.emergencyNumber ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px' }}>
                           <span className="d-flex align-items-center gap-1 me-2 pe-2 border-end text-muted" style={{ fontSize: '0.9rem' }}>
                             <span>🇮🇳</span>
                             <span className="small fw-semibold text-dark">+91</span>
@@ -757,7 +688,7 @@ export default function CreateUserPage() {
 
                       <div className="col-12">
                         <label className="form-label small fw-bold text-dark mb-1">Address *</label>
-                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.address ? 'is-invalid' : ''}`} style={{ border: validationErrors.address ? '1px solid var(--bs-danger)' : '1px solid #cbd5e1', borderRadius: '8px', gap: '10px' }}>
+                        <div className={`d-flex align-items-center form-control bg-white px-3 py-2 ${validationErrors.address ? 'is-invalid' : ''}`} style={{ border: validationErrors.address ? '1px solid var(--bs-danger)' : '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
                           <i className="hgi-stroke hgi-location-01 text-muted" style={{ fontSize: '1.1rem' }}></i>
                           <input type="text" className="border-0 p-0 w-100 shadow-none text-dark" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent' }} placeholder="ohm sri shiva sai mens hostel" required value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} />
                         </div>
@@ -773,14 +704,14 @@ export default function CreateUserPage() {
 
               {/* Step 2: Office Setup */}
               {currentStep === 2 && (
-                <div className="card border rounded-4 bg-white mb-4">
+                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center gap-3 mb-4">
                       <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style={{ width: '42px', height: '42px' }}>
                         <i className="hgi-stroke hgi-building-03" style={{ fontSize: '1.25rem' }}></i>
                       </div>
                       <div>
-                        <h5 className="fw-bold mb-0 text-dark">Office Setup</h5>
+                        <h5 className="fw-bold mb-0 text-dark">Workspace Setup</h5>
                         <p className="text-muted small mb-0">Select property and floor details for user deployment.</p>
                       </div>
                     </div>
@@ -836,7 +767,7 @@ export default function CreateUserPage() {
 
               {/* Step 3: Billing & Agreement */}
               {currentStep === 3 && (
-                <div className="card border rounded-4 bg-white mb-4">
+                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center gap-3 mb-4">
                       <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style={{ width: '42px', height: '42px' }}>
@@ -860,11 +791,11 @@ export default function CreateUserPage() {
                       <div className="row g-3">
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Company / Organization Name</label>
-                          <input type="text" className="form-control py-2 shadow-none" placeholder="e.g. Apex Tech Solutions" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          <input type="text" className="form-control py-2 shadow-none" placeholder="example Solutions" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Tenant Type</label>
-                          <select className="form-select py-2 shadow-none" value={formData.tenantType} onChange={(e) => setFormData({ ...formData, tenantType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}>
+                          <select className="form-select py-2 shadow-none" value={formData.tenantType} onChange={(e) => setFormData({ ...formData, tenantType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                             <option value="Individual">Individual</option>
                             <option value="Company">Company</option>
                             <option value="Corporate">Corporate</option>
@@ -872,13 +803,13 @@ export default function CreateUserPage() {
                         </div>
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">GST / PAN Number</label>
-                          <input type="text" className={`form-control py-2 shadow-none ${validationErrors.gstPan ? 'is-invalid' : ''}`} placeholder="e.g. 22AAAAA0000A1Z5" value={formData.gstPan} onChange={(e) => setFormData({ ...formData, gstPan: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          <input type="text" className={`form-control py-2 shadow-none ${validationErrors.gstPan ? 'is-invalid' : ''}`} placeholder="e.g. 22AAAAA0000A1Z5" value={formData.gstPan} onChange={(e) => setFormData({ ...formData, gstPan: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                           {validationErrors.gstPan && <div className="invalid-feedback small">{validationErrors.gstPan}</div>}
                         </div>
 
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Agreement Status *</label>
-                          <select className="form-select py-2 shadow-none" value={formData.agreementStatus} onChange={(e) => setFormData({ ...formData, agreementStatus: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}>
+                          <select className="form-select py-2 shadow-none" value={formData.agreementStatus} onChange={(e) => setFormData({ ...formData, agreementStatus: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                             <option value="Active">Active</option>
                             <option value="Pending">Pending</option>
                             <option value="Expired">Expired</option>
@@ -888,7 +819,7 @@ export default function CreateUserPage() {
 
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">ID Proof Upload</label>
-                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}>
+                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
                             <input type="file" className="d-none" id="id-proof" onChange={(e) => setIdProof(e.target.files ? e.target.files[0] : null)} />
                             <label htmlFor="id-proof" className="w-100 m-0" style={{ cursor: 'pointer' }}>
                               <i className="hgi-stroke hgi-invoice-01 text-primary me-2"></i>
@@ -899,7 +830,7 @@ export default function CreateUserPage() {
 
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Profile Photo Upload</label>
-                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: '#cbd5e1' }}>
+                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
                             <input type="file" className="d-none" id="profile-photo" onChange={(e) => setProfilePhoto(e.target.files ? e.target.files[0] : null)} />
                             <label htmlFor="profile-photo" className="w-100 m-0" style={{ cursor: 'pointer' }}>
                               <i className="hgi-stroke hgi-user text-primary me-2"></i>
@@ -910,7 +841,7 @@ export default function CreateUserPage() {
 
                         <div className="col-md-6">
                           <label className="form-label small fw-bold text-dark mb-1">Agreement Start Date *</label>
-                          <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentStartDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentStartDate} onChange={(e) => handleStartDateChange(e.target.value)} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentStartDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentStartDate} onChange={(e) => handleStartDateChange(e.target.value)} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                           {validationErrors.floorAssignmentStartDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentStartDate}</div>}
                         </div>
 
@@ -919,7 +850,7 @@ export default function CreateUserPage() {
                           <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentEndDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentEndDate} onChange={(e) => {
                             const endVal = e.target.value;
                             setFormData(prev => ({ ...prev, floorAssignmentEndDate: endVal }));
-                          }} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          }} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                           {validationErrors.floorAssignmentEndDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentEndDate}</div>}
                         </div>
 
@@ -931,12 +862,12 @@ export default function CreateUserPage() {
                               ...prev,
                               totalAgreementAmount: totalVal
                             }));
-                          }} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          }} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                         </div>
 
                         <div className="col-md-4">
                           <label className="form-label small fw-bold text-dark mb-1">Payment Frequency *</label>
-                          <select className="form-select py-2 shadow-none" value={formData.paymentType} onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}>
+                          <select className="form-select py-2 shadow-none" value={formData.paymentType} onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
                             <option value="Monthly">Monthly</option>
                             <option value="Quarterly">Quarterly</option>
                             <option value="Daily Wise">Daily Wise</option>
@@ -946,7 +877,7 @@ export default function CreateUserPage() {
 
                         <div className="col-md-4">
                           <label className="form-label small fw-bold text-dark mb-1">Payment Due Day (Day of Month) *</label>
-                          <input type="number" className="form-control py-2 shadow-none" required min="1" max="31" value={formData.paymentDueDay} onChange={(e) => setFormData({ ...formData, paymentDueDay: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }} />
+                          <input type="number" className="form-control py-2 shadow-none" required min="1" max="31" value={formData.paymentDueDay} onChange={(e) => setFormData({ ...formData, paymentDueDay: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
                         </div>
 
                         {/* Payment Calculation Details Panel */}
@@ -958,13 +889,7 @@ export default function CreateUserPage() {
                                 Duration: <strong>{termDays} Days / {termMonths} Months</strong>
                               </div>
                               <div>
-                                Monthly Amount: <strong>₹{monthlyAmt.toLocaleString()}</strong>
-                              </div>
-                              <div>
-                                Quarterly Amount: <strong>₹{quarterlyAmt.toLocaleString()}</strong>
-                              </div>
-                              <div>
-                                Daily Amount: <strong>₹{dailyAmt.toLocaleString()}</strong>
+                                Installment Amount: <strong>₹{getInstallmentAmt().toLocaleString()}</strong>
                               </div>
                               <div>
                                 Next Due Date: <strong>{getCalculatedNextDueDate()}</strong>
@@ -975,7 +900,7 @@ export default function CreateUserPage() {
 
                         <div className="col-12">
                           <label className="form-label small fw-bold text-dark mb-1">Remarks / Special Notes</label>
-                          <textarea rows={2} className="form-control py-2 shadow-none" placeholder="Any internal assignment remarks..." value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} style={{ borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '0.9rem' }}></textarea>
+                          <textarea rows={2} className="form-control py-2 shadow-none" placeholder="Any internal assignment remarks..." value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}></textarea>
                         </div>
                       </div>
                     )}
@@ -986,7 +911,7 @@ export default function CreateUserPage() {
 
               {/* Step 4: Permissions */}
               {currentStep === 4 && (
-                <div className="card border rounded-4 bg-white mb-4">
+                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center gap-3 mb-3 pb-2 border-bottom">
                       <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style={{ width: '42px', height: '42px' }}>
@@ -1010,7 +935,7 @@ export default function CreateUserPage() {
                         const hasPerm = formData.permissions.includes(perm.id);
                         return (
                           <div className="col-md-4 col-sm-6" key={perm.id}>
-                            <div className={`p-2 rounded-3 border d-flex align-items-center gap-2 transition-all ${hasPerm ? 'bg-white' : 'bg-light opacity-50'}`} style={{ border: hasPerm ? '1px solid #e2e8f0' : '1px solid #f1f5f9' }}>
+                            <div className={`p-2 rounded-3 border d-flex align-items-center gap-2 transition-all ${hasPerm ? 'bg-white' : 'bg-light opacity-50'}`} style={{ border: hasPerm ? '1px solid var(--border-color)' : '1px solid var(--border-color)' }}>
                               <div className={`rounded-circle d-flex align-items-center justify-content-center ${hasPerm ? 'bg-success text-white' : 'bg-secondary text-white bg-opacity-25'}`} style={{ width: '20px', height: '20px', minWidth: '20px' }}>
                                 {hasPerm ? <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '0.9rem' }}></i> : <i className="hgi-stroke hgi-cancel-01" style={{ fontSize: '0.8rem' }}></i>}
                               </div>
@@ -1026,15 +951,15 @@ export default function CreateUserPage() {
 
               {/* Step 5: Review & Confirm */}
               {currentStep === 5 && (
-                <div className="card border rounded-4 bg-white mb-4">
+                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
                   <div className="card-body p-4">
                     <div className="d-flex align-items-center gap-3 mb-4">
-                      <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center text-primary" style={{ width: '42px', height: '42px' }}>
-                        <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '1.25rem' }}></i>
+                      <div className="bg-light rounded-circle d-flex align-items-center justify-content-center text-dark" style={{ width: '38px', height: '38px' }}>
+                        <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '1.1rem' }}></i>
                       </div>
                       <div>
-                        <h5 className="fw-bold mb-0 text-dark">Review User Profile</h5>
-                        <p className="text-muted small mb-0">Deep check the information below before creating the user account.</p>
+                        <h6 className="fw-bold mb-0 text-dark">Review User Profile</h6>
+                        <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>Deep check the information below before creating the user account.</p>
                       </div>
                     </div>
 
@@ -1042,8 +967,8 @@ export default function CreateUserPage() {
 
                       {/* Section 1: Personal Details */}
                       <div>
-                        <h6 className="fw-bold text-primary mb-2 border-bottom pb-1">
-                          <i className="hgi-stroke hgi-user me-2"></i>Personal Information Summary
+                        <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
+                          <i className="hgi-stroke hgi-user text-muted me-2"></i>Personal Information Summary
                         </h6>
                         <div className="row g-2">
                           <div className="col-sm-6">
@@ -1072,8 +997,8 @@ export default function CreateUserPage() {
                       {/* Section 2: Spatial Assignment */}
                       {formData.role !== 'SUPER_ADMIN' && (
                         <div>
-                          <h6 className="fw-bold text-primary mb-2 border-bottom pb-1">
-                            <i className="hgi-stroke hgi-building-03 me-2"></i>Spatial Assignment Summary
+                          <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
+                            <i className="hgi-stroke hgi-building-03 text-muted me-2"></i>Spatial Assignment Summary
                           </h6>
                           <div className="row g-2">
                             <div className="col-12">
@@ -1109,8 +1034,8 @@ export default function CreateUserPage() {
                       {/* Section 3: Invoicing Terms */}
                       {formData.role !== 'SUPER_ADMIN' && formData.role !== 'STAFF_ADMIN' && (
                         <div>
-                          <h6 className="fw-bold text-primary mb-2 border-bottom pb-1">
-                            <i className="hgi-stroke hgi-invoice-01 me-2"></i>Agreement & Financials Summary
+                          <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
+                            <i className="hgi-stroke hgi-invoice-01 text-muted me-2"></i>Agreement & Financials Summary
                           </h6>
                           <div className="row g-2">
                             <div className="col-sm-6">
@@ -1121,7 +1046,7 @@ export default function CreateUserPage() {
                               <span className="text-muted small d-block">GSTIN / PAN</span>
                               <strong className="text-dark small">{formData.gstPan || 'Not specified'}</strong>
                             </div>
-                             <div className="col-sm-6">
+                            <div className="col-sm-6">
                               <span className="text-muted small d-block">Lease Term</span>
                               <strong className="text-dark small">
                                 {formData.floorAssignmentStartDate || 'N/A'} to {formData.floorAssignmentEndDate || 'N/A'} ({termDays} days / {termMonths} mos)
@@ -1144,16 +1069,8 @@ export default function CreateUserPage() {
                               <strong className="text-dark small">{formData.paymentDueDay}th of month</strong>
                             </div>
                             <div className="col-sm-4">
-                              <span className="text-muted small d-block">Monthly Amount</span>
-                              <strong className="text-dark small">₹{monthlyAmt.toLocaleString()}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Quarterly Amount</span>
-                              <strong className="text-dark small">₹{quarterlyAmt.toLocaleString()}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Daily Amount</span>
-                              <strong className="text-dark small">₹{dailyAmt.toLocaleString()}</strong>
+                              <span className="text-muted small d-block">Installment Amount ({formData.paymentType})</span>
+                              <strong className="text-dark small">₹{getInstallmentAmt().toLocaleString()}</strong>
                             </div>
                             <div className="col-sm-4">
                               <span className="text-muted small d-block">Next Payment Due Date</span>
@@ -1169,39 +1086,45 @@ export default function CreateUserPage() {
                 </div>
               )}
 
-              {/* Actions Footer */}
-              <div className="d-flex justify-content-end gap-3 mt-4">
-                <button
-                  type="button"
-                  onClick={handlePrevStep}
-                  className="btn btn-white border rounded-pill px-4 py-2 fw-bold text-dark bg-white"
-                >
-                  {currentStep === 1 ? 'Cancel' : 'Back'}
-                </button>
+              {/* Spacer to ensure scroll doesn't get cut off by fixed footer */}
+              <div style={{ height: '100px', width: '100%' }}></div>
 
-                {currentStep < 5 ? (
+              {/* Actions Footer */}
+              <div className="position-fixed bottom-0 start-0 w-100 bg-white border-top px-4 py-3 shadow-sm" style={{ zIndex: 1020 }}>
+                <div className="d-flex justify-content-end gap-3 mx-auto" style={{ maxWidth: '1400px' }}>
                   <button
                     type="button"
-                    onClick={handleNextStep}
-                    className="btn btn-primary rounded-pill px-4 py-2 fw-bold text-white d-flex align-items-center gap-1"
-                    style={{ backgroundColor: '#014aad', borderColor: '#014aad' }}
+                    onClick={handlePrevStep}
+                    className="btn btn-white border rounded-3 px-3 py-1 fw-bold text-dark bg-white shadow-sm"
+                    style={{ fontSize: '0.85rem' }}
                   >
-                    <span>Next</span>
-                    <i className="hgi-stroke hgi-arrow-right-01" style={{ fontSize: '0.95rem' }}></i>
+                    {currentStep === 1 ? 'Cancel' : 'Back'}
                   </button>
-                ) : (
-                  <button
-                    type="submit"
-                    className="btn btn-primary rounded-pill px-4 py-2 fw-bold text-white"
-                    disabled={isLoading}
-                    style={{ backgroundColor: '#014aad', borderColor: '#014aad' }}
-                  >
-                    {isLoading ? (
-                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    ) : null}
-                    Create User Account
-                  </button>
-                )}
+
+                  {currentStep < 5 ? (
+                    <button
+                      type="button"
+                      onClick={handleNextStep}
+                      className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white d-flex align-items-center gap-1 shadow-sm"
+                      style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
+                    >
+                      <span>Next</span>
+                      <i className="hgi-stroke hgi-arrow-right-01" style={{ fontSize: '0.95rem' }}></i>
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white shadow-sm"
+                      disabled={isLoading || !isSubmitReady}
+                      style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
+                    >
+                      {isLoading ? (
+                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                      ) : null}
+                      Create User Account
+                    </button>
+                  )}
+                </div>
               </div>
 
             </div>
@@ -1220,7 +1143,7 @@ export default function CreateUserPage() {
         }}>
           <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
             maxWidth: '420px',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--bg-card)',
             border: '1px solid rgba(255, 255, 255, 0.8)'
           }}>
             <div className="mb-3">
@@ -1258,15 +1181,17 @@ export default function CreateUserPage() {
         }}>
           <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
             maxWidth: '420px',
-            backgroundColor: '#ffffff',
+            backgroundColor: 'var(--bg-card)',
             border: '1px solid rgba(255, 255, 255, 0.8)'
           }}>
-            <div className="mb-3">
-              {otpSuccess ? (
-                <i className="hgi-stroke hgi-checkmark-circle-01 text-success" style={{ fontSize: '3.5rem' }}></i>
-              ) : (
-                <i className="hgi-stroke hgi-mail-01 text-primary" style={{ fontSize: '3.5rem' }}></i>
-              )}
+            <div className="d-flex justify-content-center mb-4">
+              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '72px', height: '72px', backgroundColor: otpSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(15, 23, 42, 0.04)' }}>
+                {otpSuccess ? (
+                  <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '2.2rem', color: '#10b981' }}></i>
+                ) : (
+                  <i className="hgi-stroke hgi-mail-01 text-dark" style={{ fontSize: '2.2rem' }}></i>
+                )}
+              </div>
             </div>
 
             <h4 className="fw-bold text-dark mb-2">
@@ -1288,7 +1213,9 @@ export default function CreateUserPage() {
                     ...formData,
                     idProofUrl: idProof ? idProof.name : '',
                     profilePhotoUrl: profilePhoto ? profilePhoto.name : '',
-                    otp: otpCode.trim()
+                    otp: otpCode.trim(),
+                    createdBy: currentUser?._id,
+                    assignedBy: currentUser?.name || 'System Administrator'
                   };
                   const res = await api.post('/users', payload);
                   if (res.success) {
@@ -1305,28 +1232,58 @@ export default function CreateUserPage() {
                 }
               }}>
                 <div className="mb-3">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    className="form-control py-2 text-center fw-bold font-monospace shadow-none text-dark"
-                    placeholder="Enter 6-Digit OTP"
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value.replace(/\D/g, ''))}
-                    style={{
-                      borderRadius: '8px',
-                      border: '1px solid #cbd5e1',
-                      fontSize: '1.25rem',
-                      letterSpacing: '4px'
-                    }}
-                    required
-                  />
+                  <div className="d-flex justify-content-center gap-2">
+                    {[0, 1, 2, 3, 4, 5].map((index) => (
+                      <input
+                        key={index}
+                        id={`otp-${index}`}
+                        type="text"
+                        maxLength={1}
+                        className="form-control text-center fw-bold bg-light shadow-none text-dark"
+                        value={otpCode[index] || ''}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '');
+                          let newOtp = otpCode.split('');
+                          newOtp[index] = val;
+                          setOtpCode(newOtp.join(''));
+                          if (val && index < 5) {
+                            document.getElementById(`otp-${index + 1}`)?.focus();
+                          }
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Backspace' && !otpCode[index] && index > 0) {
+                            document.getElementById(`otp-${index - 1}`)?.focus();
+                          }
+                        }}
+                        onPaste={(e) => {
+                          e.preventDefault();
+                          const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+                          if (pasted) {
+                            setOtpCode(pasted);
+                            const focusIndex = Math.min(pasted.length, 5);
+                            document.getElementById(`otp-${focusIndex}`)?.focus();
+                          }
+                        }}
+                        style={{
+                          width: '48px',
+                          height: '52px',
+                          fontSize: '1.25rem',
+                          borderRadius: '10px',
+                          border: '1px solid transparent',
+                          caretColor: 'var(--dark-section)'
+                        }}
+                        required
+                      />
+                    ))}
+                  </div>
                   {otpError && <div className="text-danger small mt-2">{otpError}</div>}
+                  {otpMessage && <div className="text-success small mt-2 fw-bold">{otpMessage}</div>}
                 </div>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 mt-4">
                   <button
                     type="button"
-                    className="btn btn-light border w-100 py-2 rounded-pill fw-bold text-dark bg-light"
+                    className="btn border w-100 py-2 rounded-3 fw-bold text-dark bg-white shadow-sm"
                     onClick={() => {
                       setShowOtpDialog(false);
                     }}
@@ -1335,8 +1292,8 @@ export default function CreateUserPage() {
                   </button>
                   <button
                     type="submit"
-                    className="btn btn-primary w-100 py-2 rounded-pill fw-bold text-white shadow-sm"
-                    style={{ backgroundColor: '#014aad', borderColor: '#014aad' }}
+                    className="btn w-100 py-2 rounded-3 fw-bold text-white shadow-sm"
+                    style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)' }}
                     disabled={isLoading}
                   >
                     {isLoading ? (
@@ -1347,19 +1304,25 @@ export default function CreateUserPage() {
                   </button>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-4">
                   <button
                     type="button"
-                    className="btn btn-link p-0 small text-primary text-decoration-none fw-bold"
-                    style={{ fontSize: '0.8rem' }}
+                    className="btn btn-link p-0 small text-dark fw-bold"
+                    style={{ fontSize: '0.85rem', textDecoration: 'underline', textUnderlineOffset: '4px' }}
                     onClick={async () => {
                       setOtpError("");
+                      setOtpMessage("");
+                      setOtpCode(""); // Clear OTP fields
+                      // Focus the first input field
+                      setTimeout(() => document.getElementById('otp-0')?.focus(), 50);
+                      
                       try {
                         await api.post('/users/send-verification-otp', {
                           email: formData.email,
                           name: formData.name
                         });
-                        setOtpError("OTP Resent successfully!");
+                        setOtpMessage("OTP resent successfully via SMS & Email!");
+                        setTimeout(() => setOtpMessage(""), 5000);
                       } catch (err: any) {
                         setOtpError(err.message || "Failed to resend OTP.");
                       }

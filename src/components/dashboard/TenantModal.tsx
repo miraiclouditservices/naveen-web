@@ -75,7 +75,7 @@ export default function TenantModal({ isOpen, onClose, onSave, editData }: any) 
               </div>
               <div className="d-flex justify-content-end gap-2 mt-4 pt-3 border-top">
                 <button type="button" className="btn btn-light rounded-pill px-4 fw-bold" onClick={onClose}>Cancel</button>
-                <button type="submit" className="btn btn-primary rounded-pill px-4 fw-bold" style={{ backgroundColor: '#014aad', borderColor: '#014aad' }}>Save Tenant</button>
+                <button type="submit" className="btn btn-primary rounded-pill px-4 fw-bold" style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)' }}>Save Tenant</button>
               </div>
             </form>
           </div>

@@ -84,7 +84,7 @@ export default function MaterialDetailView({
           {/* Header */}
           <div
             className="d-flex align-items-center justify-content-between px-4 py-3"
-            style={{ backgroundColor: "#3a3a3a" }}
+            style={{ backgroundColor: "var(--text-primary)" }}
           >
             <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
               View Gate Pass Details
@@ -93,12 +93,12 @@ export default function MaterialDetailView({
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", lineHeight: 1, cursor: "pointer",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -111,12 +111,12 @@ export default function MaterialDetailView({
             <div className="text-center mb-4">
               <div
                 className="d-inline-flex align-items-center justify-content-center mb-2 rounded-circle text-white fw-bold"
-                style={{ width: 56, height: 56, backgroundColor: "#014aad", fontSize: "1.3rem" }}
+                style={{ width: 56, height: 56, backgroundColor: "var(--dark-section)", fontSize: "1.3rem" }}
               >
                 <i className="bi bi-box-seam"></i>
               </div>
               <div>
-                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "#1f2937" }}>
+                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "var(--text-main)" }}>
                   {viewItem.materialDetails}
                 </h5>
                 <div className="d-flex gap-2 justify-content-center align-items-center mt-2">
@@ -163,7 +163,7 @@ export default function MaterialDetailView({
 
             {/* Section 1: Material Information */}
             <div className="mb-4">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                 <i className="bi bi-info-circle-fill text-primary me-2"></i>
                 Material Information
               </h6>
@@ -176,7 +176,7 @@ export default function MaterialDetailView({
             {/* Section 2: Location Details */}
             {(viewItem.property || viewItem.floor || viewItem.unit) && (
               <div className="mb-4 pt-2">
-                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                   <i className="bi bi-geo-alt-fill text-primary me-2"></i>
                   Location Details
                 </h6>
@@ -211,7 +211,7 @@ export default function MaterialDetailView({
 
             {/* Section 3: Movement Details */}
             <div className="mb-4 pt-2">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                 <i className="bi bi-truck text-primary me-2"></i>
                 Movement Details
               </h6>
@@ -224,7 +224,7 @@ export default function MaterialDetailView({
 
             {/* Section 4: Audit & Creator Details */}
             <div className="mb-4 pt-2">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                 <i className="bi bi-person-badge-fill text-primary me-2"></i>
                 Creator Details
               </h6>
@@ -243,7 +243,7 @@ export default function MaterialDetailView({
             {/* Section 5: Approval Details */}
             {viewItem.status !== "Pending" && (
               <div className="mb-3 pt-2">
-                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+                <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                   <i className="bi bi-shield-check text-primary me-2"></i>
                   Approval Decision Details
                 </h6>
@@ -298,7 +298,7 @@ export default function MaterialDetailView({
               onClick={() => onEdit(viewItem)}
               disabled={isCheckingOut}
               className="btn btn-primary btn-sm rounded px-3 fw-bold text-white shadow-sm border-0"
-              style={{ backgroundColor: "#014aad" }}
+              style={{ backgroundColor: "var(--dark-section)" }}
             >
               <i className="bi bi-pencil-square me-1" /> Edit
             </button>
@@ -323,13 +323,13 @@ function ROW({ label, value, highlight = false }: { label: string; value: any; h
     const stringVal = String(value).trim();
     if (isPhone && /^\+?[0-9\s\-()]{7,20}$/.test(stringVal)) {
       renderedValue = (
-        <a href={`tel:${stringVal}`} className="text-decoration-none fw-semibold" style={{ color: "#014aad" }}>
+        <a href={`tel:${stringVal}`} className="text-decoration-none fw-semibold" style={{ color: "var(--dark-section)" }}>
           <i className="bi bi-telephone me-1" />{value}
         </a>
       );
     } else if (isEmail && stringVal.includes("@")) {
       renderedValue = (
-        <a href={`mailto:${stringVal}`} className="text-decoration-none fw-semibold" style={{ color: "#014aad" }}>
+        <a href={`mailto:${stringVal}`} className="text-decoration-none fw-semibold" style={{ color: "var(--dark-section)" }}>
           <i className="bi bi-envelope me-1" />{value}
         </a>
       );

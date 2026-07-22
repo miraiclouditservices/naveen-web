@@ -47,7 +47,7 @@ export default function ResetPasswordModal({
               style={{
                 width: 32, height: 32, borderRadius: "50%", border: "none",
                 background: "transparent", cursor: "pointer", fontSize: "1.1rem",
-                color: "#94a3b8", display: "flex", alignItems: "center", justifyContent: "center",
+                color: "var(--text-muted)", display: "flex", alignItems: "center", justifyContent: "center",
               }}
             >
               ×

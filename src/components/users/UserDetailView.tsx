@@ -75,7 +75,7 @@ export default function UserDetailView({
           <button
             onClick={onStartEditing}
             className="btn btn-outline-secondary d-flex align-items-center gap-2 px-3 py-2"
-            style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, border: "1px solid #cbd5e1" }}
+            style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, border: "1px solid var(--border-color)" }}
           >
             <i className="hgi-stroke hgi-pencil-line-01" /> Edit User
           </button>
@@ -83,7 +83,7 @@ export default function UserDetailView({
             <button
               className="btn btn-outline-secondary d-flex align-items-center gap-2 px-3 py-2 dropdown-toggle"
               data-bs-toggle="dropdown"
-              style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, border: "1px solid #cbd5e1" }}
+              style={{ borderRadius: "8px", fontSize: "0.85rem", fontWeight: 600, border: "1px solid var(--border-color)" }}
             >
               More Actions
             </button>

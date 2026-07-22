@@ -152,7 +152,7 @@ export default function AssetModal({ isOpen, onClose, onSave, editData, mode }: 
                               <i className={`bi ${formData.category === 'HVAC' ? 'bi-wind' : formData.category === 'Electrical' ? 'bi-lightning-charge' : 'bi-box-seam'} fs-4`}></i>
                            </div>
                            <div>
-                              <h4 className="fw-bold mb-0" style={{ color: '#0F172A' }}>{formData.assetDescription}</h4>
+                              <h4 className="fw-bold mb-0" style={{ color: 'var(--text-main)' }}>{formData.assetDescription}</h4>
                               <span className="badge bg-emerald bg-opacity-10 text-primary rounded-pill px-3">{formData.category}</span>
                            </div>
                         </div>
@@ -244,7 +244,7 @@ export default function AssetModal({ isOpen, onClose, onSave, editData, mode }: 
                     </div>
                   )}
 
-                  <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2" style={{ color: '#014aad' }}>
+                  <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2" style={{ color: 'var(--dark-section)' }}>
                     <i className="bi bi-info-square-fill"></i> Core Asset Identity
                   </h6>
                   <div className="row g-3 mb-4">
@@ -373,7 +373,7 @@ export default function AssetModal({ isOpen, onClose, onSave, editData, mode }: 
                   <hr className="text-muted opacity-25" />
 
                   {/* Warranty Details */}
-                  <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2" style={{ color: '#014aad' }}>
+                  <h6 className="fw-bold text-primary mb-3 d-flex align-items-center gap-2" style={{ color: 'var(--dark-section)' }}>
                     <i className="bi bi-shield-check"></i> Warranty & Lifecycle Support
                   </h6>
                   <div className="row g-3">
@@ -405,7 +405,7 @@ export default function AssetModal({ isOpen, onClose, onSave, editData, mode }: 
                 <button 
                   type="submit" className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm text-white border-0"
                   disabled={isSubmitting}
-                  style={{ backgroundColor: '#014aad', fontSize: '0.85rem' }}
+                  style={{ backgroundColor: 'var(--dark-section)', fontSize: '0.85rem' }}
                 >
                   {isSubmitting ? (
                     <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>

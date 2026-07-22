@@ -32,7 +32,7 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
     }).finally(()=>setLoading(false));
   },[]);
 
-  if(loading) return <div className="d-flex align-items-center justify-content-center" style={{ height:"50vh" }}><div className="spinner-border" style={{ color:"#014aad" }} /></div>;
+  if(loading) return <div className="d-flex align-items-center justify-content-center" style={{ height:"50vh" }}><div className="spinner-border" style={{ color:"var(--dark-section)" }} /></div>;
 
   // ── FILTERING DATASETS BY LOGIN AND FLAT (UNIT) NUMBER ───────────────────
   const activeUnits = profile?.assignedUnits || [];
@@ -92,7 +92,7 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
     return { label: dayLabel, value: count };
   });
 
-  const C = { purple:"#7c3aed",blue:"#014aad",green:"#16a34a",yellow:"#d97706",red:"#dc2626",teal:"#0891b2" };
+  const C = { purple:"#7c3aed",blue:"var(--dark-section)",green:"#16a34a",yellow:"#d97706",red:"#dc2626",teal:"#0891b2" };
 
   return (
     <div style={{ paddingBottom:40 }}>
@@ -101,7 +101,7 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
       <DashHeader
         title="Office Owner Dashboard"
         subtitle={`Office access management · ${new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"})}`}
-        user={user} accentColor="#014aad" gradientFrom="#1e293b" gradientTo="#0f172a"
+        user={user} accentColor="var(--dark-section)" gradientFrom="#1e293b" gradientTo="var(--text-main)"
       >
         {activeUnits.length > 0 && (
           <div style={{ display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "14px" }}>
@@ -114,7 +114,7 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
                 display: "flex", 
                 alignItems: "center", 
                 gap: "12px",
-                color: "#f8fafc"
+                color: "var(--bg-app)"
               }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                   <i className="bi bi-building" style={{ fontSize: "0.85rem", color: "#38bdf8" }}></i>
@@ -210,7 +210,7 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
 
       {/* Quick Actions */}
       <div className="d-mb">
-        <Panel title="Quick Actions" icon="bi-lightning-fill" iconColor="#fbbf24" accent="#014aad">
+        <Panel title="Quick Actions" icon="bi-lightning-fill" iconColor="#fbbf24" accent="var(--dark-section)">
           <QuickActions actions={[
             { label:"Register Visitor",       icon:"bi-person-plus-fill",   href:"/admin/visitors",  color:C.purple },
             { label:"Create Gate Pass",       icon:"bi-card-checklist",     href:"/admin/materials", color:C.blue },
@@ -225,32 +225,32 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
       <div className="d-g3 d-mb">
 
         {/* Visitor Analytics */}
-        <Panel title="Visitor Analytics" icon="bi-graph-up-arrow" iconColor="#7c3aed" accent="#014aad">
+        <Panel title="Visitor Analytics" icon="bi-graph-up-arrow" iconColor="#7c3aed" accent="var(--dark-section)">
           {filteredVisitors.length>0
             ? <LineChart items={last7DaysTrend} color={C.purple} />
-            : <p style={{ textAlign:"center",color:"#94a3b8",margin:"30px 0",fontSize:"0.8rem" }}>No visitor data</p>}
+            : <p style={{ textAlign:"center",color:"var(--text-muted)",margin:"30px 0",fontSize:"0.8rem" }}>No visitor data</p>}
           <div style={{ display:"flex",gap:14,marginTop:12 }}>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Today</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{visitorsToday}</div></div>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Expected</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.yellow }}>{visitorsPending}</div></div>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Inside</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{visitorsCheckedIn}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Today</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{visitorsToday}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Expected</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.yellow }}>{visitorsPending}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Inside</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{visitorsCheckedIn}</div></div>
           </div>
         </Panel>
 
         {/* Gate Pass Summary */}
-        <Panel title="Gate Pass Analytics" icon="bi-bar-chart-fill" iconColor="#38bdf8" accent="#014aad">
+        <Panel title="Gate Pass Analytics" icon="bi-bar-chart-fill" iconColor="#38bdf8" accent="var(--dark-section)">
           <BarChart items={[
             { label:"Total",   value:gatePassTotal },
             { label:"Pending", value:gatePassPending },
             { label:"Approved",value:gatePassApproved },
           ]} color={C.blue} />
           <div style={{ display:"flex",gap:14,marginTop:12 }}>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Total</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{gatePassTotal}</div></div>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Approved</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{gatePassApproved}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Total</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{gatePassTotal}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Approved</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{gatePassApproved}</div></div>
           </div>
         </Panel>
 
         {/* Operational Overview summary */}
-        <Panel title="Operations Overview" icon="bi-shield-check" iconColor="#16a34a" accent="#014aad">
+        <Panel title="Operations Overview" icon="bi-shield-check" iconColor="#16a34a" accent="var(--dark-section)">
           <div style={{ display:"flex",flexDirection:"column",gap:14,padding:"10px 0" }}>
             <div className="d-flex justify-content-between align-items-center bg-light p-3 rounded border">
               <div>
@@ -274,23 +274,23 @@ export default function OfficeOwnerDashboard({ user }: { user: any }) {
       {/* Bottom Row */}
       <div className="d-g2">
         {/* Recent Visitors */}
-        <Panel title="Recent Visitors" icon="bi-person-badge" iconColor="#7c3aed" link="/admin/visitors" accent="#014aad">
+        <Panel title="Recent Visitors" icon="bi-person-badge" iconColor="#7c3aed" link="/admin/visitors" accent="var(--dark-section)">
           {filteredVisitors.length>0
             ? filteredVisitors.slice(0,5).map((v:any,i:number)=>(
               <AlertItem key={i} icon="bi-person-check" iconColor={C.purple}
                 title={v.visitorName} sub={`${v.property?.propertyName || v.placeOfVisit || "Office"} · ${v.visitDate}`} time={<StatusPill status={v.status} />} />
             ))
-            : <p style={{ textAlign:"center",color:"#94a3b8",fontSize:"0.8rem",margin:"20px 0" }}>No recent visitors</p>}
+            : <p style={{ textAlign:"center",color:"var(--text-muted)",fontSize:"0.8rem",margin:"20px 0" }}>No recent visitors</p>}
         </Panel>
 
         {/* Recent Gate Passes */}
-        <Panel title="Recent Gate Passes" icon="bi-card-checklist" iconColor="#38bdf8" link="/admin/materials" accent="#014aad">
+        <Panel title="Recent Gate Passes" icon="bi-card-checklist" iconColor="#38bdf8" link="/admin/materials" accent="var(--dark-section)">
           {filteredMaterials.length>0
             ? filteredMaterials.slice(0,5).map((g:any,i:number)=>(
               <AlertItem key={i} icon="bi-box-seam" iconColor={C.blue}
                 title={g.materialDetails||"—"} sub={`${g.property?.propertyName || g.building || "Office"} · ${g.gatePassType}`} time={<StatusPill status={g.status} />} />
             ))
-            : <p style={{ textAlign:"center",color:"#94a3b8",fontSize:"0.8rem",margin:"20px 0" }}>No gate passes</p>}
+            : <p style={{ textAlign:"center",color:"var(--text-muted)",fontSize:"0.8rem",margin:"20px 0" }}>No gate passes</p>}
         </Panel>
       </div>
     </div>

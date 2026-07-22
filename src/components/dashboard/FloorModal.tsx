@@ -5,13 +5,13 @@ import { api } from "@/utils/api";
 
 const FIELD_STYLE: React.CSSProperties = {
   borderRadius: "6px",
-  border: "1px solid #d1d5db",
+  border: "1px solid var(--text-muted)",
   fontSize: "0.88rem",
   padding: "8px 12px",
   width: "100%",
   outline: "none",
-  backgroundColor: "#fff",
-  color: "#111827",
+  backgroundColor: "var(--bg-card)",
+  color: "var(--text-main)",
 };
 
 const LABEL_STYLE: React.CSSProperties = {
@@ -25,17 +25,13 @@ const LABEL_STYLE: React.CSSProperties = {
 export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
   const [properties, setProperties] = useState<any[]>([]);
   const [existingFloors, setExistingFloors] = useState<any[]>([]);
-  const [admins, setAdmins] = useState<any[]>([]);
-  const [owners, setOwners] = useState<any[]>([]);
   
   const [formData, setFormData] = useState({
     property: "",
     floorNumber: "",
     floorName: "",
     totalSft: "",
-    status: "Active",
-    assignedAdmin: "",
-    assignedOwner: ""
+    status: "Active"
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,8 +39,6 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
   useEffect(() => {
     if (isOpen) {
       fetchProperties();
-      fetchAdmins();
-      fetchOwners();
     }
   }, [isOpen]);
 
@@ -55,12 +49,10 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
         floorNumber: editData.floorNumber || "",
         floorName: editData.floorName || "",
         totalSft: editData.totalSft || "",
-        status: editData.status || "Active",
-        assignedAdmin: editData.assignedAdmin?._id || editData.assignedAdmin || "",
-        assignedOwner: editData.assignedOwner?._id || editData.assignedOwner || ""
+        status: editData.status || "Active"
       });
     } else {
-      setFormData({ property: "", floorNumber: "", floorName: "", totalSft: "", status: "Active", assignedAdmin: "", assignedOwner: "" });
+      setFormData({ property: "", floorNumber: "", floorName: "", totalSft: "", status: "Active" });
     }
   }, [editData, isOpen]);
 
@@ -76,24 +68,6 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
     try {
       const response = await api.get('/properties');
       if (response.success) setProperties(response.data);
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchAdmins = async () => {
-    try {
-      const response = await api.get('/users/list');
-      if (response.success && response.data) {
-        setAdmins(response.data.filter((u: any) => u.role === 'FLOOR_ADMIN'));
-      }
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchOwners = async () => {
-    try {
-      const response = await api.get('/owners');
-      if (response.success && response.data) {
-        setOwners(response.data);
-      }
     } catch (err) { console.error(err); }
   };
 
@@ -131,8 +105,6 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
     setIsSubmitting(true);
     
     const submitData = { ...formData };
-    if (submitData.assignedAdmin === "") submitData.assignedAdmin = null as any;
-    if (submitData.assignedOwner === "") submitData.assignedOwner = null as any;
     
     await onSave(submitData);
     setIsSubmitting(false);
@@ -235,26 +207,6 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
                     <option value="Maintenance">Maintenance</option>
                   </select>
                 </div>
-
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}><i className="bi bi-person-badge-fill text-primary me-2"></i>Assign Floor Admin</label>
-                  <select name="assignedAdmin" value={formData.assignedAdmin} onChange={handleChange} style={FIELD_STYLE}>
-                    <option value="">-- Unassigned --</option>
-                    {admins.map(admin => (
-                      <option key={admin._id} value={admin._id}>{admin.name} ({admin.email})</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}><i className="bi bi-person-fill text-warning me-2"></i>Assign Floor Owner</label>
-                  <select name="assignedOwner" value={formData.assignedOwner} onChange={handleChange} style={FIELD_STYLE}>
-                    <option value="">-- Unassigned --</option>
-                    {owners.map(owner => (
-                      <option key={owner._id} value={owner._id}>{owner.ownerName}</option>
-                    ))}
-                  </select>
-                </div>
               </div>
             </div>
           </div>
@@ -266,7 +218,7 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
               type="submit" 
               className="btn btn-sm fw-bold text-white px-4 py-2" 
               disabled={isSubmitting}
-              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: '#014aad' }}
+              style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: 'var(--dark-section)' }}
             >
               {isSubmitting ? "Saving..." : (editData ? 'Update Floor' : 'Create Floor')}
             </button>

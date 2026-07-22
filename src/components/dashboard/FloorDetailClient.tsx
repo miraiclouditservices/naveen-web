@@ -124,7 +124,7 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
 
             {/* Header info */}
             <div className="d-flex align-items-center gap-3 mb-3">
-              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, backgroundColor: '#e8f0fe', color: '#014aad', flexShrink: 0 }}>
+              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: 44, height: 44, backgroundColor: '#e8f0fe', color: 'var(--dark-section)', flexShrink: 0 }}>
                 <i className="bi bi-layers-fill" style={{ fontSize: '1.2rem' }}></i>
               </div>
               <div className="text-truncate">
@@ -152,12 +152,12 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
                 <div
                   key={row.label}
                   className="d-flex justify-content-between align-items-center py-2"
-                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid #f1f5f9" }}
+                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}
                 >
                   <div className="d-flex align-items-center gap-2">
                     <div
                       className="d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, backgroundColor: '#f8fafc', border: '1px solid #f1f5f9', borderRadius: 6, color: '#014aad' }}
+                      style={{ width: 28, height: 28, backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 6, color: 'var(--dark-section)' }}
                     >
                       <i className={`bi ${row.icon}`} style={{ fontSize: "0.85rem" }}></i>
                     </div>
@@ -175,7 +175,7 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
           <div className="bg-white border rounded-4 p-4 h-100 d-flex flex-column" style={{ minHeight: 520 }}>
             <div className="d-flex justify-content-between align-items-center mb-3 flex-shrink-0">
               <h6 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                <i className="bi bi-grid-3x3-gap" style={{ color: "#014aad" }}></i> Units on this Floor
+                <i className="bi bi-grid-3x3-gap" style={{ color: "var(--dark-section)" }}></i> Units on this Floor
               </h6>
               <span className="badge bg-light text-dark border px-3 py-2 fw-bold" style={{ fontSize: "0.75rem", borderRadius: 6 }}>
                 {units.length} Units
@@ -188,13 +188,13 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
                   <thead>
                     <tr>
                       {["Unit / Flat", "Type", "SFT", "Owner", "Tenant", "Status"].map(h => (
-                        <th key={h} className="py-2 px-3 fw-bold text-muted" style={{ backgroundColor: "#f8fafc", fontSize: "0.72rem", textTransform: "uppercase", border: "none", letterSpacing: "0.04em" }}>{h}</th>
+                        <th key={h} className="py-2 px-3 fw-bold text-muted" style={{ backgroundColor: "var(--bg-app)", fontSize: "0.72rem", textTransform: "uppercase", border: "none", letterSpacing: "0.04em" }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {units.map((u: any, i: number) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #f1f5f9" }}>
+                      <tr key={i} style={{ borderBottom: "1px solid var(--border-color)" }}>
                         <td className="py-2 px-3 fw-bold text-dark" style={{ border: "none" }}>{u.unitNumber}</td>
                         <td className="py-2 px-3 text-muted" style={{ border: "none" }}>{u.unitType}</td>
                         <td className="py-2 px-3 fw-bold text-dark" style={{ border: "none" }}>{u.sqft ? u.sqft.toLocaleString() : 0}</td>
@@ -225,7 +225,7 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
               ].map(card => (
                 <div key={card.label} className="col-md-6 col-12">
                   <div className="d-flex align-items-center gap-3 bg-light bg-opacity-50 p-3 border" style={{ borderRadius: 10 }}>
-                    <div className="d-flex align-items-center justify-content-center bg-white border" style={{ width: 40, height: 40, borderRadius: 8, color: '#014aad' }}>
+                    <div className="d-flex align-items-center justify-content-center bg-white border" style={{ width: 40, height: 40, borderRadius: 8, color: 'var(--dark-section)' }}>
                       <i className={`bi ${card.icon}`} style={{ fontSize: '1.1rem' }}></i>
                     </div>
                     <div>

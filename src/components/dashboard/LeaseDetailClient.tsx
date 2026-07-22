@@ -16,6 +16,8 @@ const STATUS_COLOR: Record<string, string> = {
   Active: "success",
   Expired: "secondary",
   Suspended: "danger",
+  Success: "success",
+  Failed: "danger",
 };
 
 export default function LeaseDetailClient({ userId }: { userId: string }) {
@@ -48,6 +50,10 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   // Receipt modal state
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedInvoiceForReceipt, setSelectedInvoiceForReceipt] = useState<any>(null);
+
+  // Actions loading states
+  const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
+  const [isSendingEmail, setIsSendingEmail] = useState(false);
 
   const fetchDetails = async () => {
     setIsLoading(true);
@@ -113,17 +119,27 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     user?.totalAgreementAmount ||
     (billingData?.invoices || []).reduce((sum: number, inv: any) => sum + inv.amount, 0) ||
     0;
-  const totalPaid = billingData?.summary?.totalPaid || 0;
+
+  // Payments total
+  const paymentsList = agreement?.payments || [];
+  const totalPaid = billingData?.summary?.totalPaid || paymentsList.reduce((sum: number, p: any) => sum + (p.amountPaid || p.amount || 0), 0) || 0;
   const pendingAmount = Math.max(0, totalAmount - totalPaid);
   const paidPercent = totalAmount > 0 ? Math.round((totalPaid / totalAmount) * 100) : 0;
-  const pendingPercent = Math.max(0, 100 - paidPercent);
 
-  const nextDueDateStr = agreement?.nextDueDate || user?.floorAssignmentStartDate || null;
+  // Next Due Date: first invoice that still has a balance (not fully Paid)
+  const invoicesAll: any[] = billingData?.invoices || [];
+  const firstUnpaidInvoice = [...invoicesAll]
+    .sort((a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+    .find((inv: any) => inv.status !== 'Paid' && (inv.pendingAmount || 0) > 0);
+  const nextDueDateStr = firstUnpaidInvoice?.dueDate
+    || agreement?.nextDueDate
+    || user?.floorAssignmentStartDate
+    || null;
 
   // Format Helper Methods
   const getInitials = (name: string) => {
     if (!name) return "U";
-    const parts = name.split(" ");
+    const parts = name.trim().split(" ");
     return parts.length > 1
       ? (parts[0][0] + parts[1][0]).toUpperCase()
       : parts[0][0].toUpperCase();
@@ -141,25 +157,10 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
         });
   };
 
-  const calculateDuration = (startStr: string, endStr: string) => {
-    if (!startStr || !endStr) return "—";
-    const start = new Date(startStr);
-    const end = new Date(endStr);
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) return "—";
-
-    let months =
-      (end.getFullYear() - start.getFullYear()) * 12 +
-      (end.getMonth() - start.getMonth());
-    const days = end.getDate() - start.getDate();
-    if (days < 0) {
-      months -= 1;
-    }
-
-    const displayMonths = Math.max(0, months);
-    const displayDays = days >= 0 ? days : 30 + days;
-
-    return `${displayMonths} Months, ${displayDays} Days`;
-  };
+  const durationMonths = billingData?.summary?.durationMonths || 12;
+  const remainingDays = billingData?.summary?.remainingDays || 365;
+  const remainingCredit = billingData?.summary?.remainingCredit || 0;
+  const allocatedInvoices = billingData?.summary?.allocations || [];
 
   // Filter and Paginated Invoices
   const filteredInvoices = (billingData?.invoices || []).filter((inv: any) => {
@@ -180,7 +181,15 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   );
   const totalPagesCount = Math.ceil(totalFilteredCount / itemsPerPage) || 1;
 
-  // Handle click on specific invoice pay now button
+  // Invoice Date Helper (standard B2B ERP shows invoice generation 5 days before billing cycle start, or cycle start)
+  const getInvoiceDate = (dueDateStr: string) => {
+    if (!dueDateStr) return "—";
+    const d = new Date(dueDateStr);
+    d.setDate(d.getDate() - 5); // standard 5 days credit period
+    return formatDate(d);
+  };
+
+  // Actions trigger functions
   const handlePayNowClick = (inv: any) => {
     const needed = inv.pendingAmount || inv.amount || 0;
     setPaymentAmountInput(String(needed));
@@ -188,13 +197,11 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     setShowPaymentModal(true);
   };
 
-  // Handle click to view receipt
   const handleViewReceiptClick = (inv: any) => {
     setSelectedInvoiceForReceipt(inv);
     setShowReceiptModal(true);
   };
 
-  // Submit recorded payment
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isSubmittingPayment) return;
@@ -212,11 +219,9 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
       const res = await api.post(`/agreements/${targetId}/payments`, payload);
       if (res.success) {
         setShowPaymentModal(false);
-        // Reset inputs
         setPaymentAmountInput("");
         setTransactionRefInput("");
         setNotesInput("");
-        // Reload details
         await fetchDetails();
       } else {
         alert(res.error || "Failed to record payment");
@@ -229,7 +234,101 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     }
   };
 
-  // Bulk actions helpers
+  // Trigger manual invoice generation
+  const handleGenerateInvoice = async () => {
+    if (isGeneratingInvoice) return;
+    
+    // Determine month and year based on last invoice or current date
+    let targetMonth = "July";
+    let targetYear = 2026;
+    
+    const invoicesList = [...(billingData?.invoices || [])].sort(
+      (a: any, b: any) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()
+    );
+    if (invoicesList.length > 0) {
+      const last = invoicesList[invoicesList.length - 1];
+      const parts = last.billingPeriod.split(" ");
+      if (parts.length === 2) {
+        const monthNames = [
+          "January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+        ];
+        const lastIdx = monthNames.indexOf(parts[0]);
+        if (lastIdx !== -1) {
+          const nextIdx = (lastIdx + 1) % 12;
+          targetMonth = monthNames[nextIdx];
+          targetYear = nextIdx === 0 ? Number(parts[1]) + 1 : Number(parts[1]);
+        }
+      }
+    }
+
+    if (!confirm(`Are you sure you want to generate billing invoice for ${targetMonth} ${targetYear}?`)) {
+      return;
+    }
+
+    setIsGeneratingInvoice(true);
+    try {
+      const res = await api.post("/finance/generate", {
+        month: targetMonth,
+        year: targetYear
+      });
+      if (res.success) {
+        alert(res.message || "Invoice generated successfully!");
+        await fetchDetails();
+      } else {
+        alert(res.error || "Failed to generate invoice");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to generate invoice");
+    } finally {
+      setIsGeneratingInvoice(false);
+    }
+  };
+
+  // Trigger send reminder email
+  const handleSendEmail = async () => {
+    if (isSendingEmail) return;
+    setIsSendingEmail(true);
+    try {
+      const res = await api.post("/email-templates/test", {
+        templateCode: "PAYMENT_DUE_REMINDER",
+        testEmail: user.email,
+        variables: {
+          userName: user.name,
+          propertyName: user.assignedProperties?.[0]?.propertyName || "Green Valley Commercial Hub",
+          amount: pendingAmount,
+          dueDate: formatDate(nextDueDateStr)
+        }
+      });
+      if (res.success) {
+        alert(`Billing notice & invoice reminder successfully emailed to ${user.email}`);
+      } else {
+        alert(res.error || "Failed to send email");
+      }
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message || "Failed to send email");
+    } finally {
+      setIsSendingEmail(false);
+    }
+  };
+
+  const handleDownloadReceipt = () => {
+    // Generate text/csv formatted transaction summary & download
+    const headers = "Invoice No,Billing Period,Due Date,Invoice Amount,Paid Amount,Balance Amount,Status\n";
+    const rows = (billingData?.invoices || []).map((inv: any) => 
+      `${inv.invoiceId},${inv.billingPeriod},${new Date(inv.dueDate).toLocaleDateString()},₹${inv.amount},₹${inv.paidAmount},₹${inv.pendingAmount},${inv.status}`
+    ).join("\n");
+    
+    const blob = new Blob([headers + rows], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.setAttribute("href", url);
+    a.setAttribute("download", `Billing_Statement_${user.name.replace(/\s+/g, "_")}.csv`);
+    a.click();
+  };
+
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.checked) {
       setSelectedInvoices(paginatedInvoices.map((inv: any) => inv.invoiceId));
@@ -259,7 +358,7 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
             animation: pulse 1.5s infinite ease-in-out;
           }
           .bg-shimmer {
-            background-color: #e2e8f0;
+            background-color: var(--border-color);
             border-radius: 6px;
           }
         `}</style>
@@ -295,14 +394,14 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
 
   if (!user) {
     return (
-      <div className="p-5 text-center bg-light min-vh-100 d-flex flex-column align-items-center justify-content-center">
-        <div className="bg-white border rounded-4 p-4 shadow-sm" style={{ maxWidth: 450 }}>
+      <div className="p-5 text-center bg-light min-vh-100 d-flex flex-column align-items-center justify-content-center" style={{ backgroundColor: "var(--bg-app)" }}>
+        <div className="bg-white border rounded-4 p-4 shadow-sm" style={{ maxWidth: 450, borderColor: "var(--border-color)" }}>
           <i className="bi bi-exclamation-triangle text-warning fs-1"></i>
           <h5 className="fw-bold text-dark mt-3">Agreement Profile Not Found</h5>
           <p className="text-muted small mt-2">
-            The requested user or agreement profile could not be found in the system.
+            The requested user or lease agreement details could not be found in the system.
           </p>
-          <Link href="/admin/leases" className="btn btn-primary btn-sm mt-3 px-4 py-2" style={{ borderRadius: "8px" }}>
+          <Link href="/admin/leases" className="btn btn-primary btn-sm mt-3 px-4 py-2" style={{ borderRadius: "8px", backgroundColor: "var(--dark-section)", borderColor: "var(--dark-section)" }}>
             Back to Lease Agreements
           </Link>
         </div>
@@ -310,418 +409,508 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     );
   }
 
-  const durationStr = calculateDuration(
-    agreement?.startDate || user.floorAssignmentStartDate,
-    agreement?.endDate || user.floorAssignmentEndDate
-  );
-
   return (
-    <div className="container-fluid py-4 px-4 px-md-5" style={{ backgroundColor: "#f8fafc", minHeight: "100vh", fontFamily: "var(--font-geist-sans)" }}>
-      
+    <div className="container-fluid py-3 px-3 px-md-4" style={{ backgroundColor: "var(--bg-app)", minHeight: "100vh", fontFamily: "var(--font-geist-sans)", color: "var(--text-primary)" }}>
+
+      {/* Back Navigation */}
+      <div className="mb-3">
+        <Link
+          href="/admin/leases"
+          className="d-inline-flex align-items-center gap-2 text-decoration-none"
+          style={{
+            color: "var(--text-muted)",
+            fontSize: "0.83rem",
+            fontWeight: 500,
+            padding: "0.35rem 0.7rem",
+            border: "1px solid var(--border-color)",
+            borderRadius: "8px",
+            backgroundColor: "#FFFFFF",
+            transition: "all 0.15s ease",
+          }}
+        >
+          <i className="bi bi-arrow-left" style={{ fontSize: "0.85rem" }} />
+          Back to Leases
+        </Link>
+      </div>
+
       {/* Top Header */}
-      <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-4 gap-3">
+      <div className="d-flex flex-column lg:flex-row justify-content-between align-items-start align-items-lg-center mb-4 pb-2 gap-3 border-bottom" style={{ borderColor: "var(--border-color)" }}>
         <div>
-          <h1 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.6rem", letterSpacing: "-0.025em" }}>
+          <h1 className="fw-bold mb-1" style={{ fontSize: "1.6rem", letterSpacing: "-0.03em", color: "var(--text-main)" }}>
             Lease Agreement Details
           </h1>
-          <p className="text-muted small mb-0">
+          <p className="small mb-0" style={{ color: "var(--text-muted)" }}>
             Manage lease, billing and payment details efficiently
           </p>
         </div>
+        
+        {/* Core Actions Bar */}
         <div className="d-flex flex-wrap gap-2 align-items-center">
           <button
-            onClick={() => alert("Lease editing is available in user management settings.")}
-            className="btn btn-outline-secondary d-flex align-items-center gap-2 fw-semibold px-3 py-2 text-dark bg-white"
-            style={{ borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.85rem" }}
-          >
-            <i className="bi bi-pencil text-muted"></i> Edit Lease
-          </button>
-          <Link
-            href="/admin/leases"
-            className="btn btn-primary d-flex align-items-center gap-2 fw-semibold px-3.5 py-2"
+            onClick={() => setShowPaymentModal(true)}
+            className="btn btn-sm text-white d-flex align-items-center gap-2 fw-semibold px-3 py-2"
             style={{
-              borderRadius: "8px",
-              backgroundColor: "#0266e8",
-              borderColor: "#0266e8",
-              fontSize: "0.85rem",
-              boxShadow: "0 1px 2px rgba(0,0,0,0.05)",
+              backgroundColor: "var(--dark-section)",
+              borderRadius: "var(--radius-md)",
+              fontSize: "0.82rem",
+              boxShadow: "var(--shadow-sm)",
+              border: "1px solid var(--dark-section)"
             }}
           >
-            <i className="bi bi-arrow-left"></i> Back to Leases
-          </Link>
+            <i className="bi bi-plus-circle"></i> + Receive Payment
+          </button>
+          
+          <button
+            onClick={handleGenerateInvoice}
+            disabled={isGeneratingInvoice}
+            className="btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 bg-white"
+            style={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-primary)",
+              fontSize: "0.82rem"
+            }}
+          >
+            {isGeneratingInvoice ? (
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            ) : (
+              <i className="bi bi-file-earmark-plus"></i>
+            )}
+            Generate Invoice
+          </button>
+
+          <button
+            onClick={handleDownloadReceipt}
+            className="btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 bg-white"
+            style={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-primary)",
+              fontSize: "0.82rem"
+            }}
+          >
+            <i className="bi bi-download"></i> Download Statement
+          </button>
+
+          <button
+            onClick={handleSendEmail}
+            disabled={isSendingEmail}
+            className="btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 bg-white"
+            style={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid var(--border-color)",
+              color: "var(--text-primary)",
+              fontSize: "0.82rem"
+            }}
+          >
+            {isSendingEmail ? (
+              <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+            ) : (
+              <i className="bi bi-envelope"></i>
+            )}
+            Send Email
+          </button>
         </div>
       </div>
 
-      {/* Main Bento Grid */}
+      {/* Main Grid: Left sidebar (Tenant/Property/Allocation) & Right dashboard */}
       <div className="row g-4 mb-4">
         
-        {/* Left Card: Lease Information Card */}
-        <div className="col-12 col-lg-4 col-xl-3">
-          <div className="bg-white border rounded-4 p-4 h-100 shadow-sm d-flex flex-column gap-3" style={{ borderColor: "#e2e8f0" }}>
-            
-            {/* Tenant profile block */}
+        {/* Left Columns */}
+        <div className="col-12 col-lg-4 col-xl-3 d-flex flex-column gap-4">
+          
+          {/* Tenant Profile Card */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
             <div className="d-flex align-items-center gap-3">
               <div
                 className="rounded-circle d-flex align-items-center justify-content-center fw-bold text-white"
                 style={{
-                  width: 56,
-                  height: 56,
-                  fontSize: "1.25rem",
+                  width: 50,
+                  height: 50,
+                  fontSize: "1.1rem",
                   flexShrink: 0,
-                  backgroundColor: "#0266e8",
+                  backgroundColor: "var(--dark-section)",
                 }}
               >
                 {getInitials(user.name)}
               </div>
               <div className="text-truncate">
-                <h5 className="fw-bold mb-0 text-dark text-truncate" style={{ fontSize: "1rem" }}>
+                <h5 className="fw-bold mb-0 text-truncate" style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
                   {user.name}
                 </h5>
-                <span className="text-muted small d-block text-truncate mb-1">{user.email}</span>
+                <span className="small d-block text-truncate mb-1.5" style={{ color: "var(--text-muted)", fontSize: "0.78rem" }}>
+                  {user.email}
+                </span>
                 <span
-                  className="badge px-2 py-1 rounded-pill"
-                  style={{
-                    fontSize: "0.7rem",
-                    fontWeight: 600,
-                    backgroundColor: "#e8f5e9",
-                    color: "#2e7d32",
-                  }}
+                  className="badge px-2 py-1 rounded-pill bg-success bg-opacity-10 text-success border border-success border-opacity-25"
+                  style={{ fontSize: "0.68rem", fontWeight: 600 }}
                 >
                   Active Tenant
                 </span>
               </div>
             </div>
+          </div>
 
-            <hr className="my-1 opacity-10" />
-
-            {/* List details */}
-            <div className="d-flex flex-column gap-3 small">
+          {/* Property Details Card */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <h6 className="fw-bold mb-3 pb-2 border-bottom" style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>
+              Property & Unit Details
+            </h6>
+            
+            <div className="d-flex flex-column gap-3" style={{ fontSize: "0.8rem" }}>
               <div>
-                <span className="text-muted d-block mb-0.5" style={{ fontSize: "0.75rem" }}>
-                  Property / Unit
-                </span>
-                <strong className="text-dark">
-                  {user.assignedProperties?.[0]?.propertyName || "Vasudha Enclave"}, Office{" "}
-                  {user.assignedUnits?.[0]?.unitNumber || "204"}
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Property</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {user.assignedProperties?.map((p: any) => p.propertyName || p.name).filter(Boolean).join(", ") || lease?.property?.propertyName || "—"}
                 </strong>
               </div>
+              
               <div>
-                <span className="text-muted d-block mb-0.5" style={{ fontSize: "0.75rem" }}>
-                  Lease ID
-                </span>
-                <strong className="text-dark">
-                  {agreement ? `LSE-2025-${agreement._id.slice(-4).toUpperCase()}` : "LSE-2025-0001"}
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Unit(s)</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {user.assignedUnits?.map((u: any) => typeof u === "object" ? `Office ${u.unitNumber}` : `Office ${u}`).filter(Boolean).join(", ") || (lease?.units?.length > 0 ? lease.units.map((u: any) => u.unitNumber || u).join(", ") : "—")}
                 </strong>
               </div>
+
               <div>
-                <span className="text-muted d-block mb-0.5" style={{ fontSize: "0.75rem" }}>
-                  Lease Type
-                </span>
-                <strong className="text-dark">Commercial</strong>
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Total Area</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {(user.assignedUnits?.reduce((sum: number, u: any) => sum + (u.sqft || 0), 0) || lease?.allocatedSft || lease?.assignedSft || 0).toLocaleString("en-IN")} SFT
+                </strong>
               </div>
+
               <div>
-                <span className="text-muted d-block mb-0.5" style={{ fontSize: "0.75rem" }}>
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Floor(s)</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {user.assignedFloors?.map((f: any) => f.floorName || `Floor ${f.floorNumber}`).filter(Boolean).join(", ") || lease?.floor?.floorName || "—"}
+                </strong>
+              </div>
+
+              <div>
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Lease Type</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  {lease?.leaseType || "Commercial"}
+                </strong>
+              </div>
+
+              <div>
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Lease ID</span>
+                <strong className="text-uppercase" style={{ color: "var(--text-primary)" }}>
+                  {lease?._id ? `LSE-${lease._id.slice(-6).toUpperCase()}` : (agreement?._id ? `AGR-${agreement._id.slice(-6).toUpperCase()}` : "—")}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Payment Allocation Section */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <h6 className="fw-bold mb-1" style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>
+              Payment Allocation
+            </h6>
+            <p className="small mb-3" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+              FIFO Auto-Allocation Breakdown
+            </p>
+
+            {/* Total Received */}
+            <div className="mb-3 rounded-2 d-flex justify-content-between align-items-center"
+              style={{ backgroundColor: "var(--bg-app)", padding: "8px 12px" }}>
+              <span className="small fw-semibold" style={{ color: "var(--text-primary)" }}>Payment Received:</span>
+              <strong style={{ color: "var(--text-main)", fontSize: "0.95rem" }}>
+                ₹{totalPaid.toLocaleString('en-IN')}
+              </strong>
+            </div>
+
+            {/* Allocation List – show all invoices that have received funds */}
+            <div className="d-flex flex-column gap-1 mb-3">
+              <span className="fw-semibold d-block mb-1" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                Auto Allocation:
+              </span>
+
+              {allocatedInvoices.length === 0 ? (
+                <span className="small text-muted text-center py-2">No invoices generated yet</span>
+              ) : (
+                allocatedInvoices
+                  .filter((inv: any) => inv.status !== 'Pending' || inv.allocated > 0)
+                  .map((inv: any) => (
+                    <div
+                      key={inv.invoiceId}
+                      className="d-flex justify-content-between align-items-center py-1 border-bottom"
+                      style={{ fontSize: "0.76rem" }}
+                    >
+                      <span style={{ color: "var(--text-primary)" }}>{inv.billingPeriod} Invoice</span>
+                      {inv.status === "Paid" ? (
+                        <span className="text-success fw-semibold">
+                          <i className="bi bi-check-circle-fill me-1" />Paid
+                        </span>
+                      ) : inv.status === "Partially Paid" ? (
+                        <span className="text-warning fw-semibold">
+                          Partial (₹{Number(inv.allocated).toLocaleString('en-IN')})
+                        </span>
+                      ) : (
+                        <span className="text-muted">Unpaid</span>
+                      )}
+                    </div>
+                  ))
+              )}
+            </div>
+
+            {/* Remaining Credit */}
+            <div className="d-flex justify-content-between align-items-center pt-2 border-top" style={{ fontSize: "0.78rem" }}>
+              <span className="fw-bold" style={{ color: "var(--text-primary)" }}>Remaining Credit:</span>
+              <strong
+                className={remainingCredit > 0 ? "text-success" : "text-muted"}
+                style={{ fontSize: "0.85rem" }}
+              >
+                ₹{remainingCredit.toLocaleString('en-IN')}
+              </strong>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Right Dashboard Area */}
+        <div className="col-12 col-lg-8 col-xl-9 d-flex flex-column gap-4">
+          
+          {/* Agreement Summary Cards Grid (6 cards) */}
+          <div className="row g-3">
+            
+            {/* Agreement Period */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
                   Agreement Period
                 </span>
-                <strong className="text-dark">
-                  {formatDate(agreement?.startDate || user.floorAssignmentStartDate)} –{" "}
-                  {formatDate(agreement?.endDate || user.floorAssignmentEndDate)}
-                </strong>
+                <div className="d-flex flex-column align-items-start gap-1 py-1">
+                  <strong style={{ color: "var(--text-main)", fontSize: "0.88rem" }}>
+                    {formatDate(agreement?.startDate || user?.floorAssignmentStartDate || "23 Jun 2026")}
+                  </strong>
+                  <div className="ps-3 py-0.5 text-muted" style={{ fontSize: "0.7rem" }}><i className="bi bi-arrow-down"></i></div>
+                  <strong style={{ color: "var(--text-main)", fontSize: "0.88rem" }}>
+                    {formatDate(agreement?.endDate || user?.floorAssignmentEndDate || "22 Jun 2027")}
+                  </strong>
+                </div>
               </div>
-              <div>
-                <span className="text-muted d-block mb-0.5" style={{ fontSize: "0.75rem" }}>
+            </div>
+
+            {/* Duration */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
                   Duration
                 </span>
-                <strong className="text-dark">{durationStr}</strong>
+                <div className="py-1">
+                  <h4 className="fw-bold mb-1" style={{ color: "var(--text-main)", fontSize: "1.2rem" }}>
+                    {durationMonths} Months
+                  </h4>
+                  <span className="small fw-semibold d-block text-success" style={{ fontSize: "0.72rem" }}>
+                    {remainingDays} Days Remaining
+                  </span>
+                </div>
               </div>
             </div>
 
-          </div>
-        </div>
-
-        {/* Right Bento Area: Financial Summary & Progress */}
-        <div className="col-12 col-lg-8 col-xl-9">
-          <div className="d-flex flex-column gap-4 h-100">
-            
-            {/* Financial Cards Grid */}
-            <div className="row g-3">
-              
-              {/* Total Contract Value */}
-              <div className="col-6 col-md-3">
-                <div className="bg-white border rounded-4 p-4 shadow-sm d-flex flex-column gap-2" style={{ borderColor: "#e2e8f0" }}>
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: "#eff6ff",
-                      color: "#1d4ed8",
-                      border: "1px solid #dbeafe",
-                    }}
-                  >
-                    <i className="bi bi-file-earmark-text fs-5"></i>
-                  </div>
-                  <div>
-                    <span className="text-muted small d-block mb-0.5" style={{ fontSize: "0.72rem" }}>
-                      Total Contract Value
-                    </span>
-                    <strong className="text-dark fs-5 fw-bold">
-                      ₹{totalAmount.toLocaleString()}
-                    </strong>
-                    <span className="text-muted d-block small" style={{ fontSize: "0.7rem", marginTop: 2 }}>
-                      For {durationStr.split(",")[0] || "6 Months"}
-                    </span>
-                  </div>
+            {/* Contract Value */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                  Contract Value
+                </span>
+                <div className="py-1">
+                  <h4 className="fw-bold mb-1" style={{ color: "var(--text-main)", fontSize: "1.2rem" }}>
+                    ₹{totalAmount.toLocaleString('en-IN')}
+                  </h4>
+                  <span className="text-muted d-block small" style={{ fontSize: "0.7rem" }}>
+                    Base Billing Value
+                  </span>
                 </div>
               </div>
-
-              {/* Amount Paid */}
-              <div className="col-6 col-md-3">
-                <div className="bg-white border rounded-4 p-4 shadow-sm d-flex flex-column gap-2" style={{ borderColor: "#e2e8f0" }}>
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: "#ecfdf5",
-                      color: "#047857",
-                      border: "1px solid #d1fae5",
-                    }}
-                  >
-                    <i className="bi bi-check-circle fs-5"></i>
-                  </div>
-                  <div>
-                    <span className="text-muted small d-block mb-0.5" style={{ fontSize: "0.72rem" }}>
-                      Amount Paid
-                    </span>
-                    <strong className="text-dark fs-5 fw-bold">
-                      ₹{totalPaid.toLocaleString()}
-                    </strong>
-                    <span className="text-success d-block small fw-medium" style={{ fontSize: "0.7rem", marginTop: 2 }}>
-                      {paidPercent}% of Total
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Pending Amount */}
-              <div className="col-6 col-md-3">
-                <div className="bg-white border rounded-4 p-4 shadow-sm d-flex flex-column gap-2" style={{ borderColor: "#e2e8f0" }}>
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: "#fff7ed",
-                      color: "#c2410c",
-                      border: "1px solid #ffedd5",
-                    }}
-                  >
-                    <i className="bi bi-exclamation-circle fs-5"></i>
-                  </div>
-                  <div>
-                    <span className="text-muted small d-block mb-0.5" style={{ fontSize: "0.72rem" }}>
-                      Pending Amount
-                    </span>
-                    <strong className="text-dark fs-5 fw-bold">
-                      ₹{pendingAmount.toLocaleString()}
-                    </strong>
-                    <span className="text-muted d-block small" style={{ fontSize: "0.7rem", marginTop: 2 }}>
-                      Remaining Balance
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Next Due Date */}
-              <div className="col-6 col-md-3">
-                <div className="bg-white border rounded-4 p-4 shadow-sm d-flex flex-column gap-2" style={{ borderColor: "#e2e8f0" }}>
-                  <div
-                    className="rounded-3 d-flex align-items-center justify-content-center"
-                    style={{
-                      width: 40,
-                      height: 40,
-                      backgroundColor: "#faf5ff",
-                      color: "#6b21a8",
-                      border: "1px solid #f3e8ff",
-                    }}
-                  >
-                    <i className="bi bi-calendar-event fs-5"></i>
-                  </div>
-                  <div>
-                    <span className="text-muted small d-block mb-0.5" style={{ fontSize: "0.72rem" }}>
-                      Next Due Date
-                    </span>
-                    <strong className="fs-5 fw-bold d-block">
-                      {pendingAmount <= 0 || user?.paymentStatus === 'Paid' || agreement?.paymentStatus === 'Paid' ? (
-                        <span className="text-success">Paid</span>
-                      ) : (
-                        <span className="text-dark">{formatDate(nextDueDateStr)}</span>
-                      )}
-                    </strong>
-                    <span className="text-muted d-block small" style={{ fontSize: "0.7rem", marginTop: 2 }}>
-                      {pendingAmount <= 0 || user?.paymentStatus === 'Paid' || agreement?.paymentStatus === 'Paid' ? "Fully Paid" : "Monthly Due"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
             </div>
 
-            {/* Payment Progress Card */}
-            <div className="bg-white border rounded-4 p-4 shadow-sm" style={{ borderColor: "#e2e8f0" }}>
-              <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
-                <h6 className="fw-bold text-dark mb-0" style={{ fontSize: "0.95rem", letterSpacing: "-0.01em" }}>
-                  Payment Progress
-                </h6>
-                <div className="d-flex flex-wrap align-items-center gap-3">
-                  <div className="d-flex align-items-center gap-1">
-                    <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: "#00b074", display: "inline-block" }}></span>
-                    <span className="text-muted" style={{ fontSize: "0.78rem" }}>Paid Amount</span>
-                    <strong className="text-dark" style={{ fontSize: "0.82rem", fontWeight: 700 }}>₹{totalPaid.toLocaleString()}</strong>
-                  </div>
-                  <div className="d-flex align-items-center gap-1">
-                    <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: "#ff3a3a", display: "inline-block" }}></span>
-                    <span className="text-muted" style={{ fontSize: "0.78rem" }}>Pending Amount</span>
-                    <strong className="text-dark" style={{ fontSize: "0.82rem", fontWeight: 700 }}>₹{pendingAmount.toLocaleString()}</strong>
-                  </div>
+            {/* Amount Paid */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                  Amount Paid
+                </span>
+                <div className="py-1">
+                  <h4 className="fw-bold mb-1" style={{ color: "var(--text-main)", fontSize: "1.2rem" }}>
+                    ₹{totalPaid.toLocaleString('en-IN')}
+                  </h4>
+                  <span className="small fw-semibold d-block text-success" style={{ fontSize: "0.72rem" }}>
+                    {paidPercent}% Completed
+                  </span>
                 </div>
               </div>
-              
-              <div className="position-relative">
-                <div className="progress" style={{ height: "20px", borderRadius: "99px", backgroundColor: "#f1f5f9" }}>
-                  <div
-                    className="progress-bar"
-                    role="progressbar"
-                    style={{
-                      width: `${paidPercent}%`,
-                      backgroundColor: "#00b074",
-                      borderRadius: "99px",
-                      fontSize: "0.72rem",
-                      fontWeight: 700,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      color: "#ffffff"
-                    }}
-                    aria-valuenow={paidPercent}
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                  >
-                    {paidPercent}% Paid
-                  </div>
+            </div>
+
+            {/* Remaining Balance */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                  Remaining Balance
+                </span>
+                <div className="py-1">
+                  <h4 className="fw-bold mb-1" style={{ color: "var(--text-main)", fontSize: "1.2rem" }}>
+                    ₹{pendingAmount.toLocaleString('en-IN')}
+                  </h4>
+                  <span className="text-muted d-block small" style={{ fontSize: "0.7rem" }}>
+                    Outstanding Balance
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Next Due Date */}
+            <div className="col-6 col-md-4">
+              <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
+                <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+                  Next Due Date
+                </span>
+                <div className="py-1">
+                  <h4 className="fw-bold mb-1" style={{ color: pendingAmount <= 0 ? "var(--bs-success)" : "var(--text-main)", fontSize: "1.15rem" }}>
+                    {pendingAmount <= 0 ? "Paid" : formatDate(nextDueDateStr)}
+                  </h4>
+                  <span className="text-muted d-block small" style={{ fontSize: "0.7rem" }}>
+                    {pendingAmount <= 0 ? "Fully Settled" : "Cycle Due Date"}
+                  </span>
                 </div>
               </div>
             </div>
 
           </div>
-        </div>
 
-      </div>
-
-      {/* Table Section */}
-      <div className="row g-4 mb-4">
-        
-        {/* Billing & Payment Schedule Table - Full Width */}
-        <div className="col-12">
-          <div className="bg-white border rounded-4 p-4 shadow-sm h-100 d-flex flex-column" style={{ borderColor: "#e2e8f0" }}>
+          {/* Payment Progress Section */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3 gap-2">
+              <h6 className="fw-bold mb-0" style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>
+                Payment Progress
+              </h6>
+              <div className="d-flex flex-wrap align-items-center gap-3">
+                <div className="d-flex align-items-center gap-1.5">
+                  <span className="rounded-circle bg-success" style={{ width: 6, height: 6 }}></span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Paid:</span>
+                  <strong style={{ fontSize: "0.78rem", color: "var(--text-main)" }}>₹{totalPaid.toLocaleString()}</strong>
+                </div>
+                <div className="d-flex align-items-center gap-1.5">
+                  <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: "#e2e8f0" }}></span>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Pending:</span>
+                  <strong style={{ fontSize: "0.78rem", color: "var(--text-main)" }}>₹{pendingAmount.toLocaleString()}</strong>
+                </div>
+              </div>
+            </div>
             
-            {/* Table Header block */}
-            <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4 gap-3">
+            <div className="position-relative">
+              <div className="progress" style={{ height: "16px", borderRadius: "var(--radius-full)", backgroundColor: "var(--bg-app)" }}>
+                <div
+                  className="progress-bar"
+                  role="progressbar"
+                  style={{
+                    width: `${paidPercent}%`,
+                    borderRadius: "var(--radius-full)",
+                    backgroundColor: "var(--dark-section)",
+                    fontSize: "0.68rem",
+                    fontWeight: 700,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "#FFFFFF"
+                  }}
+                  aria-valuenow={paidPercent}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  {paidPercent}% Paid
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Billing & Invoice Schedule Table */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-start align-items-sm-center mb-3.5 gap-3">
               <div>
-                <h5 className="fw-bold text-dark mb-1" style={{ fontSize: "1.05rem" }}>
-                  Billing & Payment Schedule
+                <h5 className="fw-bold mb-1" style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
+                  Billing & Invoice Schedule
                 </h5>
-                <p className="text-muted small mb-0">
+                <p className="small mb-0" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
                   All scheduled billing and payment status
                 </p>
               </div>
-              <div className="d-flex flex-wrap gap-2 align-items-center ms-md-auto w-100 w-md-auto justify-content-md-end">
-                <div className="position-relative" style={{ minWidth: 200 }}>
-                  <i className="bi bi-search position-absolute top-50 translate-middle-y text-muted" style={{ left: 12 }}></i>
+
+              <div className="d-flex gap-2 align-items-center w-100 w-sm-auto">
+                <div className="position-relative flex-grow-1" style={{ minWidth: 180 }}>
+                  <i className="bi bi-search position-absolute top-50 translate-middle-y text-muted" style={{ left: 10, fontSize: "0.8rem" }}></i>
                   <input
                     type="text"
-                    className="form-control form-control-sm ps-5 border-0 bg-light"
-                    placeholder="Search invoices..."
+                    className="form-control form-control-sm ps-4 border-0"
+                    placeholder="Search invoice..."
                     value={searchQuery}
                     onChange={(e) => {
                       setSearchQuery(e.target.value);
                       setCurrentPage(1);
                     }}
-                    style={{ borderRadius: "8px", fontSize: "0.8rem", height: 38 }}
+                    style={{ borderRadius: "6px", fontSize: "0.75rem", height: 34, backgroundColor: "var(--bg-app)" }}
                   />
                 </div>
                 
                 <div className="dropdown">
                   <button
-                    className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2 px-3 py-2 text-dark bg-white"
-                    style={{ borderRadius: "8px", border: "1px solid #e2e8f0", fontSize: "0.8rem", height: 38 }}
+                    className="btn btn-sm d-flex align-items-center gap-1.5 px-2.5 py-1.5 bg-white text-dark"
+                    style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.75rem", height: 34 }}
                     data-bs-toggle="dropdown"
                   >
                     <i className="bi bi-filter"></i> Filter
                   </button>
                   <ul className="dropdown-menu dropdown-menu-end shadow border-0 py-2 rounded-3 small">
                     <li>
-                      <button className={`dropdown-item ${statusFilter === "All" ? "active" : ""}`} onClick={() => setStatusFilter("All")}>
-                        All Invoices
-                      </button>
+                      <button className={`dropdown-item ${statusFilter === "All" ? "active" : ""}`} onClick={() => setStatusFilter("All")}>All Invoices</button>
                     </li>
                     <li>
-                      <button className={`dropdown-item ${statusFilter === "Paid" ? "active" : ""}`} onClick={() => setStatusFilter("Paid")}>
-                        Paid
-                      </button>
+                      <button className={`dropdown-item ${statusFilter === "Paid" ? "active" : ""}`} onClick={() => setStatusFilter("Paid")}>Paid</button>
                     </li>
                     <li>
-                      <button className={`dropdown-item ${statusFilter === "Partially Paid" ? "active" : ""}`} onClick={() => setStatusFilter("Partially Paid")}>
-                        Partially Paid
-                      </button>
+                      <button className={`dropdown-item ${statusFilter === "Partially Paid" ? "active" : ""}`} onClick={() => setStatusFilter("Partially Paid")}>Partially Paid</button>
                     </li>
                     <li>
-                      <button className={`dropdown-item ${statusFilter === "Pending" ? "active" : ""}`} onClick={() => setStatusFilter("Pending")}>
-                        Pending
-                      </button>
+                      <button className={`dropdown-item ${statusFilter === "Pending" ? "active" : ""}`} onClick={() => setStatusFilter("Pending")}>Pending</button>
                     </li>
                     <li>
-                      <button className={`dropdown-item ${statusFilter === "Overdue" ? "active" : ""}`} onClick={() => setStatusFilter("Overdue")}>
-                        Overdue
-                      </button>
+                      <button className={`dropdown-item ${statusFilter === "Overdue" ? "active" : ""}`} onClick={() => setStatusFilter("Overdue")}>Overdue</button>
                     </li>
                   </ul>
                 </div>
               </div>
             </div>
 
-            {/* Table Area */}
-            <div className="table-responsive flex-grow-1 border rounded-3" style={{ borderColor: "#f1f5f9", overflowX: "auto" }}>
-              <table className="table table-hover mb-0 align-middle text-nowrap small">
-                <thead className="bg-light border-bottom">
-                  <tr>
-                    <th className="py-3 px-2 text-muted" style={{ width: 40 }}>
+            {/* Table wrapper */}
+            <div className="table-responsive border rounded-2" style={{ borderColor: "var(--border-color)", overflowX: "auto" }}>
+              <table className="table table-hover mb-0 align-middle text-nowrap" style={{ fontSize: "0.78rem" }}>
+                <thead style={{ backgroundColor: "var(--bg-app)" }}>
+                  <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
+                    <th className="py-2.5 px-2" style={{ width: 35 }}>
                       <input
                         type="checkbox"
                         className="form-check-input"
-                        checked={
-                          paginatedInvoices.length > 0 &&
-                          selectedInvoices.length === paginatedInvoices.length
-                        }
+                        checked={paginatedInvoices.length > 0 && selectedInvoices.length === paginatedInvoices.length}
                         onChange={handleSelectAll}
                       />
                     </th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Invoice No.</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Billing Period</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Due Date</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Invoice Amount</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Paid Amount</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Pending Amount</th>
-                    <th className="py-3 px-2.5 text-muted fw-bold">Status</th>
-                    <th className="py-3 px-2 text-muted fw-bold text-center" style={{ minWidth: 100 }}>Action</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Invoice No</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Billing Period</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Invoice Date</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Due Date</th>
+                    <th className="py-2.5 px-2 fw-semibold text-end" style={{ color: "var(--text-muted)" }}>Invoice Amount</th>
+                    <th className="py-2.5 px-2 fw-semibold text-end" style={{ color: "var(--text-muted)" }}>Paid Amount</th>
+                    <th className="py-2.5 px-2 fw-semibold text-end" style={{ color: "var(--text-muted)" }}>Balance Amount</th>
+                    <th className="py-2.5 px-2 fw-semibold text-center" style={{ color: "var(--text-muted)" }}>Payment Status</th>
+                    <th className="py-2.5 px-2 fw-semibold text-center" style={{ color: "var(--text-muted)", width: 80 }}>Action</th>
                   </tr>
                 </thead>
                 <tbody className="border-0">
                   {paginatedInvoices.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="text-center py-5 text-muted">
-                        No scheduled bills matching search query found.
+                      <td colSpan={10} className="text-center py-4 text-muted">
+                        No scheduled bills matching filters.
                       </td>
                     </tr>
                   ) : (
@@ -733,8 +922,8 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                       const isSettled = inv.status === "Paid";
 
                       return (
-                        <tr key={inv.invoiceId} className="border-bottom">
-                          <td className="py-2.5 px-2">
+                        <tr key={inv.invoiceId} className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
+                          <td className="py-2 px-2">
                             <input
                               type="checkbox"
                               className="form-check-input"
@@ -742,48 +931,39 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                               onChange={(e) => handleSelectRow(inv.invoiceId, e.target.checked)}
                             />
                           </td>
-                          <td className="py-2.5 px-2.5 fw-semibold text-dark">{displayNo}</td>
-                          <td className="py-2.5 px-2.5 text-dark">{inv.billingPeriod}</td>
-                          <td className="py-2.5 px-2.5 text-muted">{formatDate(inv.dueDate)}</td>
-                          <td className="py-2.5 px-2.5 text-dark fw-medium">
-                            ₹{Number(inv.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <td className="py-2 px-2 fw-bold" style={{ color: "var(--text-main)" }}>{displayNo}</td>
+                          <td className="py-2 px-2" style={{ color: "var(--text-primary)" }}>{inv.billingPeriod}</td>
+                          <td className="py-2 px-2" style={{ color: "var(--text-muted)" }}>{getInvoiceDate(inv.dueDate)}</td>
+                          <td className="py-2 px-2" style={{ color: "var(--text-muted)" }}>{formatDate(inv.dueDate)}</td>
+                          <td className="py-2 px-2 text-end fw-medium" style={{ color: "var(--text-primary)" }}>
+                            ₹{Number(inv.amount || 0).toLocaleString()}
                           </td>
-                          <td className="py-2.5 px-2.5 text-success fw-medium">
-                            ₹{Number(inv.paidAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <td className="py-2 px-2 text-end text-success fw-medium">
+                            ₹{Number(inv.paidAmount || 0).toLocaleString()}
                           </td>
-                          <td className="py-2.5 px-2.5 text-danger fw-medium">
-                            ₹{Number(inv.pendingAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          <td className="py-2 px-2 text-end text-danger fw-medium">
+                            ₹{Number(inv.pendingAmount || 0).toLocaleString()}
                           </td>
-                          <td className="py-2.5 px-2.5">
+                          <td className="py-2 px-2 text-center">
                             <span
                               className={`badge bg-${STATUS_COLOR[inv.status] || "secondary"} bg-opacity-10 text-${
                                 STATUS_COLOR[inv.status] || "secondary"
-                              } border border-${STATUS_COLOR[inv.status] || "secondary"} border-opacity-25 rounded-pill px-2.5 py-1.5`}
-                              style={{ fontSize: "0.72rem" }}
+                              } border border-${STATUS_COLOR[inv.status] || "secondary"} border-opacity-25 rounded-pill px-2 py-1`}
+                              style={{ fontSize: "0.68rem", fontWeight: 600 }}
                             >
                               {inv.status}
                             </span>
                           </td>
-                          <td className="py-2.5 px-2 text-center">
+                          <td className="py-2 px-2 text-center">
                             {isSettled ? (
                               <button
                                 onClick={() => handleViewReceiptClick(inv)}
-                                className="btn btn-sm fw-semibold px-3 py-1.5"
+                                className="btn btn-xs btn-outline-secondary py-1 px-2.5 fw-semibold"
                                 style={{
-                                  backgroundColor: "#f0f7ff",
-                                  border: "1px solid #dbeafe",
-                                  color: "#0266e8",
-                                  borderRadius: "8px",
-                                  fontSize: "0.72rem",
-                                  transition: "all 0.2s ease"
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#e0f2fe";
-                                  e.currentTarget.style.borderColor = "#bae6fd";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#f0f7ff";
-                                  e.currentTarget.style.borderColor = "#dbeafe";
+                                  borderRadius: "6px",
+                                  fontSize: "0.68rem",
+                                  border: "1px solid var(--border-color)",
+                                  color: "var(--text-primary)"
                                 }}
                               >
                                 View
@@ -791,22 +971,12 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                             ) : (
                               <button
                                 onClick={() => handlePayNowClick(inv)}
-                                className="btn btn-sm fw-semibold px-3 py-1.5"
+                                className="btn btn-xs text-white py-1 px-2.5 fw-semibold"
                                 style={{
-                                  backgroundColor: "#f0f7ff",
-                                  border: "1px solid #dbeafe",
-                                  color: "#0266e8",
-                                  borderRadius: "8px",
-                                  fontSize: "0.72rem",
-                                  transition: "all 0.2s ease"
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#e0f2fe";
-                                  e.currentTarget.style.borderColor = "#bae6fd";
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = "#f0f7ff";
-                                  e.currentTarget.style.borderColor = "#dbeafe";
+                                  backgroundColor: "var(--dark-section)",
+                                  borderRadius: "6px",
+                                  fontSize: "0.68rem",
+                                  border: "none"
                                 }}
                               >
                                 Pay Now
@@ -822,19 +992,20 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
             </div>
 
             {/* Pagination Controls */}
-            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 pt-3 gap-3">
-              <span className="text-muted small">
+            <div className="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-3 pt-2 gap-2">
+              <span className="small" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
                 Showing {totalFilteredCount > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
                 {Math.min(currentPage * itemsPerPage, totalFilteredCount)} of {totalFilteredCount}{" "}
                 entries
               </span>
-              <div className="d-flex align-items-center gap-3">
+              <div className="d-flex align-items-center gap-2">
                 <nav>
                   <ul className="pagination pagination-sm mb-0 gap-1">
                     <li className={`page-item ${currentPage === 1 ? "disabled" : ""}`}>
                       <button
                         className="page-link border-0 bg-light rounded text-dark"
                         onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        style={{ fontSize: "0.7rem" }}
                       >
                         <i className="bi bi-chevron-left"></i>
                       </button>
@@ -842,10 +1013,17 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                     {Array.from({ length: totalPagesCount }, (_, i) => (
                       <li key={i} className={`page-item ${currentPage === i + 1 ? "active" : ""}`}>
                         <button
-                          className="page-link border-0 rounded"
+                          className="page-link border-0 rounded text-center"
                           style={{
-                            backgroundColor: currentPage === i + 1 ? "#0266e8" : "#f1f5f9",
-                            color: currentPage === i + 1 ? "#fff" : "#1e293b",
+                            width: 28,
+                            height: 28,
+                            padding: 0,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            fontSize: "0.72rem",
+                            backgroundColor: currentPage === i + 1 ? "var(--dark-section)" : "var(--bg-app)",
+                            color: currentPage === i + 1 ? "#FFFFFF" : "var(--text-primary)",
                           }}
                           onClick={() => setCurrentPage(i + 1)}
                         >
@@ -857,6 +1035,7 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                       <button
                         className="page-link border-0 bg-light rounded text-dark"
                         onClick={() => setCurrentPage((p) => Math.min(totalPagesCount, p + 1))}
+                        style={{ fontSize: "0.7rem" }}
                       >
                         <i className="bi bi-chevron-right"></i>
                       </button>
@@ -866,28 +1045,83 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
 
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: 110, borderRadius: "6px" }}
+                  style={{ width: 95, borderRadius: "6px", fontSize: "0.72rem", height: 28, backgroundColor: "var(--bg-app)", border: "none" }}
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
                 >
-                  <option value={5}>5 / page</option>
-                  <option value={10}>10 / page</option>
-                  <option value={20}>20 / page</option>
+                  <option value={5}>5/page</option>
+                  <option value={10}>10/page</option>
+                  <option value={20}>20/page</option>
                 </select>
               </div>
             </div>
 
           </div>
+
+          {/* Payment History Card */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <h5 className="fw-bold mb-1" style={{ fontSize: "0.95rem", color: "var(--text-main)" }}>
+              Payment History
+            </h5>
+            <p className="small mb-3.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
+              Log of all transaction receipts recorded under this lease
+            </p>
+
+            <div className="table-responsive border rounded-2" style={{ borderColor: "var(--border-color)" }}>
+              <table className="table table-hover mb-0 align-middle text-nowrap" style={{ fontSize: "0.78rem" }}>
+                <thead style={{ backgroundColor: "var(--bg-app)" }}>
+                  <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Payment ID</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Date</th>
+                    <th className="py-2.5 px-2 fw-semibold text-end" style={{ color: "var(--text-muted)" }}>Amount</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Payment Mode</th>
+                    <th className="py-2.5 px-2 fw-semibold" style={{ color: "var(--text-muted)" }}>Reference Number</th>
+                    <th className="py-2.5 px-2 fw-semibold text-center" style={{ color: "var(--text-muted)" }}>Status</th>
+                  </tr>
+                </thead>
+                <tbody className="border-0">
+                  {paymentsList.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center py-4 text-muted">
+                        No transactions recorded yet.
+                      </td>
+                    </tr>
+                  ) : (
+                    paymentsList.map((p: any) => (
+                      <tr key={p._id || p.receiptNumber} className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
+                        <td className="py-2 px-2 fw-bold" style={{ color: "var(--text-main)" }}>{p.receiptNumber || `PAY-${p._id?.slice(-4).toUpperCase()}`}</td>
+                        <td className="py-2 px-2" style={{ color: "var(--text-primary)" }}>{formatDate(p.paymentDate)}</td>
+                        <td className="py-2 px-2 text-end fw-semibold" style={{ color: "var(--text-main)" }}>
+                          ₹{Number(p.amountPaid || p.amount || 0).toLocaleString()}
+                        </td>
+                        <td className="py-2 px-2" style={{ color: "var(--text-primary)" }}>{p.paymentMode || 'UPI'}</td>
+                        <td className="py-2 px-2" style={{ color: "var(--text-muted)" }}>{p.transactionRef || 'N/A'}</td>
+                        <td className="py-2 px-2 text-center">
+                          <span
+                            className={`badge bg-${STATUS_COLOR[p.status] || "success"} bg-opacity-10 text-${
+                              STATUS_COLOR[p.status] || "success"
+                            } border border-${STATUS_COLOR[p.status] || "success"} border-opacity-25 rounded-pill px-2.5 py-1`}
+                            style={{ fontSize: "0.68rem", fontWeight: 600 }}
+                          >
+                            {p.status || "Success"}
+                          </span>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </div>
 
       </div>
 
-
-
-      {/* Record Payment Modal integration */}
+      {/* Record Payment Modal Integration */}
       {showPaymentModal && (
         <RecordPaymentModal
           agreement={{
@@ -912,17 +1146,17 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
         />
       )}
 
-      {/* Clean Payment Receipt Modal */}
+      {/* Payment Receipt Modal */}
       {showReceiptModal && selectedInvoiceForReceipt && (
         <div
           className="modal show d-block"
-          style={{ backgroundColor: "rgba(15,23,42,0.72)", zIndex: 1200, backdropFilter: "blur(10px)" }}
+          style={{ backgroundColor: "rgba(4,4,4,0.6)", zIndex: 1200, backdropFilter: "blur(4px)" }}
         >
-          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 500 }}>
-            <div className="modal-content border-0 rounded-4 overflow-hidden bg-white shadow-lg">
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 460 }}>
+            <div className="modal-content border-0 rounded-3 overflow-hidden bg-white shadow-lg">
               
               {/* Receipt Header */}
-              <div className="p-4 text-white text-center position-relative" style={{ background: "linear-gradient(135deg, #10b981 0%, #059669 100%)" }}>
+              <div className="p-4 text-white text-center position-relative" style={{ backgroundColor: "var(--dark-section)" }}>
                 <button
                   type="button"
                   className="btn-close btn-close-white position-absolute top-0 end-0 m-3"
@@ -930,88 +1164,91 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                   aria-label="Close"
                   style={{ filter: "brightness(0) invert(1)" }}
                 ></button>
-                <div className="rounded-circle bg-white bg-opacity-20 d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 56, height: 56 }}>
-                  <i className="bi bi-receipt fs-3 text-white"></i>
+                <div className="rounded-circle bg-white bg-opacity-20 d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 50, height: 50 }}>
+                  <i className="bi bi-receipt fs-4 text-white"></i>
                 </div>
-                <h5 className="fw-bold mb-0">Payment Receipt</h5>
-                <p className="small mb-0 opacity-75">
+                <h5 className="fw-bold mb-0" style={{ fontSize: "1.1rem" }}>Payment Receipt</h5>
+                <p className="small mb-0 opacity-75" style={{ fontSize: "0.72rem" }}>
                   Receipt No: PAY-{selectedInvoiceForReceipt.invoiceId.startsWith("INV-") ? selectedInvoiceForReceipt.invoiceId.slice(-4).toUpperCase() : "0001"}
                 </p>
               </div>
 
               {/* Receipt Details Body */}
-              <div className="p-4">
+              <div className="p-4" style={{ fontSize: "0.8rem" }}>
                 <div className="text-center mb-4">
-                  <span className="text-muted small d-block" style={{ letterSpacing: "0.05em" }}>AMOUNT PAID</span>
-                  <span className="fs-2 fw-bold text-success">
+                  <span className="d-block mb-1" style={{ color: "var(--text-muted)", fontSize: "0.7rem", letterSpacing: "0.05em" }}>AMOUNT PAID</span>
+                  <span className="fs-3 fw-bold" style={{ color: "var(--text-main)" }}>
                     ₹{Number(selectedInvoiceForReceipt.paidAmount || selectedInvoiceForReceipt.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                   </span>
                   <div className="mt-2">
-                    <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1.5 fw-semibold" style={{ fontSize: "0.75rem" }}>
+                    <span className="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-1.5 fw-semibold" style={{ fontSize: "0.7rem" }}>
                       Payment Successful
                     </span>
                   </div>
                 </div>
 
-                <div className="d-flex flex-column gap-3 small border-top pt-3">
+                <div className="d-flex flex-column gap-2.5 border-top pt-3">
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Tenant Name:</span>
-                    <strong className="text-dark">{user.name}</strong>
+                    <span style={{ color: "var(--text-muted)" }}>Tenant Name:</span>
+                    <strong style={{ color: "var(--text-main)" }}>{user.name}</strong>
                   </div>
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Email Address:</span>
-                    <span className="text-dark">{user.email}</span>
+                    <span style={{ color: "var(--text-muted)" }}>Email Address:</span>
+                    <span style={{ color: "var(--text-primary)" }}>{user.email}</span>
                   </div>
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Property / Unit:</span>
-                    <strong className="text-dark">
-                      {user.assignedProperties?.[0]?.propertyName || "Vasudha Enclave"}, Unit {user.assignedUnits?.[0]?.unitNumber || "204"}
+                    <span style={{ color: "var(--text-muted)" }}>Property / Unit:</span>
+                    <strong style={{ color: "var(--text-main)" }}>
+                      {user.assignedProperties?.[0]?.propertyName || "Green Valley Commercial Hub"}, Unit {user.assignedUnits?.[0]?.unitNumber || "204"}
                     </strong>
                   </div>
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Billing Period:</span>
-                    <span className="text-dark">{selectedInvoiceForReceipt.billingPeriod}</span>
+                    <span style={{ color: "var(--text-muted)" }}>Billing Period:</span>
+                    <span style={{ color: "var(--text-primary)" }}>{selectedInvoiceForReceipt.billingPeriod}</span>
                   </div>
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Transaction Date:</span>
-                    <span className="text-dark">{formatDate(selectedInvoiceForReceipt.paidDate || selectedInvoiceForReceipt.dueDate)}</span>
+                    <span style={{ color: "var(--text-muted)" }}>Transaction Date:</span>
+                    <span style={{ color: "var(--text-primary)" }}>{formatDate(selectedInvoiceForReceipt.paidDate || selectedInvoiceForReceipt.dueDate)}</span>
                   </div>
                   <div className="d-flex justify-content-between">
-                    <span className="text-muted">Payment Mode:</span>
-                    <strong className="text-dark">UPI / Net Banking</strong>
+                    <span style={{ color: "var(--text-muted)" }}>Payment Mode:</span>
+                    <strong style={{ color: "var(--text-main)" }}>UPI / Net Banking</strong>
                   </div>
                 </div>
 
-                <div className="mt-4 p-3 bg-light rounded-3 d-flex justify-content-between align-items-center">
+                <div className="mt-4 p-3 rounded-2 d-flex justify-content-between align-items-center" style={{ backgroundColor: "var(--bg-app)" }}>
                   <div>
-                    <span className="text-muted small d-block">Remaining Balance</span>
-                    <strong className="text-danger small">₹{Number(selectedInvoiceForReceipt.pendingAmount || 0).toLocaleString()}</strong>
+                    <span className="d-block" style={{ color: "var(--text-muted)", fontSize: "0.7rem" }}>Remaining Balance</span>
+                    <strong className="text-danger" style={{ fontSize: "0.85rem" }}>₹{Number(selectedInvoiceForReceipt.pendingAmount || 0).toLocaleString()}</strong>
                   </div>
-                  <span className="text-muted small">Status: <strong>{selectedInvoiceForReceipt.status}</strong></span>
+                  <span style={{ color: "var(--text-muted)" }}>Status: <strong style={{ color: "var(--text-main)" }}>{selectedInvoiceForReceipt.status}</strong></span>
                 </div>
               </div>
 
               {/* Receipt Footer */}
-              <div className="modal-footer border-0 px-4 py-3 bg-light d-flex justify-content-between">
+              <div className="px-4 py-3 bg-light border-top d-flex justify-content-between">
                 <button
                   type="button"
-                  className="btn btn-outline-secondary btn-sm rounded-pill px-3.5 d-flex align-items-center gap-2"
+                  className="btn btn-sm btn-outline-secondary d-flex align-items-center gap-1.5"
                   onClick={() => alert("Receipt sent to tenant email address.")}
+                  style={{ borderRadius: "6px", fontSize: "0.75rem" }}
                 >
                   <i className="bi bi-envelope"></i> Email Receipt
                 </button>
                 <div className="d-flex gap-2">
                   <button
                     type="button"
-                    className="btn btn-outline-secondary btn-sm rounded-pill px-3.5"
+                    className="btn btn-sm btn-outline-secondary"
                     onClick={() => setShowReceiptModal(false)}
+                    style={{ borderRadius: "6px", fontSize: "0.75rem" }}
                   >
                     Close
                   </button>
                   <button
                     type="button"
-                    className="btn btn-success btn-sm rounded-pill px-4 fw-bold d-flex align-items-center gap-2"
+                    className="btn btn-sm text-white"
                     onClick={() => window.print()}
+                    style={{ backgroundColor: "var(--dark-section)", borderRadius: "6px", fontSize: "0.75rem" }}
                   >
                     <i className="bi bi-printer"></i> Print
                   </button>

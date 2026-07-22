@@ -45,21 +45,21 @@ const STATUS_OPTIONS = [
 const PRIORITY_OPTIONS = ["All", "Low", "Medium", "High", "Critical"];
 
 const STATUS_CONFIG: Record<string, { label: string; activeBg: string; activeFg: string }> = {
-  "All": { label: "All Statuses", activeBg: "#014aad", activeFg: "#ffffff" },
-  "OPEN": { label: "Open", activeBg: "#ef4444", activeFg: "#ffffff" },
-  "ASSIGNED": { label: "Assigned", activeBg: "#3b82f6", activeFg: "#ffffff" },
-  "IN_PROGRESS": { label: "In Progress", activeBg: "#f59e0b", activeFg: "#ffffff" },
-  "WAITING_FOR_RESPONSE": { label: "Waiting", activeBg: "#6366f1", activeFg: "#ffffff" },
-  "RESOLVED": { label: "Resolved", activeBg: "#10b981", activeFg: "#ffffff" },
-  "CLOSED": { label: "Closed", activeBg: "#64748b", activeFg: "#ffffff" }
+  "All": { label: "All Statuses", activeBg: "var(--dark-section)", activeFg: "var(--bg-card)" },
+  "OPEN": { label: "Open", activeBg: "#ef4444", activeFg: "var(--bg-card)" },
+  "ASSIGNED": { label: "Assigned", activeBg: "#3b82f6", activeFg: "var(--bg-card)" },
+  "IN_PROGRESS": { label: "In Progress", activeBg: "#f59e0b", activeFg: "var(--bg-card)" },
+  "WAITING_FOR_RESPONSE": { label: "Waiting", activeBg: "#6366f1", activeFg: "var(--bg-card)" },
+  "RESOLVED": { label: "Resolved", activeBg: "#10b981", activeFg: "var(--bg-card)" },
+  "CLOSED": { label: "Closed", activeBg: "var(--text-muted)", activeFg: "var(--bg-card)" }
 };
 
 const PRIORITY_CONFIG: Record<string, { label: string; activeBg: string; activeFg: string }> = {
-  "All": { label: "All Priorities", activeBg: "#014aad", activeFg: "#ffffff" },
-  "Low": { label: "Low Priority", activeBg: "#10b981", activeFg: "#ffffff" },
-  "Medium": { label: "Medium Priority", activeBg: "#f59e0b", activeFg: "#ffffff" },
-  "High": { label: "High Priority", activeBg: "#ef4444", activeFg: "#ffffff" },
-  "Critical": { label: "Critical Priority", activeBg: "#7f1d1d", activeFg: "#ffffff" }
+  "All": { label: "All Priorities", activeBg: "var(--dark-section)", activeFg: "var(--bg-card)" },
+  "Low": { label: "Low Priority", activeBg: "#10b981", activeFg: "var(--bg-card)" },
+  "Medium": { label: "Medium Priority", activeBg: "#f59e0b", activeFg: "var(--bg-card)" },
+  "High": { label: "High Priority", activeBg: "#ef4444", activeFg: "var(--bg-card)" },
+  "Critical": { label: "Critical Priority", activeBg: "#7f1d1d", activeFg: "var(--bg-card)" }
 };
 
 export default function HelpdeskFilterDrawer({
@@ -118,7 +118,7 @@ export default function HelpdeskFilterDrawer({
           right: 0,
           height: "100vh",
           width: "320px",
-          background: "#fff",
+          background: "var(--bg-card)",
           zIndex: 1050,
           boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
@@ -131,7 +131,7 @@ export default function HelpdeskFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--border-color)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -167,13 +167,13 @@ export default function HelpdeskFilterDrawer({
               background: "transparent",
               cursor: "pointer",
               fontSize: "1.1rem",
-              color: "#94a3b8",
+              color: "var(--text-muted)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               transition: "background 0.15s ease",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--border-color)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             ×
@@ -194,7 +194,7 @@ export default function HelpdeskFilterDrawer({
                 placeholder="ID, Title or Desc..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", paddingRight: "36px" }}
+                style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem", paddingRight: "36px" }}
               />
               <i
                 className="bi bi-search position-absolute text-muted"
@@ -221,9 +221,9 @@ export default function HelpdeskFilterDrawer({
                       gridColumn: s === "All" ? "1 / span 2" : "auto",
                       padding: "8px 12px",
                       borderRadius: "6px",
-                      border: isActive ? `1px solid ${cfg.activeBg}` : "1px solid #e2e8f0",
-                      backgroundColor: isActive ? cfg.activeBg : "#f8fafc",
-                      color: isActive ? cfg.activeFg : "#475569",
+                      border: isActive ? `1px solid ${cfg.activeBg}` : "1px solid var(--border-color)",
+                      backgroundColor: isActive ? cfg.activeBg : "var(--bg-app)",
+                      color: isActive ? cfg.activeFg : "var(--text-primary)",
                       fontSize: "0.78rem",
                       fontWeight: 600,
                       textAlign: "center",
@@ -256,9 +256,9 @@ export default function HelpdeskFilterDrawer({
                       gridColumn: p === "All" ? "1 / span 2" : "auto",
                       padding: "8px 12px",
                       borderRadius: "6px",
-                      border: isActive ? `1px solid ${cfg.activeBg}` : "1px solid #e2e8f0",
-                      backgroundColor: isActive ? cfg.activeBg : "#f8fafc",
-                      color: isActive ? cfg.activeFg : "#475569",
+                      border: isActive ? `1px solid ${cfg.activeBg}` : "1px solid var(--border-color)",
+                      backgroundColor: isActive ? cfg.activeBg : "var(--bg-app)",
+                      color: isActive ? cfg.activeFg : "var(--text-primary)",
                       fontSize: "0.78rem",
                       fontWeight: 600,
                       textAlign: "center",
@@ -282,7 +282,7 @@ export default function HelpdeskFilterDrawer({
               className="form-select"
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
-              style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem" }}
+              style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem" }}
             >
               {CATEGORY_OPTIONS.map(cat => (
                 <option key={cat} value={cat}>
@@ -301,7 +301,7 @@ export default function HelpdeskFilterDrawer({
               className="form-select"
               value={propertyFilter}
               onChange={e => setPropertyFilter(e.target.value)}
-              style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem" }}
+              style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem" }}
             >
               <option value="All">All Properties</option>
               {properties.map(p => (
@@ -315,11 +315,11 @@ export default function HelpdeskFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderTop: "1px solid #f1f5f9",
+            borderTop: "1px solid var(--border-color)",
             display: "flex",
             gap: 10,
             flexShrink: 0,
-            backgroundColor: "#f8fafc"
+            backgroundColor: "var(--bg-app)"
           }}
         >
           <button
@@ -335,7 +335,7 @@ export default function HelpdeskFilterDrawer({
             type="button"
             className="btn btn-primary btn-sm flex-grow-1 text-white border-0"
             onClick={onClose}
-            style={{ height: "36px", fontSize: "0.82rem", backgroundColor: "#014aad", borderRadius: "6px" }}
+            style={{ height: "36px", fontSize: "0.82rem", backgroundColor: "var(--dark-section)", borderRadius: "6px" }}
           >
             Apply
           </button>

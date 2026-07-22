@@ -39,7 +39,7 @@ export default function ActivityLogTab({ viewUser, agreementData }: ActivityLogT
   if (viewUser.assignedFloors?.length > 0) {
     events.push({
       id: "spatial-sync",
-      color: "#014aad",
+      color: "var(--dark-section)",
       icon: "hgi-building-03",
       title: "Spatial Mappings Synchronized",
       date: viewUser.createdAt ? new Date(viewUser.createdAt).toLocaleDateString("en-GB") : "—",
@@ -112,13 +112,13 @@ export default function ActivityLogTab({ viewUser, agreementData }: ActivityLogT
           <div className="timeline-container position-relative py-3">
             <div
               className="timeline-line position-absolute"
-              style={{ left: "19px", top: 0, bottom: 0, width: "2px", backgroundColor: "#e2e8f0", zIndex: 1 }}
+              style={{ left: "19px", top: 0, bottom: 0, width: "2px", backgroundColor: "var(--border-color)", zIndex: 1 }}
             />
             {events.map((evt) => (
               <div key={evt.id} className="timeline-item d-flex gap-4 mb-4 position-relative" style={{ zIndex: 2 }}>
                 <div
                   className="timeline-icon rounded-circle d-flex align-items-center justify-content-center text-white flex-shrink-0"
-                  style={{ width: "40px", height: "40px", backgroundColor: evt.color, border: "4px solid #fff", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
+                  style={{ width: "40px", height: "40px", backgroundColor: evt.color, border: "4px solid var(--bg-card)", boxShadow: "0 1px 4px rgba(0,0,0,0.1)" }}
                 >
                   <i className={`hgi-stroke ${evt.icon}`} style={{ fontSize: "0.85rem" }} />
                 </div>

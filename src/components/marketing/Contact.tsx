@@ -182,9 +182,9 @@ export default function Contact() {
         }
 
         .contact-info-card {
-          background-color: #0f172a;
+          background-color: var(--text-main);
           border-radius: 20px;
-          color: #ffffff;
+          color: var(--bg-card);
           box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.15);
         }
 
@@ -210,7 +210,7 @@ export default function Contact() {
 
         .info-label {
           font-size: 0.6rem;
-          color: #94a3b8;
+          color: var(--text-muted);
           text-transform: uppercase;
           font-weight: 700;
           letter-spacing: 0.05em;
@@ -232,8 +232,8 @@ export default function Contact() {
 
         /* Form Card */
         .contact-form-card {
-          background: #ffffff;
-          border: 1px solid #f1f5f9;
+          background: var(--bg-card);
+          border: 1px solid var(--border-color);
           border-radius: 20px;
           box-shadow: 0 10px 30px -10px rgba(15, 23, 42, 0.05);
           height: 100%;
@@ -249,25 +249,25 @@ export default function Contact() {
         .form-label-custom {
           font-size: 0.72rem;
           font-weight: 700;
-          color: #475569;
+          color: var(--text-primary);
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
 
         .form-control-custom {
-          border: 1px solid #cbd5e1;
+          border: 1px solid var(--border-color);
           border-radius: 12px;
           padding: 10px 14px;
           font-size: 0.85rem;
-          color: #0f172a;
+          color: var(--text-main);
           outline: none;
-          background: #f8fafc;
+          background: var(--bg-app);
           transition: all 0.2s ease;
         }
 
         .form-control-custom:focus {
           border-color: #ff7a00;
-          background: #ffffff;
+          background: var(--bg-card);
           box-shadow: 0 0 0 3px rgba(255, 122, 0, 0.12);
         }
 

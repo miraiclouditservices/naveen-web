@@ -168,7 +168,7 @@ export default function UseCases() {
       <style jsx global>{`
         .section-subtitle-small {
           font-size: 1.15rem;
-          color: #0f172a;
+          color: var(--text-main);
           letter-spacing: -0.01em;
         }
 
@@ -200,13 +200,13 @@ export default function UseCases() {
 
         .use-case-text {
           font-size: 0.88rem;
-          color: #475569;
+          color: var(--text-primary);
           font-weight: 500;
         }
 
         /* Bento Ecosystem Quadrants */
         .ecosystem-bento-card {
-          background: #ffffff;
+          background: var(--bg-card);
           border: 1px solid rgba(15, 23, 42, 0.08);
           border-radius: 24px;
           padding: 16px;
@@ -243,7 +243,7 @@ export default function UseCases() {
         }
 
         .mini-mockup-card {
-          background: #ffffff;
+          background: var(--bg-card);
           border-radius: 8px;
           width: 80px;
           min-height: 48px;
@@ -260,7 +260,7 @@ export default function UseCases() {
         .bg-emerald { background: #10b981; }
         .bg-primary { background: #3b82f6; }
         .bg-lime { background: #84cc16; }
-        .bg-light { background: #f1f5f9; }
+        .bg-light { background: var(--border-color); }
 
         .mock-dot {
           width: 4px;
@@ -285,13 +285,13 @@ export default function UseCases() {
 
         .quadrant-title {
           font-size: 0.85rem;
-          color: #0f172a;
+          color: var(--text-main);
           margin-top: 4px;
         }
 
         .quadrant-subtitle {
           font-size: 0.55rem;
-          color: #94a3b8;
+          color: var(--text-muted);
           font-weight: 700;
           letter-spacing: 0.05em;
         }
@@ -335,7 +335,7 @@ export default function UseCases() {
         }
 
         .arrow-box {
-          color: #94a3b8;
+          color: var(--text-muted);
           font-size: 1rem;
           display: flex;
           align-items: center;

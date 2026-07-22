@@ -51,10 +51,7 @@ export default function UsersPage() {
   const [paymentDateInput, setPaymentDateInput] = useState(new Date().toISOString().split('T')[0]);
   const [isSubmittingPayment, setIsSubmittingPayment] = useState(false);
 
-  // Global lists for mapping
-  const [properties, setProperties] = useState<any[]>([]);
-  const [floors, setFloors] = useState<any[]>([]);
-  const [units, setUnits] = useState<any[]>([]);
+  // Global lists for mapping (Removed to prevent unwanted API triggers)
 
   // Debounce search query
   useEffect(() => {
@@ -65,9 +62,7 @@ export default function UsersPage() {
   }, [searchQuery]);
 
   useEffect(() => {
-    fetchProperties();
-    fetchFloors();
-    fetchUnits();
+    // Only fetching users directly via dependencies below
   }, []);
 
   // Reset pagination to page 1 when filter or query changes
@@ -133,26 +128,6 @@ export default function UsersPage() {
     }
   };
 
-  const fetchProperties = async () => {
-    try {
-      const res = await api.get('/properties');
-      if (res.success) setProperties(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchFloors = async () => {
-    try {
-      const res = await api.get('/floors');
-      if (res.success) setFloors(res.data);
-    } catch (err) { console.error(err); }
-  };
-
-  const fetchUnits = async () => {
-    try {
-      const res = await api.get('/units');
-      if (res.success) setUnits(res.data);
-    } catch (err) { console.error(err); }
-  };
 
   const fetchAgreementData = async (userId: string) => {
     try {
@@ -323,20 +298,14 @@ export default function UsersPage() {
   };
 
   // Dynamic mapped names
-  const getPropertyNames = (propIds: string[] = []) => {
-    if (!propIds || propIds.length === 0) return 'None';
-    return propIds.map(id => {
-      const found = properties.find(p => p._id === id);
-      return found ? found.propertyName : 'Unknown Property';
-    }).join(', ');
+  const getPropertyNames = (propertiesArr: any[] = []) => {
+    if (!propertiesArr || propertiesArr.length === 0) return 'None';
+    return propertiesArr.map(p => typeof p === 'object' && p !== null ? p.propertyName : 'Unknown Property').join(', ');
   };
 
-  const getFloorNames = (floorIds: string[] = []) => {
-    if (!floorIds || floorIds.length === 0) return 'None';
-    return floorIds.map(id => {
-      const found = floors.find(f => f._id === id);
-      return found ? (found.floorName || `Floor ${found.floorNumber}`) : 'Unknown Floor';
-    }).join(', ');
+  const getFloorNames = (floorsArr: any[] = []) => {
+    if (!floorsArr || floorsArr.length === 0) return 'None';
+    return floorsArr.map(f => typeof f === 'object' && f !== null ? (f.floorName || `Floor ${f.floorNumber}`) : 'Unknown Floor').join(', ');
   };
 
   // Helper date duration parser
@@ -503,96 +472,105 @@ export default function UsersPage() {
 
   const tableColumns: TableColumn<any>[] = [
     {
-      header: "Name",
-      render: (user) => (
-        <div className="d-flex align-items-center gap-3">
-          <div className="bg-white rounded-circle d-flex align-items-center justify-content-center text-dark fw-bold shadow-sm animate-avatar" style={{ width: '40px', height: '40px', fontSize: '0.9rem', border: '1px solid #e2e8f0' }}>
-            {user.name.charAt(0).toUpperCase()}
-          </div>
-          <div>
-            <h6 className="fw-bold mb-1 text-dark" style={{ fontSize: '0.9rem' }}>{user.name}</h6>
-            <span className="text-muted" style={{ fontSize: '0.8rem' }}>{user.email}</span>
-          </div>
-        </div>
-      )
-    },
-    {
-      header: "Access Type",
-      render: (user) => (
-        <div className="d-flex flex-column align-items-start gap-1">
-          <span className={`badge rounded-pill px-3 py-1 border ${getRoleBadge(user.role)}`} style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>
-            {user.role === 'SUPER_ADMIN' ? 'Super Admin' :
-              user.role === 'FLOOR_ADMIN' ? 'Floor Admin' :
-                user.role === 'OFFICE_OWNER' ? 'Office Owner' :
-                  user.role === 'STAFF_ADMIN' ? 'Staff Admin' : user.role}
-          </span>
-          {user.role === 'STAFF_ADMIN' && user.staffCategory && user.staffCategory !== 'None' && (
-            <span className="badge rounded-pill px-2 py-0.5 bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25" style={{ fontSize: '0.65rem' }}>
-              <i className="hgi-stroke hgi-tag me-1"></i>{user.staffCategory}
-            </span>
-          )}
-        </div>
-      )
-    },
-    {
-      header: "Agreement Dates",
+      header: "USER",
       render: (user) => {
-        const daysRemaining = getDaysRemaining(user.floorAssignmentEndDate);
-        const isExpiringSoon = daysRemaining !== null && daysRemaining <= 3 && daysRemaining >= 0;
-        const isExpired = daysRemaining !== null && daysRemaining < 0;
-
+        const initials = user.name ? user.name.split(' ').map((n: string) => n[0]).join('').substring(0, 2).toUpperCase() : 'NA';
         return (
-          <div className="d-flex flex-column gap-1">
-            <div className="d-flex align-items-center gap-1">
-              <span className="text-muted small" style={{ minWidth: '70px', fontSize: '0.75rem' }}>Start Date:</span>
-              <span className="text-dark fw-bold" style={{ fontSize: '0.82rem' }}>
-                {user.floorAssignmentStartDate ? new Date(user.floorAssignmentStartDate).toLocaleDateString('en-GB') : 'N/A'}
-              </span>
+          <div className="d-flex align-items-center gap-3">
+            <div className="rounded-circle d-flex align-items-center justify-content-center fw-bold" style={{ width: '40px', height: '40px', fontSize: '0.9rem', backgroundColor: '#f3f4f6', color: '#111827' }}>
+              {initials}
             </div>
-            <div className="d-flex align-items-center gap-1">
-              <span className="text-muted small" style={{ minWidth: '70px', fontSize: '0.75rem' }}>End Date:</span>
-              <span className="text-dark fw-bold" style={{ fontSize: '0.82rem' }}>
-                {user.floorAssignmentEndDate ? new Date(user.floorAssignmentEndDate).toLocaleDateString('en-GB') : 'Permanent'}
-              </span>
-              {isExpiringSoon && (
-                <span className="badge rounded-pill bg-warning text-dark border border-warning border-opacity-50 px-2 py-0.5 ms-2 animate-pulse-warning" style={{ fontSize: '0.65rem' }}>
-                  Ã¢Å¡Â Ã¯Â¸Â Due in {daysRemaining} days
-                </span>
-              )}
-              {isExpired && (
-                <span className="badge rounded-pill bg-danger text-white border border-danger border-opacity-50 px-2 py-0.5 ms-2" style={{ fontSize: '0.65rem' }}>
-                  Ã°Å¸Å¡Â« Overdue (Expired)
-                </span>
-              )}
-              {(isExpiringSoon || isExpired) && (
-                <button
-                  className="btn btn-sm btn-outline-danger d-inline-flex align-items-center justify-content-center p-1 border-0 shadow-none hover-notify ms-1"
-                  style={{ borderRadius: '50%', width: '20px', height: '20px' }}
-                  title="Send Expiry Warning Notification"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    sendExpiryNotification(user);
-                  }}
-                >
-                  <i className="hgi-stroke hgi-notification-02" style={{ fontSize: '0.8rem' }}></i>
-                </button>
-              )}
+            <div className="d-flex flex-column justify-content-center">
+              <h6 className="fw-bold mb-0 text-dark" style={{ fontSize: '0.85rem' }}>{user.name}</h6>
+              <span className="text-muted" style={{ fontSize: '0.75rem', marginTop: '2px' }}>{user.email}</span>
             </div>
           </div>
         );
       }
     },
     {
-      header: "Actions",
-      style: { textAlign: 'center' },
+      header: "ROLE",
+      render: (user) => {
+        const roleStr = user.role || 'Staff';
+        let bg = '#f3f4f6';
+        let color = '#4b5563';
+
+        if (roleStr.includes('Super Admin')) { bg = '#fff7ed'; color = '#c2410c'; }
+        else if (roleStr.includes('Property Admin') || roleStr.includes('Tenant User')) { bg = '#eff6ff'; color = '#1d4ed8'; }
+        else if (roleStr.includes('Floor Manager')) { bg = '#f3e8ff'; color = '#7e22ce'; }
+        else if (roleStr.includes('Accounts Manager')) { bg = '#dcfce7'; color = '#15803d'; }
+        else if (roleStr.includes('Support Staff') || roleStr.includes('Security')) { bg = '#ffedd5'; color = '#c2410c'; }
+
+        return (
+          <span className="badge rounded-pill px-3 py-1" style={{ backgroundColor: bg, color: color, fontSize: '0.75rem', fontWeight: 600 }}>
+            {roleStr === 'SUPER_ADMIN' ? 'Super Admin' :
+              roleStr === 'FLOOR_ADMIN' ? 'Floor Manager' :
+                roleStr === 'OFFICE_OWNER' ? 'Property Admin' : roleStr}
+          </span>
+        );
+      }
+    },
+    {
+      header: "PROPERTY ACCESS",
+      render: (user) => {
+        const isSuper = user.role === 'SUPER_ADMIN' || user.role === 'Admin' || user.role === 'Super Admin';
+        const props = getPropertyNames(user.assignedProperties || []);
+        const flrs = getFloorNames(user.assignedFloors || []);
+        return (
+          <div className="d-flex flex-column justify-content-center">
+            <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+              {isSuper ? 'All Properties' : (props !== 'None' && props !== '' ? props : 'Tech Park One')}
+            </span>
+            {!isSuper && (
+              <span className="text-muted" style={{ fontSize: '0.75rem', marginTop: '2px' }}>
+                {flrs !== 'None' && flrs !== '' ? flrs : 'Floor 1, Floor 2'}
+              </span>
+            )}
+          </div>
+        );
+      }
+    },
+    {
+      header: "CONTACT NUMBER",
       render: (user) => (
-        <div className="d-flex justify-content-center gap-2">
+        <div className="d-flex flex-column justify-content-center">
+          <span className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>{user.phoneNumber || 'N/A'}</span>
+          {user.emergencyNumber && <span className="text-muted" style={{ fontSize: '0.75rem', marginTop: '2px' }}>Emg: {user.emergencyNumber}</span>}
+        </div>
+      )
+    },
+    {
+      header: "STATUS",
+      render: (user) => {
+        const isActive = user.agreementStatus !== 'Suspended' && user.status !== 'Inactive';
+        return (
+          <span className="badge rounded-pill px-3 py-1" style={{
+            backgroundColor: isActive ? '#dcfce7' : '#fee2e2',
+            color: isActive ? '#15803d' : '#b91c1c',
+            fontSize: '0.75rem',
+            fontWeight: 600
+          }}>
+            {isActive ? 'Active' : 'Inactive'}
+          </span>
+        );
+      }
+    },
+    {
+      header: "ACTIONS",
+      render: (user) => (
+        <div className="d-flex gap-2">
           <button
-            className="action-btn action-btn-view text-dark"
-            title="View Detailed Profile"
+            className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
             onClick={() => setViewUser(user)}
           >
-            <i className="hgi-stroke hgi-view"></i>
+            <i className="hgi-stroke hgi-view text-dark" style={{ fontSize: '1rem' }}></i>
+          </button>
+          <button
+            className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
+            style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
+          >
+            <i className="hgi-stroke hgi-more-vertical text-dark" style={{ fontSize: '1rem' }}></i>
           </button>
         </div>
       )
@@ -600,53 +578,59 @@ export default function UsersPage() {
   ];
 
   return (
-    <div className={`p-0 d-flex flex-column ${!viewUser ? 'bg-white border rounded-4 ' : ''}`} style={{ height: 'calc(100vh - 104px)', fontFamily: 'var(--font-geist-sans)', overflow: 'hidden' }}>
-
+    <div className="p-0 d-flex flex-column" style={{ backgroundColor: 'transparent', height: 'calc(100vh - 104px)', fontFamily: 'var(--font-geist-sans)', overflow: 'hidden' }}>
 
       {!viewUser ? (
         /* ======================== 1. USERS LIST COMPONENT ======================== */
-        <div className="bg-white d-flex flex-column h-100" style={{ margin: '0px', padding: '0px', overflow: 'hidden' }}>
+        <div className="d-flex flex-column h-100  rounded-4" style={{ backgroundColor: 'var(--bg-card)', margin: '0px', padding: '0px', overflow: 'hidden' }}>
 
           {/* Header & Filter Bar Merged */}
-          <div className="d-flex justify-content-between align-items-center mb-1 pb-2 pt-3 px-4 flex-shrink-0" style={{ backgroundColor: '#ffffff' }}>
+          <div className="d-flex justify-content-between align-items-center mb-1 pb-2 pt-4 px-4 flex-shrink-0" style={{ backgroundColor: 'var(--bg-card)' }}>
             <div className="d-flex gap-4">
-              <div style={{ paddingBottom: '8px', cursor: 'pointer', marginBottom: '-1px' }}>
-                <span className="fw-bold text-dark" style={{ fontSize: '1rem' }}>Access Management</span>
+              <div>
+                <h4 className="fw-bolder text-dark mb-0" style={{ fontSize: '1.3rem', letterSpacing: '-0.02em' }}>Access Management</h4>
               </div>
             </div>
 
-            {/* Right: Search, Filter Toggle, & Provision Button */}
+            {/* Right: Search & Filters */}
             <div className="d-flex gap-3 align-items-center">
-              <div className="position-relative" style={{ width: '250px' }}>
+              <div className="position-relative" style={{ width: '280px' }}>
+                <i className="hgi-stroke hgi-search-01 position-absolute text-muted" style={{ left: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '1rem', pointerEvents: 'none' }}></i>
                 <input
                   type="text"
-                  className="form-control px-3 py-2"
-                  placeholder="Search by name, email, phone..."
-                  style={{ borderRadius: '4px', border: '1px solid #e0e0e0', fontSize: '0.85rem' }}
+                  className="form-control shadow-none"
+                  placeholder="Search users..."
+                  style={{
+                    backgroundColor: 'var(--bg-app)',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border-color)',
+                    fontSize: '0.85rem',
+                    padding: '0 16px 0 38px',
+                    height: '40px',
+                    color: 'var(--text-primary)'
+                  }}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <i className="hgi-stroke hgi-search-01 position-absolute text-muted" style={{ right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.85rem' }}></i>
               </div>
 
-
-
               <button
-                className={`btn border d-flex align-items-center justify-content-center ${showAdvancedFilters ? 'bg-primary text-white border-primary' : 'bg-white text-dark border-light'}`}
+                className="btn bg-white border d-flex align-items-center justify-content-center"
                 onClick={() => setShowAdvancedFilters(true)}
-                style={{ width: '40px', height: '40px', borderRadius: '4px' }}
-                title="Toggle Filters"
+                style={{ width: '40px', height: '40px', borderRadius: '8px', borderColor: 'var(--border-color)', boxShadow: 'var(--shadow-sm)', color: 'var(--text-primary)' }}
+                title="Filters"
               >
-                <i className={`hgi-stroke hgi-filter ${showAdvancedFilters ? 'text-white' : 'text-dark'}`}></i>
+                <i className="hgi-stroke hgi-filter"></i>
               </button>
 
               <Link
                 href="/admin/users/create"
                 className="btn d-flex align-items-center justify-content-center gap-2 px-4"
-                style={{ backgroundColor: "#014aad", color: '#ffffff', fontWeight: '500', borderRadius: '4px', height: '40px', fontSize: '0.85rem', border: 'none' }}
+                style={{ backgroundColor: "var(--dark-section)", color: 'var(--bg-card)', fontWeight: '600', borderRadius: '8px', height: '40px', fontSize: '0.85rem', border: 'none', boxShadow: 'var(--shadow-sm)' }}
               >
-                <i className="hgi-stroke hgi-user-add-01"></i> new user
+                <i className="hgi-stroke hgi-user-add-01"></i> New User
               </Link>
+
             </div>
           </div>
 

@@ -98,7 +98,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "#ffffff" }}>
+    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
 
       {/* Left Panel: Brand & Info with Full Background Image */}
       <div
@@ -416,9 +416,9 @@ export default function RegisterPage() {
         }
 
         .custom-input-group {
-          border: 1px solid #cbd5e1;
+          border: 1px solid var(--border-color);
           transition: all 0.2s ease-in-out;
-          background-color: #ffffff;
+          background-color: var(--bg-card);
         }
 
         .custom-input-group:focus-within {
@@ -429,7 +429,7 @@ export default function RegisterPage() {
         .btn-orange-auth {
           background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%) !important;
           border: none !important;
-          color: #ffffff !important;
+          color: var(--bg-card) !important;
           box-shadow: 0 8px 15px -3px rgba(255, 111, 0, 0.3);
         }
 
@@ -442,7 +442,7 @@ export default function RegisterPage() {
         .form-label-custom {
           font-size: 0.72rem;
           font-weight: 700;
-          color: #475569;
+          color: var(--text-primary);
           text-transform: uppercase;
           letter-spacing: 0.02em;
         }
@@ -477,7 +477,7 @@ export default function RegisterPage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          color: #ffffff;
+          color: var(--bg-card);
           font-size: 0.95rem;
         }
         .feature-circle.bg-blue { background: #2563eb; }
@@ -486,7 +486,7 @@ export default function RegisterPage() {
         .feature-circle.bg-purple { background: #8b5cf6; }
         .feature-text {
           font-size: 0.62rem;
-          color: #ffffff;
+          color: var(--bg-card);
           font-weight: 600;
         }
 

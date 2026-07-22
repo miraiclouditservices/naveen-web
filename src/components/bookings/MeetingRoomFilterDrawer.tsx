@@ -83,7 +83,7 @@ export default function MeetingRoomFilterDrawer({
             <label className="form-label small fw-bold text-secondary mb-2">Property / Building</label>
             <select
               className="form-select shadow-none"
-              style={{ fontSize: "0.85rem", borderRadius: "6px", border: "1px solid #e2e8f0" }}
+              style={{ fontSize: "0.85rem", borderRadius: "6px", border: "1px solid var(--border-color)" }}
               value={selectedProperty}
               onChange={(e) => {
                 setSelectedProperty(e.target.value);
@@ -104,7 +104,7 @@ export default function MeetingRoomFilterDrawer({
             <label className="form-label small fw-bold text-secondary mb-2">Floor Level</label>
             <select
               className="form-select shadow-none"
-              style={{ fontSize: "0.85rem", borderRadius: "6px", border: "1px solid #e2e8f0" }}
+              style={{ fontSize: "0.85rem", borderRadius: "6px", border: "1px solid var(--border-color)" }}
               disabled={!selectedProperty}
               value={selectedFloor}
               onChange={(e) => setSelectedFloor(e.target.value)}
@@ -136,7 +136,7 @@ export default function MeetingRoomFilterDrawer({
           <button
             type="button"
             className="btn btn-primary btn-sm px-3 fw-bold text-white shadow-sm border-0 rounded-3"
-            style={{ backgroundColor: "#014aad" }}
+            style={{ backgroundColor: "var(--dark-section)" }}
             onClick={() => {
               onApply();
               onClose();

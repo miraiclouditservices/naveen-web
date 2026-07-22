@@ -80,7 +80,7 @@ export default function MaterialFilterDrawer({
           right: 0,
           height: "100vh",
           width: "320px",
-          background: "#fff",
+          background: "var(--bg-card)",
           zIndex: 1050,
           boxShadow: "-8px 0 32px rgba(0,0,0,0.12)",
           transform: isOpen ? "translateX(0)" : "translateX(100%)",
@@ -93,7 +93,7 @@ export default function MaterialFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderBottom: "1px solid #f1f5f9",
+            borderBottom: "1px solid var(--border-color)",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
@@ -129,13 +129,13 @@ export default function MaterialFilterDrawer({
               background: "transparent",
               cursor: "pointer",
               fontSize: "1.1rem",
-              color: "#94a3b8",
+              color: "var(--text-muted)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               transition: "background 0.15s ease",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f1f5f9")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--border-color)")}
             onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
           >
             ×
@@ -156,7 +156,7 @@ export default function MaterialFilterDrawer({
                 placeholder="Details, HSN, vehicle..."
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
-                style={{ borderRadius: "6px", border: "1px solid #e2e8f0", fontSize: "0.85rem", paddingRight: "36px" }}
+                style={{ borderRadius: "6px", border: "1px solid var(--border-color)", fontSize: "0.85rem", paddingRight: "36px" }}
               />
               <i
                 className="bi bi-search position-absolute text-muted"
@@ -210,7 +210,7 @@ export default function MaterialFilterDrawer({
         <div
           style={{
             padding: "16px 20px",
-            borderTop: "1px solid #f1f5f9",
+            borderTop: "1px solid var(--border-color)",
             display: "flex",
             gap: "8px",
             flexShrink: 0,
@@ -229,7 +229,7 @@ export default function MaterialFilterDrawer({
             type="button"
             onClick={onClose}
             className="btn flex-fill rounded-3 fw-semibold text-white"
-            style={{ backgroundColor: "#014aad", border: "none", fontSize: "0.82rem" }}
+            style={{ backgroundColor: "var(--dark-section)", border: "none", fontSize: "0.82rem" }}
           >
             Apply Filters
           </button>

@@ -316,7 +316,7 @@ export default function LeaseModal({ isOpen, onClose, onSave, editData, mode = "
       case "Pending": return "#f59e0b"; // Yellow
       case "Expired": return "#ef4444"; // Red
       case "Renewal Pending": return "#3b82f6"; // Blue
-      default: return "#6b7280";
+      default: return "var(--text-muted)";
     }
   };
 
@@ -351,7 +351,7 @@ export default function LeaseModal({ isOpen, onClose, onSave, editData, mode = "
           <div className="modal-header border-bottom px-4 py-3 bg-light d-flex justify-content-between align-items-center flex-shrink-0">
             <div>
               <div className="d-flex align-items-center gap-2">
-                <span className="badge text-white font-semibold py-1 px-3 rounded-pill" style={{ backgroundColor: '#014aad' }}>Step {activeStep} of 4</span>
+                <span className="badge text-white font-semibold py-1 px-3 rounded-pill" style={{ backgroundColor: 'var(--dark-section)' }}>Step {activeStep} of 4</span>
                 <span className="text-muted small">| {isView ? 'Lease Profile Review' : editData ? 'Edit Agreement' : 'New Tenant Registry'}</span>
               </div>
               <h5 className="modal-title fw-bold text-dark mt-1">
@@ -790,7 +790,7 @@ export default function LeaseModal({ isOpen, onClose, onSave, editData, mode = "
                 <div className="d-flex flex-column gap-3">
                   
                   {/* Glassmorphism Title Panel */}
-                  <div className="p-3 rounded-3 text-white" style={{ background: 'linear-gradient(135deg, #014aad 0%, #1e40af 100%)' }}>
+                  <div className="p-3 rounded-3 text-white" style={{ background: 'linear-gradient(135deg, var(--dark-section) 0%, #1e40af 100%)' }}>
                     <div className="d-flex align-items-center gap-2">
                       <i className="bi bi-file-earmark-text fs-5"></i>
                       <h6 className="fw-bold mb-0">Lease Summary</h6>
@@ -900,7 +900,7 @@ export default function LeaseModal({ isOpen, onClose, onSave, editData, mode = "
                 Cancel
               </button>
               {activeStep < 4 ? (
-                <button type="button" className="btn btn-primary rounded-pill px-4 fw-bold text-white shadow-sm" style={{ backgroundColor: '#014aad' }} onClick={handleNext}>
+                <button type="button" className="btn btn-primary rounded-pill px-4 fw-bold text-white shadow-sm" style={{ backgroundColor: 'var(--dark-section)' }} onClick={handleNext}>
                   Next Step <i className="bi bi-chevron-right"></i>
                 </button>
               ) : (

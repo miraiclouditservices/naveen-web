@@ -114,7 +114,7 @@ export default function PaymentsTab({
           },
         ].map((s, i) => (
           <div key={i} className="col-12 col-sm-6 col-md-3">
-            <div className="bg-white border rounded-4 p-4 d-flex flex-column gap-2" style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
+            <div className="bg-white border rounded-4 p-4 d-flex flex-column gap-2" style={{ borderColor: "var(--border-color)", boxShadow: "0 1px 3px rgba(0,0,0,0.02)" }}>
               <div className="d-flex align-items-center justify-content-center rounded-3" style={{ width: "40px", height: "40px", backgroundColor: s.bgColor, color: s.color }}>
                 <i className={`${s.icon} fs-5`} />
               </div>
@@ -131,7 +131,7 @@ export default function PaymentsTab({
       </div>
 
       {/* Installment Schedule Card */}
-      <div className="bg-white border rounded-4 p-4" style={{ borderColor: "#e2e8f0" }}>
+      <div className="bg-white border rounded-4 p-4" style={{ borderColor: "var(--border-color)" }}>
         <div className="d-flex align-items-center justify-content-between mb-4">
           <div className="d-flex align-items-center gap-2">
             <div className="d-flex align-items-center justify-content-center rounded-3 bg-light" style={{ width: "36px", height: "36px" }}>
@@ -143,7 +143,7 @@ export default function PaymentsTab({
         {installments.length > 0 ? (
           <>
             <div className="table-responsive">
-              <table className="table align-middle mb-0" style={{ borderColor: "#f1f5f9" }}>
+              <table className="table align-middle mb-0" style={{ borderColor: "var(--border-color)" }}>
                 <thead>
                   <tr className="border-bottom">
                     {["Invoice No", "Due Date", "Amount", "Paid", "Balance", "Status"].map(h => (
@@ -175,7 +175,7 @@ export default function PaymentsTab({
             </div>
 
             {/* Sub-panel below Installment Schedule Table */}
-            <div className="mt-4 p-3 rounded-4 d-flex justify-content-between align-items-center" style={{ backgroundColor: "#f4f7fd", border: "1px solid #e2e8f0" }}>
+            <div className="mt-4 p-3 rounded-4 d-flex justify-content-between align-items-center" style={{ backgroundColor: "#f4f7fd", border: "1px solid var(--border-color)" }}>
               {[
                 { label: "Total Due", value: `₹ ${Number(totalAmount).toLocaleString("en-IN")}`, icon: "bi bi-file-earmark-text", color: "#1a73e8", bgColor: "#e8f0fe" },
                 { label: "Total Paid", value: `₹ ${Number(totalPaid).toLocaleString("en-IN")}`, icon: "bi bi-wallet2", color: "#137333", bgColor: "#e6f4ea" },
@@ -213,7 +213,7 @@ export default function PaymentsTab({
           <span className="spinner-border spinner-border-sm me-2" />Loading payment history...
         </div>
       ) : (
-        <div className="bg-white border rounded-4 p-4" style={{ borderColor: "#e2e8f0" }}>
+        <div className="bg-white border rounded-4 p-4" style={{ borderColor: "var(--border-color)" }}>
           <div className="d-flex align-items-center mb-4">
             <div className="d-flex align-items-center gap-2">
               <div className="d-flex align-items-center justify-content-center rounded-3 bg-light" style={{ width: "36px", height: "36px" }}>
@@ -225,7 +225,7 @@ export default function PaymentsTab({
           {displayAgr.payments?.length > 0 ? (
             <>
               <div className="table-responsive">
-                <table className="table align-middle mb-0" style={{ borderColor: "#f1f5f9" }}>
+                <table className="table align-middle mb-0" style={{ borderColor: "var(--border-color)" }}>
                   <thead>
                     <tr className="border-bottom">
                       {["Payment Date", "Payment ID", "Paid Amount", "Mode of Payment", "Transaction ID", "Status", "Receipt"].map(h => (

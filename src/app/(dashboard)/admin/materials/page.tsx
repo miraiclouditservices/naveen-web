@@ -220,7 +220,7 @@ function MaterialsContent() {
       render: (item: any) => (
         <div>
           <div className="fw-bold text-dark" style={{ fontSize: "0.83rem" }}>
-            <i className="bi bi-building me-1" style={{ color: "#014aad" }} />
+            <i className="bi bi-building me-1" style={{ color: "var(--dark-section)" }} />
             {item.property?.propertyName || item.building || "—"}
           </div>
           {(item.floor?.floorNumber || item.floorLabel) && (
@@ -286,14 +286,14 @@ function MaterialsContent() {
             title="View Details"
             onClick={() => handleViewDetails(item._id)}
             style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #e2e8f0",
-              background: "#fff", cursor: "pointer", display: "flex",
+              width: 32, height: 32, borderRadius: "6px", border: "1px solid var(--border-color)",
+              background: "var(--bg-card)", cursor: "pointer", display: "flex",
               alignItems: "center", color: "#1e293b",
               justifyContent: "center",
               transition: "background 0.15s",
             }}
-            onMouseEnter={e => (e.currentTarget.style.background = "#f8fafc")}
-            onMouseLeave={e => (e.currentTarget.style.background = "#fff")}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--bg-app)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--bg-card)")}
           >
             <i className="bi bi-eye text-secondary" style={{ fontSize: "0.95rem" }} />
           </button>
@@ -303,9 +303,9 @@ function MaterialsContent() {
               disabled={checkingOutId === item._id}
               onClick={() => handleCheckOut(item._id)}
               style={{
-                width: 32, height: 32, borderRadius: "6px", border: checkingOutId === item._id ? "1px solid #e2e8f0" : "1px solid #fee2e2",
-                background: checkingOutId === item._id ? "#f1f5f9" : "#fee2e2", cursor: checkingOutId === item._id ? "not-allowed" : "pointer", display: "flex",
-                alignItems: "center", justifyContent: "center", color: checkingOutId === item._id ? "#94a3b8" : "#991b1b",
+                width: 32, height: 32, borderRadius: "6px", border: checkingOutId === item._id ? "1px solid var(--border-color)" : "1px solid #fee2e2",
+                background: checkingOutId === item._id ? "var(--border-color)" : "#fee2e2", cursor: checkingOutId === item._id ? "not-allowed" : "pointer", display: "flex",
+                alignItems: "center", justifyContent: "center", color: checkingOutId === item._id ? "var(--text-muted)" : "#991b1b",
                 transition: "background 0.15s",
               }}
             >
@@ -329,7 +329,7 @@ function MaterialsContent() {
       {/* ── Header ────────────────────────────────────────────────────────── */}
       <div
         className="d-flex justify-content-between align-items-center pb-2 pt-3 px-4 flex-shrink-0"
-        style={{ backgroundColor: "#ffffff" }}
+        style={{ backgroundColor: "var(--bg-card)" }}
       >
         <div>
           <span className="fw-bold text-dark" style={{ fontSize: "1rem" }}>Material Management</span>
@@ -354,7 +354,7 @@ function MaterialsContent() {
                 onClick={() => { setSearchTerm(""); setCurrentPage(1); }}
                 style={{
                   position: "absolute", right: 10, top: "50%", transform: "translateY(-50%)",
-                  border: "none", background: "none", cursor: "pointer", color: "#94a3b8",
+                  border: "none", background: "none", cursor: "pointer", color: "var(--text-muted)",
                   fontSize: "0.85rem", lineHeight: 1,
                 }}
               >×</button>
@@ -371,7 +371,7 @@ function MaterialsContent() {
             onClick={() => setShowFilters(true)}
             style={{
               width: 40, height: 40, borderRadius: "4px",
-              backgroundColor: showFilters ? "#014aad" : "#fff",
+              backgroundColor: showFilters ? "var(--dark-section)" : "var(--bg-card)",
             }}
             title="Advanced Filters"
           >
@@ -398,7 +398,7 @@ function MaterialsContent() {
           <button
             className="btn d-flex align-items-center gap-2 px-4"
             style={{
-              backgroundColor: "#014aad", color: "#fff", fontWeight: 500,
+              backgroundColor: "var(--dark-section)", color: "var(--bg-card)", fontWeight: 500,
               borderRadius: "4px", height: 40, fontSize: "0.85rem", border: "none",
             }}
             onClick={() => handleOpenModal("create")}
@@ -414,19 +414,19 @@ function MaterialsContent() {
           {searchTerm && (
             <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
               Search: <strong>{searchTerm}</strong>
-              <button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
+              <button onClick={() => { setSearchTerm(""); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "var(--text-muted)" }}>×</button>
             </span>
           )}
           {gatePassTypeFilter !== "Type: All" && gatePassTypeFilter !== "All" && (
             <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
               Type: <strong>{gatePassTypeFilter}</strong>
-              <button onClick={() => { setGatePassTypeFilter("Type: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
+              <button onClick={() => { setGatePassTypeFilter("Type: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "var(--text-muted)" }}>×</button>
             </span>
           )}
           {statusFilter !== "Status: All" && statusFilter !== "All" && (
             <span className="badge bg-light text-dark border px-2 py-1" style={{ fontSize: "0.75rem" }}>
               Status: <strong>{statusFilter}</strong>
-              <button onClick={() => { setStatusFilter("Status: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "#64748b" }}>×</button>
+              <button onClick={() => { setStatusFilter("Status: All"); setCurrentPage(1); }} style={{ border: "none", background: "none", cursor: "pointer", marginLeft: 4, color: "var(--text-muted)" }}>×</button>
             </span>
           )}
           <button

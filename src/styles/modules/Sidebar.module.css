@@ -1,11 +1,11 @@
 .sidebar {
-  width: 220px;
+  width: 240px;
   height: 100vh;
   position: fixed;
   left: 0;
   top: 0;
-  background-color: var(--bg-card);
-  border-right: 1px solid var(--border-color);
+  background-color: var(--text-primary);
+  border-right: none;
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -13,30 +13,29 @@
 }
 
 .brand {
-  padding: var(--space-6);
   display: flex;
   align-items: center;
   gap: var(--space-3);
   margin-bottom: var(--space-4);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: var(--space-4) !important;
 }
 
 .brandIcon {
   width: 36px;
   height: 36px;
-  background: var(--primary);
-  color: white;
-  border-radius: var(--radius-md);
+  background: transparent;
+  color: #c49a02;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-sm);
 }
 
 .brandName {
   font-weight: 800;
-  font-size: 1.25rem;
-  color: var(--text-main);
-  letter-spacing: -0.025em;
+  font-size: 1.15rem;
+  color: var(--bg-card);
+  letter-spacing: 0.02em;
 }
 
 .navSection {
@@ -46,48 +45,42 @@
 }
 
 .navGroup {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 }
 
 .navLabel {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  letter-spacing: 0.05em;
-  margin-bottom: var(--space-2);
-  padding-left: var(--space-3);
+  display: none;
 }
 
 .navLink {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
   text-decoration: none;
-  color: var(--text-muted);
-  font-size: 0.9rem;
+  color: #ffffff;
+  font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .navLink:hover {
-  background-color: var(--bg-app);
-  color: var(--text-main);
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
 }
 
 .navLinkActive {
-  background-color: var(--primary-light);
-  color: var(--primary-dark);
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .navLinkActive i {
-  color: var(--primary);
+  color: #8b6914;
+  /* A dark gold/brownish tint to match image for active icon */
 }
 
 .navIcon {
-  font-size: 1.2rem;
+  font-size: 1.15rem;
 }
-
-

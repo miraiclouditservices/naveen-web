@@ -23,7 +23,7 @@ export default function WatchmanDashboard({ user }: { user: any }) {
 
   if(loading) return <div className="d-flex align-items-center justify-content-center" style={{ height:"50vh" }}><div className="spinner-border" style={{ color:"#16a34a" }} /></div>;
 
-  const C = { green:"#16a34a",blue:"#014aad",yellow:"#d97706",red:"#dc2626",teal:"#0891b2",slate:"#475569" };
+  const C = { green:"#16a34a",blue:"var(--dark-section)",yellow:"#d97706",red:"#dc2626",teal:"#0891b2",slate:"var(--text-primary)" };
 
   return (
     <div style={{ paddingBottom:40 }}>
@@ -45,11 +45,11 @@ export default function WatchmanDashboard({ user }: { user: any }) {
 
       {/* Live Status Indicator */}
       <div className="d-mb">
-        <div style={{ background:"#fff",borderRadius:12,border:"1px solid #e2e8f0",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:20 }}>
+        <div style={{ background:"var(--bg-card)",borderRadius:12,border:"1px solid var(--border-color)",padding:"16px 20px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:20 }}>
           <div style={{ display:"flex",alignItems:"center",gap:14 }}>
             <div style={{ width:14,height:14,borderRadius:"50%",background:C.green,boxShadow:`0 0 0 4px ${C.green}30`,animation:"pulse 2s infinite" }} />
             <div>
-              <div style={{ fontSize:"0.68rem",fontWeight:800,color:"#94a3b8",textTransform:"uppercase",letterSpacing:"0.08em" }}>Gate Status</div>
+              <div style={{ fontSize:"0.68rem",fontWeight:800,color:"var(--text-muted)",textTransform:"uppercase",letterSpacing:"0.08em" }}>Gate Status</div>
               <div style={{ fontSize:"1rem",fontWeight:800,color:"#1e293b" }}>Security Active — Monitoring</div>
             </div>
           </div>
@@ -61,7 +61,7 @@ export default function WatchmanDashboard({ user }: { user: any }) {
             ].map((s,i)=>(
               <div key={i} style={{ textAlign:"center" }}>
                 <div style={{ fontSize:"1.4rem",fontWeight:800,color:s.c }}>{s.v}</div>
-                <div style={{ fontSize:"0.62rem",color:"#94a3b8",fontWeight:700 }}>{s.l}</div>
+                <div style={{ fontSize:"0.62rem",color:"var(--text-muted)",fontWeight:700 }}>{s.l}</div>
               </div>
             ))}
           </div>
@@ -86,10 +86,10 @@ export default function WatchmanDashboard({ user }: { user: any }) {
         <Panel title="Visitor Traffic — Last 7 Days" icon="bi-graph-up-arrow" iconColor="#4ade80" accent="#14532d">
           {vis.length>0
             ? <LineChart items={vis.map(v=>({label:v.label,value:v.count}))} color={C.green} />
-            : <p style={{ textAlign:"center",color:"#94a3b8",margin:"30px 0",fontSize:"0.8rem" }}>No data yet</p>}
+            : <p style={{ textAlign:"center",color:"var(--text-muted)",margin:"30px 0",fontSize:"0.8rem" }}>No data yet</p>}
           <div style={{ display:"flex",gap:14,marginTop:12 }}>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Today</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{m.visitorsToday??0}</div></div>
-            <div><div style={{ fontSize:"0.62rem",color:"#94a3b8" }}>Inside</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{m.visitorsCheckedIn??0}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Today</div><div style={{ fontSize:"0.9rem",fontWeight:800 }}>{m.visitorsToday??0}</div></div>
+            <div><div style={{ fontSize:"0.62rem",color:"var(--text-muted)" }}>Inside</div><div style={{ fontSize:"0.9rem",fontWeight:800,color:C.green }}>{m.visitorsCheckedIn??0}</div></div>
           </div>
         </Panel>
 
@@ -105,9 +105,9 @@ export default function WatchmanDashboard({ user }: { user: any }) {
               { l:"Checked Out", v:m.visitorsCheckedOut??0, c:C.yellow },
               { l:"Inside",   v:m.visitorsCheckedIn??0, c:C.blue },
             ].map((s,i)=>(
-              <div key={i} style={{ background:"#f8fafc",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid #e2e8f0" }}>
+              <div key={i} style={{ background:"var(--bg-app)",borderRadius:10,padding:"10px 8px",textAlign:"center",border:"1px solid var(--border-color)" }}>
                 <div style={{ fontSize:"1.2rem",fontWeight:800,color:s.c }}>{s.v}</div>
-                <div style={{ fontSize:"0.6rem",color:"#94a3b8",fontWeight:700,textTransform:"uppercase" }}>{s.l}</div>
+                <div style={{ fontSize:"0.6rem",color:"var(--text-muted)",fontWeight:700,textTransform:"uppercase" }}>{s.l}</div>
               </div>
             ))}
           </div>
@@ -123,7 +123,7 @@ export default function WatchmanDashboard({ user }: { user: any }) {
               iconColor={v.status==="Checked-In"?C.blue:C.slate}
               title={v.name} sub={`${v.contact} · ${v.property}`} time={<StatusPill status={v.status} />} />
           ))
-          : <div style={{ textAlign:"center",padding:"24px 0",color:"#94a3b8" }}>
+          : <div style={{ textAlign:"center",padding:"24px 0",color:"var(--text-muted)" }}>
             <i className="bi bi-inbox" style={{ fontSize:"1.8rem",display:"block",marginBottom:8 }} />
             <span style={{ fontSize:"0.8rem" }}>No visitors today</span>
           </div>}

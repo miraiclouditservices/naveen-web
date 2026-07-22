@@ -22,7 +22,7 @@ export default function MeetingRoomDetailView({
         <div className="modal-content border-0 overflow-hidden" style={{ borderRadius: "10px", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
           
           {/* Header */}
-          <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ backgroundColor: "#3a3a3a" }}>
+          <div className="d-flex align-items-center justify-content-between px-4 py-3" style={{ backgroundColor: "var(--text-primary)" }}>
             <h5 className="mb-0 text-white fw-semibold" style={{ fontSize: "1rem" }}>
               View Room Specifications
             </h5>
@@ -30,12 +30,12 @@ export default function MeetingRoomDetailView({
               type="button"
               onClick={onClose}
               style={{
-                background: "none", border: "none", color: "#d1d5db",
+                background: "none", border: "none", color: "var(--text-muted)",
                 fontSize: "1.4rem", lineHeight: 1, cursor: "pointer",
                 transition: "color 0.15s",
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#fff")}
-              onMouseLeave={e => (e.currentTarget.style.color = "#d1d5db")}
+              onMouseEnter={e => (e.currentTarget.style.color = "var(--bg-card)")}
+              onMouseLeave={e => (e.currentTarget.style.color = "var(--text-muted)")}
             >
               ×
             </button>
@@ -48,12 +48,12 @@ export default function MeetingRoomDetailView({
             <div className="text-center mb-4">
               <div
                 className="d-inline-flex align-items-center justify-content-center mb-2 rounded-circle text-white fw-bold"
-                style={{ width: 56, height: 56, backgroundColor: "#014aad", fontSize: "1.3rem" }}
+                style={{ width: 56, height: 56, backgroundColor: "var(--dark-section)", fontSize: "1.3rem" }}
               >
                 <i className="bi bi-door-open"></i>
               </div>
               <div>
-                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "#1f2937" }}>
+                <h5 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "var(--text-main)" }}>
                   {viewItem.roomName || "Meeting Space"}
                 </h5>
                 <div className="d-flex gap-2 justify-content-center align-items-center mt-2">
@@ -75,7 +75,7 @@ export default function MeetingRoomDetailView({
 
             {/* Room specs */}
             <div className="mb-4">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                 <i className="bi bi-sliders text-primary me-2"></i>
                 Technical Specs
               </h6>
@@ -86,7 +86,7 @@ export default function MeetingRoomDetailView({
 
             {/* Property details */}
             <div className="mb-3">
-              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "#014aad" }}>
+              <h6 className="fw-bold mb-3 d-flex align-items-center" style={{ fontSize: "0.9rem", color: "var(--dark-section)" }}>
                 <i className="bi bi-geo-alt text-primary me-2"></i>
                 Location Association
               </h6>
@@ -108,7 +108,7 @@ export default function MeetingRoomDetailView({
             <button
               onClick={() => onEdit(viewItem)}
               className="btn btn-primary btn-sm rounded px-3 fw-bold text-white shadow-sm border-0"
-              style={{ backgroundColor: "#014aad" }}
+              style={{ backgroundColor: "var(--dark-section)" }}
             >
               <i className="bi bi-pencil-square me-1" /> Edit Room Specs
             </button>

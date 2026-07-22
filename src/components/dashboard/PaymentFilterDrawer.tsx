@@ -71,8 +71,8 @@ export default function PaymentFilterDrawer({
           right: isOpen ? 0 : -340,
           width: 340,
           height: "100vh",
-          background: "#fff",
-          borderLeft: "1px solid #e2e8f0",
+          background: "var(--bg-card)",
+          borderLeft: "1px solid var(--border-color)",
           zIndex: 1001,
           transition: "right 0.3s ease-in-out",
           padding: 24,
@@ -199,7 +199,7 @@ export default function PaymentFilterDrawer({
           <button
             onClick={onApply}
             className="btn btn-sm text-white flex-grow-1 py-2"
-            style={{ backgroundColor: "#014aad", fontSize: "0.82rem", fontWeight: 600, borderRadius: "6px" }}
+            style={{ backgroundColor: "var(--dark-section)", fontSize: "0.82rem", fontWeight: 600, borderRadius: "6px" }}
           >
             Apply
           </button>
