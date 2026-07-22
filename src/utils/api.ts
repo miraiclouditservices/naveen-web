@@ -1,4 +1,4 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://naveen-backend-s71y.onrender.com/api';
 
 export const fetchApi = async (endpoint: string, options: any = {}) => {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
