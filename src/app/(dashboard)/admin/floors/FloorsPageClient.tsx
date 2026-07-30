@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -212,13 +212,13 @@ export default function FloorsPageClient() {
                 width: "24px",
                 height: "24px",
                 borderRadius: "50%",
-                backgroundColor: "#e2e8f0",
+                backgroundColor: "var(--border-light)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
                 fontSize: "0.7rem",
                 fontWeight: "600",
-                color: "#475569",
+                color: "var(--text-body)",
                 border: "1px solid var(--border-color)"
               }}
             >
@@ -523,8 +523,8 @@ export default function FloorsPageClient() {
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                backgroundColor: "#fff7ed",
-                color: "#ea580c"
+                backgroundColor: "var(--brand-orange)_BG",
+                color: "var(--brand-orange)"
               }}
             >
               <i className="bi bi-building-dash" style={{ fontSize: "1rem" }}></i>

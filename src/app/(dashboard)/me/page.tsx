@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -239,7 +239,7 @@ export default function EmployeeHome() {
     }
 
     return (
-        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ fontFamily: "'Manrope', sans-serif" }}>
             {/* Offline/Online Ribbon banner */}
             {!isOnline && (
                 <div className="alert alert-warning d-flex align-items-center justify-content-between p-3 border-0 rounded-4 shadow-sm mb-4" style={{ backgroundColor: "#fffbeb" }}>

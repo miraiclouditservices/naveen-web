@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 import React from "react";
 
 const PAYMENT_MODES = [
@@ -235,8 +235,8 @@ export default function RecordPaymentModal({
               {/* Pending */}
               <div
                 style={{
-                  background: "#fff7ed",
-                  border: "1px solid #fed7aa",
+                  background: "var(--brand-orange)_BG",
+                  border: "1px solid var(--brand-orange)_BORDER",
                   borderRadius: 8,
                   padding: "10px 14px",
                 }}
@@ -245,7 +245,7 @@ export default function RecordPaymentModal({
                   style={{
                     fontSize: "0.65rem",
                     fontWeight: 700,
-                    color: "#ea580c",
+                    color: "var(--brand-orange)",
                     letterSpacing: "0.06em",
                     textTransform: "uppercase",
                     marginBottom: 3,
@@ -257,7 +257,7 @@ export default function RecordPaymentModal({
                   style={{
                     fontSize: "1rem",
                     fontWeight: 800,
-                    color: "#c2410c",
+                    color: "var(--brand-orange-hover)",
                   }}
                 >
                   {fmt(pending)}
@@ -282,7 +282,7 @@ export default function RecordPaymentModal({
                   style={{
                     fontSize: "0.72rem",
                     fontWeight: 700,
-                    color: paidPct >= 100 ? "#16a34a" : paidPct >= 50 ? "var(--dark-section)" : "#ea580c",
+                    color: paidPct >= 100 ? "#16a34a" : paidPct >= 50 ? "var(--dark-section)" : "var(--brand-orange)",
                   }}
                 >
                   {paidPct}% Paid
@@ -305,7 +305,7 @@ export default function RecordPaymentModal({
                         ? "linear-gradient(90deg,#16a34a,#22c55e)"
                         : paidPct >= 50
                           ? "linear-gradient(90deg,var(--dark-section),var(--text-muted))"
-                          : "linear-gradient(90deg,#f97316,#fb923c)",
+                          : "linear-gradient(90deg,var(--brand-orange)_LIGHT,#fb923c)",
                     borderRadius: 99,
                     transition: "width 0.5s ease",
                   }}

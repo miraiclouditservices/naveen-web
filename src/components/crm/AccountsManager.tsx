@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Table, { TableColumn } from "@/components/common/Table";
@@ -243,7 +243,7 @@ export default function AccountsManager({
         const status = item.status || "Active";
         let badgeStyle = { backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #dcfce7" };
         if (status === "Inactive") {
-          badgeStyle = { backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #ffedd5" };
+          badgeStyle = { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
         } else if (status === "Blocked") {
           badgeStyle = { backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fee2e2" };
         }

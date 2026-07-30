@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
@@ -792,7 +792,7 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                   <strong style={{ fontSize: "0.78rem", color: "var(--text-main)" }}>₹{totalPaid.toLocaleString()}</strong>
                 </div>
                 <div className="d-flex align-items-center gap-1.5">
-                  <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: "#e2e8f0" }}></span>
+                  <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: "var(--border-light)" }}></span>
                   <span style={{ fontSize: "0.75rem", color: "var(--text-muted)" }}>Pending:</span>
                   <strong style={{ fontSize: "0.78rem", color: "var(--text-main)" }}>₹{pendingAmount.toLocaleString()}</strong>
                 </div>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/utils/api";
@@ -440,7 +440,7 @@ export default function HelpdeskDetailView({
                   style={{
                     fontSize: "0.78rem",
                     backgroundColor: activeTab === "chat" ? "#ffffff" : "transparent",
-                    color: activeTab === "chat" ? "#0f172a" : "#64748b",
+                    color: activeTab === "chat" ? "var(--dark-heading)" : "var(--text-muted)",
                     boxShadow: activeTab === "chat" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     borderRadius: "6px",
                     cursor: "pointer"
@@ -456,7 +456,7 @@ export default function HelpdeskDetailView({
                   style={{
                     fontSize: "0.78rem",
                     backgroundColor: activeTab === "timeline" ? "#ffffff" : "transparent",
-                    color: activeTab === "timeline" ? "#0f172a" : "#64748b",
+                    color: activeTab === "timeline" ? "var(--dark-heading)" : "var(--text-muted)",
                     boxShadow: activeTab === "timeline" ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
                     borderRadius: "6px",
                     cursor: "pointer"
@@ -493,7 +493,7 @@ export default function HelpdeskDetailView({
                                   width: "30px",
                                   height: "30px",
                                   fontSize: "0.72rem",
-                                  backgroundColor: isMe ? "#014aad" : "#64748b",
+                                  backgroundColor: isMe ? "#014aad" : "var(--text-muted)",
                                   flexShrink: 0
                                 }}
                               >
@@ -523,13 +523,13 @@ export default function HelpdeskDetailView({
                                     lineHeight: "1.4",
                                     wordBreak: "break-word",
                                     backgroundColor: isMe ? "#eff6ff" : "#ffffff",
-                                    border: isMe ? "1px solid #bfdbfe" : "1px solid #e2e8f0",
+                                    border: isMe ? "1px solid #bfdbfe" : "1px solid var(--border-light)",
                                     borderRadius: isMe ? "12px 0px 12px 12px" : "0px 12px 12px 12px"
                                   }}
                                 >
                                   <div>{c.comment}</div>
                                   {c.attachment && (
-                                    <div className="pt-1 border-top" style={{ marginTop: "6px", borderColor: isMe ? "#bfdbfe" : "#e2e8f0" }}>
+                                    <div className="pt-1 border-top" style={{ marginTop: "6px", borderColor: isMe ? "#bfdbfe" : "var(--border-light)" }}>
                                       <a href={c.attachment} target="_blank" rel="noreferrer" className="text-primary text-decoration-none fw-semibold" style={{ fontSize: "0.68rem" }}>
                                         <i className="bi bi-link-45deg"></i> Attachment
                                       </a>
@@ -557,7 +557,7 @@ export default function HelpdeskDetailView({
                           borderRadius: "19px",
                           paddingLeft: "15px",
                           fontSize: "0.78rem",
-                          borderColor: "#e2e8f0"
+                          borderColor: "var(--border-light)"
                         }}
                         placeholder="Write a message reply..."
                         value={newComment}
@@ -587,7 +587,7 @@ export default function HelpdeskDetailView({
                         No activity logged yet.
                       </div>
                     ) : (
-                      <div className="position-relative ps-4" style={{ borderLeft: "2px solid #e2e8f0" }}>
+                      <div className="position-relative ps-4" style={{ borderLeft: "2px solid var(--border-light)" }}>
                         {logs.map((log, idx) => (
                           <div key={log._id || idx} className="position-relative mb-4">
                             {/* Dot indicator */}

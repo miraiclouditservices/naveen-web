@@ -1,192 +1,84 @@
-"use client";
+﻿"use client";
+
+import React from "react";
 
 export default function Comparison() {
-  const rows = [
-    { feature: "One Login", anvaya: true, others: "cross" },
-    { feature: "CRM", anvaya: true, others: "Partial" },
-    { feature: "Property", anvaya: true, others: "Separate" },
-    { feature: "Attendance", anvaya: true, others: "Separate" },
-    { feature: "Visitor Management", anvaya: true, others: "Separate" },
-    { feature: "Helpdesk", anvaya: true, others: "Separate" },
-    { feature: "Assets", anvaya: true, others: "Separate" },
-    { feature: "Unified Reports", anvaya: true, others: "Separate" },
-    { feature: "Mobile App", anvaya: true, others: "Partial" }
+  const comparisonRows = [
+    { feature: "One Unified Platform", anvaya: true, erp: false, multiple: false },
+    { feature: "AI & Predictive Workflows", anvaya: true, erp: "Limited", multiple: false },
+    { feature: "Modern & Intuitive UI", anvaya: true, erp: "Old Legacy UI", multiple: false },
+    { feature: "Mobile First (iOS & Android)", anvaya: true, erp: "Limited Mobile", multiple: false },
+    { feature: "Everything Connected", anvaya: true, erp: false, multiple: false },
+    { feature: "Fast 1-Day Implementation", anvaya: true, erp: false, multiple: false }
   ];
 
   return (
-    <section id="comparison" className="comparison-section position-relative overflow-hidden">
-      <div className="container">
-        {/* Section Header */}
+    <section id="comparison" className="py-5 bg-light border-bottom position-relative">
+      <div className="container py-lg-4">
+        
+        {/* Header */}
         <div className="text-center mb-5">
-          <div className="d-inline-block mb-3">
-            <span className="comparison-badge">WHY CHOOSE US</span>
+          <div className="d-inline-flex align-items-center gap-2 mb-3 mkt-badge">
+            <span className="mkt-pulse-dot"></span>
+            <span>WHY WE'RE DIFFERENT</span>
           </div>
-          <h2 className="section-title fw-bold text-dark">
-            One platform beats seven<br className="d-none d-sm-block" /> subscriptions.
-          </h2>
+          <h2 className="mkt-title mb-3">Comparison Matrix</h2>
+          <p className="mkt-subtitle mx-auto text-secondary">
+            See how Anvaya360 stacks up against legacy traditional ERPs and fragmented single-purpose tools.
+          </p>
         </div>
 
-        {/* Comparison Table Card */}
-        <div className="row justify-content-center">
-          <div className="col-lg-10 col-md-12">
-            <div className="comparison-table-wrapper shadow-premium">
-              <div className="table-responsive">
-                <table className="table comparison-table align-middle mb-0">
-                  <thead>
-                    <tr>
-                      <th className="text-start ps-4 py-3" style={{ width: '40%' }}>Feature</th>
-                      <th className="text-center py-3" style={{ width: '30%' }}>Anvaya360</th>
-                      <th className="text-center py-3" style={{ width: '30%' }}>Multiple Apps</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((row, index) => (
-                      <tr key={index}>
-                        <td className="text-start ps-4 py-3 fw-bold text-dark-title">{row.feature}</td>
-                        <td className="text-center py-3">
-                          <span className="check-badge-success">
-                            <i className="bi bi-check-lg"></i>
-                          </span>
-                        </td>
-                        <td className="text-center py-3">
-                          {row.others === "cross" ? (
-                            <span className="cross-badge-danger">
-                              <i className="bi bi-x-lg"></i>
-                            </span>
-                          ) : (
-                            <span className="others-status-text">{row.others}</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        {/* Comparison Table */}
+        <div className="mkt-card-clean p-0 overflow-hidden shadow-sm">
+          <div className="table-responsive">
+            <table className="table table-hover align-middle mb-0 text-center">
+              <thead className="table-dark text-white">
+                <tr>
+                  <th className="py-3 px-4 text-start fw-bold fs-6">Feature</th>
+                  <th className="py-3 px-4 fw-bold fs-6" style={{ background: 'var(--brand-orange)' }}>
+                    <i className="bi bi-stars me-1"></i> Anvaya360
+                  </th>
+                  <th className="py-3 px-4 fw-bold fs-6 text-secondary">Traditional ERP</th>
+                  <th className="py-3 px-4 fw-bold fs-6 text-secondary">Multiple Software</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row, idx) => (
+                  <tr key={idx}>
+                    <td className="py-3 px-4 text-start fw-bold text-dark">{row.feature}</td>
+                    
+                    {/* Anvaya360 Column */}
+                    <td className="py-3 px-4 fw-extrabold text-white" style={{ background: 'var(--brand-orange)_BG', color: 'var(--brand-orange)' }}>
+                      <div className="d-inline-flex align-items-center gap-1.5 px-3 py-1 rounded-pill bg-orange text-white fw-bold" style={{ background: 'var(--brand-orange)' }}>
+                        <i className="bi bi-check-circle-fill"></i> YES
+                      </div>
+                    </td>
+
+                    {/* Traditional ERP Column */}
+                    <td className="py-3 px-4 text-muted">
+                      {typeof row.erp === "boolean" ? (
+                        row.erp ? <span className="text-success fw-bold">YES</span> : <span className="text-danger fw-bold">❌ NO</span>
+                      ) : (
+                        <span className="badge bg-secondary bg-opacity-10 text-dark">{row.erp}</span>
+                      )}
+                    </td>
+
+                    {/* Multiple Software Column */}
+                    <td className="py-3 px-4 text-muted">
+                      {typeof row.multiple === "boolean" ? (
+                        row.multiple ? <span className="text-success fw-bold">YES</span> : <span className="text-danger fw-bold">❌ NO</span>
+                      ) : (
+                        <span className="badge bg-secondary bg-opacity-10 text-dark">{row.multiple}</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
+
       </div>
-
-      <style jsx global>{`
-        .comparison-section {
-          padding-top: 60px;
-          padding-bottom: 60px;
-          background-color: var(--bg-app);
-          border-top: 1px solid var(--border-color);
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .comparison-badge {
-          background: var(--bg-card);
-          border: 1px solid var(--border-color);
-          color: var(--text-muted);
-          font-size: 0.72rem;
-          font-weight: 700;
-          padding: 6px 16px;
-          border-radius: 9999px;
-          letter-spacing: 0.05em;
-        }
-
-        .comparison-section .section-title {
-          font-size: 2.2rem;
-          color: var(--text-main);
-          letter-spacing: -0.02em;
-          line-height: 1.2;
-        }
-
-        .comparison-table-wrapper {
-          background: var(--bg-card);
-          border: 1px solid var(--border-color);
-          border-radius: 16px;
-          overflow: hidden;
-        }
-
-        .comparison-table {
-          width: 100%;
-          border-collapse: collapse;
-          background: transparent !important;
-        }
-
-        .comparison-table thead {
-          background-color: rgba(0, 0, 0, 0.015);
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .comparison-table th {
-          font-size: 0.85rem;
-          font-weight: 800;
-          color: var(--text-main);
-          letter-spacing: 0.02em;
-          border-bottom: none !important;
-        }
-
-        .comparison-table th:nth-child(2) {
-          color: var(--dark-section);
-        }
-
-        .comparison-table th:nth-child(3) {
-          color: var(--text-muted);
-        }
-
-        .comparison-table tr {
-          border-bottom: 1px solid var(--border-color);
-        }
-
-        .comparison-table tr:last-child {
-          border-bottom: none;
-        }
-
-        .comparison-table td {
-          font-size: 0.88rem;
-          border-bottom: none !important;
-        }
-
-        .text-dark-title {
-          color: var(--text-primary) !important;
-        }
-
-        .check-badge-success {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background-color: var(--border-color);
-          color: var(--dark-section);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.62rem;
-          font-weight: bold;
-        }
-
-        .cross-badge-danger {
-          width: 18px;
-          height: 18px;
-          border-radius: 50%;
-          background-color: var(--border-color);
-          color: var(--text-muted);
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 0.58rem;
-          font-weight: bold;
-        }
-
-        .others-status-text {
-          font-size: 0.8rem;
-          font-weight: 600;
-          color: var(--text-muted);
-        }
-
-        @media (max-width: 991.98px) {
-          .comparison-section .section-title {
-            font-size: 1.8rem;
-          }
-          .comparison-table td, .comparison-table th {
-            font-size: 0.8rem;
-            padding: 10px 8px !important;
-          }
-        }
-      `}</style>
     </section>
   );
 }

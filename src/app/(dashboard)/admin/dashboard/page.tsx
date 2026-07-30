@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import { useState, useEffect, Suspense, lazy } from "react";
 import Link from "next/link";
 import { api } from "@/utils/api";
@@ -9,7 +9,7 @@ const OfficeOwnerDash = lazy(() => import("@/components/dashboard/OfficeOwnerDas
 const StaffAdminDash = lazy(() => import("@/components/dashboard/StaffAdminDashboard"));
 const WatchmanDash = lazy(() => import("@/components/dashboard/WatchmanDashboard"));
 
-const COLOR = { blue: "var(--dark-section)", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", slate: "var(--text-primary)", teal: "#0891b2", orange: "#ea580c" };
+const COLOR = { blue: "var(--dark-section)", green: "#16a34a", yellow: "#d97706", red: "#dc2626", purple: "#7c3aed", slate: "var(--text-primary)", teal: "#0891b2", orange: "var(--brand-orange)" };
 
 const SPINNER = (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "50vh", flexDirection: "column", gap: 16 }}>

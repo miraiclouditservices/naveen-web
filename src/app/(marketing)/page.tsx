@@ -1,35 +1,69 @@
+import "@/styles/marketing.css";
+
 import Navbar from "@/components/marketing/Navbar";
 import Hero from "@/components/marketing/Hero";
-import Problem from "@/components/marketing/Problem";
-import Features from "@/components/marketing/Features";
-import Benefits from "@/components/marketing/Benefits";
+import WhoUses from "@/components/marketing/WhoUses";
+import Problems from "@/components/marketing/Problems";
+import Modules from "@/components/marketing/Modules";
+import WhyChooseUs from "@/components/marketing/WhyChooseUs";
+import DashboardShowcase from "@/components/marketing/DashboardShowcase";
+import Solutions from "@/components/marketing/Solutions";
 import Comparison from "@/components/marketing/Comparison";
-import UseCases from "@/components/marketing/UseCases";
-import HowItWorks from "@/components/marketing/HowItWorks";
-import Roles from "@/components/marketing/Roles";
-import FAQ from "@/components/marketing/FAQ";
+import Pricing from "@/components/marketing/Pricing";
 import Contact from "@/components/marketing/Contact";
-import CTA from "@/components/marketing/CTA";
+import CTASection from "@/components/marketing/CTASection";
 import Footer from "@/components/marketing/Footer";
+
+export const metadata = {
+  title: "Anvaya360 – AI-Powered Business Operations & Property Platform",
+  description: "Manage CRM, Property Management, Coworking, Employees, Visitors, Attendance, Helpdesk, Assets, Reports and AI — everything connected in one intelligent platform.",
+  openGraph: {
+    title: "Anvaya360 – AI-Powered Business Operations Platform",
+    description: "One intelligent platform for CRM, properties, coworking, employees, visitors, attendance, helpdesk, and AI.",
+    type: "website",
+    url: "https://anvaya360.com"
+  }
+};
 
 export default function Home() {
   return (
-    <>
+    <div className="marketing-page">
       <Navbar />
-      <main>
+      <main style={{ paddingTop: 60 }}>
+        {/* Section 1: Hero */}
         <Hero />
-        <Problem />
-        <Features />
-        <Benefits />
+
+        {/* Section 2: Who Uses Anvaya360 */}
+        <WhoUses />
+
+        {/* Section 3: Problems We Solve */}
+        <Problems />
+
+        {/* Section 4: Everything You Need (Modules) */}
+        <Modules />
+
+        {/* Section 5: Why Businesses Choose Anvaya360 */}
+        <WhyChooseUs />
+
+        {/* Section 6: Business Dashboard */}
+        <DashboardShowcase />
+
+        {/* Section 7: Industries & Solutions */}
+        <Solutions />
+
+        {/* Section 8: Why We're Different (Comparison) */}
         <Comparison />
-        <UseCases />
-        <HowItWorks />
-        <Roles />
-        <FAQ />
+
+        {/* Section 9: Pricing */}
+        <Pricing />
+
+        {/* Contact Section */}
         <Contact />
-        <CTA />
+
+        {/* Section 11: Final CTA */}
+        <CTASection />
       </main>
       <Footer />
-    </>
+    </div>
   );
 }

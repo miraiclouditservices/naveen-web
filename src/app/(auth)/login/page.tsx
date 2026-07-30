@@ -45,286 +45,206 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="d-flex vh-100 flex-column flex-md-row font-sans overflow-hidden" style={{ backgroundColor: "var(--bg-card)" }}>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center p-2 p-sm-3 p-lg-4" style={{ backgroundColor: "#f1f5f9", fontFamily: "system-ui, -apple-system, sans-serif" }}>
 
-      {/* Left Panel: Brand & Info with Full Background Image */}
+      {/* Payoneer Style Floating Split Card — Responsive across Mobile, Tablet, Laptop & Desktop */}
       <div
-        className="col-12 col-md-6 d-none d-md-flex flex-column justify-content-between p-5 right-panel text-white h-100 position-relative"
-        style={{
-          backgroundImage: "url('/mirai_property_image.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center'
-        }}
+        className="w-100 bg-white shadow-lg overflow-hidden row g-0 position-relative border border-secondary border-opacity-10"
+        style={{ maxWidth: 1040, minHeight: 560, borderRadius: 28, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
       >
-        {/* Light overlay for high contrast text readability */}
+
+        {/* Left Panel: Dark Elegant Brand & Hero Preview (Visible on Large Screens) */}
         <div
-          className="position-absolute top-0 start-0 w-100 h-100"
-          style={{
-            background: 'linear-gradient(180deg, rgba(11, 15, 25, 0.3) 0%, rgba(11, 15, 25, 0.6) 100%)',
-            zIndex: 1
-          }}
-        ></div>
+          className="col-lg-6 d-none d-lg-flex flex-column justify-content-between p-4 p-xl-5 text-white position-relative overflow-hidden"
+          style={{ background: '#1c1917' }}
+        >
+          {/* Subtle Glow Orb */}
+          <div
+            className="position-absolute top-0 end-0 translate-middle-y rounded-circle pointer-events-none opacity-25"
+            style={{
+              width: 350,
+              height: 350,
+              background: 'radial-gradient(circle, var(--brand-orange) 0%, transparent 70%)',
+              filter: 'blur(60px)'
+            }}
+          ></div>
 
-        {/* Brand Header */}
-        <div className="d-flex align-items-center gap-2.5 position-relative" style={{ zIndex: 2 }}>
-          <div>
-            <span className="brand-text-kalki" style={{ fontSize: '1.3rem', display: 'block' }}>PMS GLOBAL</span>
-            <div className="brand-subtitle text-white-50" style={{ fontSize: '0.55rem', letterSpacing: '0.05em', fontWeight: 700 }}>PROPERTY MANAGEMENT SYSTEM</div>
-          </div>
-        </div>
-
-        {/* Center Title */}
-        <div className="my-auto position-relative" style={{ zIndex: 2 }}>
-          <h1 className="fw-bold mb-3" style={{ fontSize: '2.8rem', lineHeight: '1.2', letterSpacing: '-0.02em' }}>
-            Smart Property <br />
-            Management <br />
-            <span style={{ background: 'linear-gradient(135deg, #ffe066 0%, #cc2200 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', fontWeight: 800 }}>Made Simple</span>
-          </h1>
-          <p className="text-white-50 mb-5 small" style={{ maxWidth: '440px', lineHeight: '1.6' }}>
-            Manage your properties, tenants, payments, maintenance, and more from a single powerful platform.
-          </p>
-
-          {/* Floating Glassmorphic Badges Row */}
-          <div className="glass-features-panel p-3 d-flex justify-content-between text-center mt-5">
-            <div className="flex-grow-1">
-              <div className="feature-circle bg-blue"><i className="bi bi-building"></i></div>
-              <div className="feature-text">Manage Properties</div>
-            </div>
-            <div className="flex-grow-1">
-              <div className="feature-circle bg-green"><i className="bi bi-people"></i></div>
-              <div className="feature-text">Happy Tenants</div>
-            </div>
-            <div className="flex-grow-1">
-              <div className="feature-circle bg-orange"><i className="bi bi-credit-card"></i></div>
-              <div className="feature-text">Secure Payments</div>
-            </div>
-            <div className="flex-grow-1">
-              <div className="feature-circle bg-purple"><i className="bi bi-bar-chart"></i></div>
-              <div className="feature-text">Real-time Analytics</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer info */}
-        <div className="position-relative text-white-50 small opacity-55" style={{ zIndex: 2 }}>
-          © 2026 PMS GLOBAL Enterprise OS
-        </div>
-      </div>
-
-      {/* Right Panel: Login Form (mockup match) */}
-      <div className="col-12 col-md-6 d-flex flex-column justify-content-center align-items-center p-4 p-md-5 h-100 overflow-y-auto">
-        <div className="w-100 mx-auto" style={{ maxWidth: '420px' }}>
-
-          <h2 className="fw-bold text-dark mb-1" style={{ fontSize: '1.8rem', letterSpacing: '-0.02em' }}>Welcome Back!</h2>
-          <p className="text-muted mb-4" style={{ fontSize: '0.88rem' }}>Login to your account to continue</p>
-
-          <form onSubmit={handleLogin}>
-
-            {/* Email Field */}
-            <div className="mb-3 text-start">
-              <label className="form-label-custom mb-1.5">Email Address</label>
-              <div className="custom-input-group d-flex align-items-center rounded-3 bg-white">
-                <i className="bi bi-envelope text-muted px-3" style={{ fontSize: '0.9rem' }}></i>
-                <input
-                  type="email"
-                  className="form-control border-0 bg-transparent ps-0 shadow-none text-dark"
-                  placeholder="Enter your email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  style={{ fontSize: '0.9rem', height: '44px' }}
-                  required
-                />
-              </div>
-            </div>
-
-            {/* Password Field */}
-            <div className="mb-3 text-start">
-              <label className="form-label-custom mb-1.5">Password</label>
-              <div className="custom-input-group d-flex align-items-center rounded-3 bg-white justify-content-between">
-                <div className="d-flex align-items-center flex-grow-1">
-                  <i className="bi bi-lock text-muted px-3" style={{ fontSize: '0.9rem' }}></i>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="form-control border-0 bg-transparent ps-0 shadow-none text-dark"
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                    style={{ fontSize: '0.9rem', height: '44px' }}
-                    maxLength={6}
-                    required
-                  />
-                </div>
-                <i
-                  className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"} text-muted px-3 cursor-pointer`}
-                  style={{ fontSize: '0.9rem' }}
-                  onClick={() => setShowPassword(!showPassword)}
-                ></i>
-              </div>
-            </div>
-
-            {/* Forgot Password */}
-            <div className="d-flex justify-content-end mb-4">
-              <a href="#" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ fontSize: '0.82rem', color: '#ff6f00' }}>
-                Forgot Password?
-              </a>
-            </div>
-
-            {error && (
-              <div className="alert alert-danger py-2 px-3 small rounded-3 mb-4 border-0 bg-danger bg-opacity-10 text-danger d-flex align-items-center">
-                <i className="bi bi-exclamation-circle-fill me-2" style={{ fontSize: '0.85rem' }}></i>
-                {error}
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <button
-              type="submit"
-              className="btn btn-orange-auth w-100 fw-bold transition-all rounded-3"
-              style={{ height: '44px', fontSize: '0.9rem' }}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <span className="spinner-border spinner-border-sm" role="status"></span>
-              ) : (
-                "Login"
-              )}
-            </button>
-          </form>
-
-          {/* Register Redirect */}
-          <div className="text-center mt-4">
-            <p className="text-muted mb-0" style={{ fontSize: '0.82rem' }}>
-              Don't have an account? <Link href="/register" className="text-primary text-decoration-none fw-semibold hover-opacity" style={{ color: '#ff6f00' }}>Sign Up</Link>
+          {/* Top Tagline */}
+          <div className="position-relative z-2">
+            <p className="mb-0 fw-medium" style={{ color: '#cbd5e1', fontSize: '0.85rem', letterSpacing: '0.01em' }}>
+              Global business operations made simple — online solutions for you.
             </p>
           </div>
 
+          {/* Center Heading & Image Showcase */}
+          <div className="my-auto py-3 position-relative z-2 text-start">
+            <h1 className="text-white mb-4" style={{ fontWeight: 800, fontSize: '3rem', lineHeight: 1.1, letterSpacing: '-0.04em' }}>
+              Manage <br />
+              <span style={{ color: 'var(--brand-orange-light)', fontWeight: 800 }}>your business</span>
+            </h1>
+
+            {/* Mobile / App Platform Preview */}
+            <div className="d-flex justify-content-center mt-3 position-relative">
+              <img
+                src="/hero-right.png"
+                alt="ANVAYA360 Platform"
+                className="img-fluid rounded-4 shadow-lg border border-secondary border-opacity-25"
+                style={{ maxWidth: '88%', maxHeight: 260, objectFit: 'cover', transform: 'rotate(-2deg)' }}
+              />
+            </div>
+          </div>
+
+          {/* Left Panel Bottom Footer */}
+          <div className="d-flex align-items-center justify-content-between extra-small position-relative z-2" style={{ color: '#94a3b8' }}>
+            <span>© {new Date().getFullYear()} ANVAYA360 OS</span>
+            <span className="badge bg-secondary bg-opacity-25 text-white">v2.4 Live</span>
+          </div>
         </div>
+
+        {/* Right Panel: White Clean Sign In Form */}
+        <div className="col-lg-6 col-12 bg-white p-4 p-sm-5 d-flex flex-column justify-content-between">
+
+          {/* Right Header: Logo & Sign Up Link */}
+          <div className="d-flex align-items-center justify-content-between mb-4 pb-2">
+            <Link href="/" className="d-flex align-items-center text-decoration-none">
+              <img
+                src="/brand-logo.png"
+                alt="ANVAYA360"
+                style={{ height: 46 }}
+                className="w-auto object-fit-contain"
+              />
+            </Link>
+
+            <Link
+              href="/register"
+              className="text-decoration-none d-inline-flex align-items-center gap-2 fw-semibold"
+              style={{
+                fontSize: '0.8rem',
+                color: 'var(--text-primary)',
+                border: '1.5px solid var(--text-primary)',
+                borderRadius: 999,
+                padding: '6px 18px',
+                transition: 'all 0.2s'
+              }}
+            >
+              <i className="bi bi-person-plus" /> Sign Up
+            </Link>
+          </div>
+
+          {/* Form Content Container */}
+          <div className="py-2 my-auto" style={{ maxWidth: 380, width: '100%', margin: '0 auto' }}>
+
+            <h2 style={{ fontSize: '2.1rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }} className="mb-1">
+              Sign In
+            </h2>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }} className="mb-4">
+              Enter your credentials to access your operations dashboard
+            </p>
+
+            <form onSubmit={handleLogin}>
+
+              {/* Email Field */}
+              <div className="mb-3">
+                <input
+                  type="email"
+                  className="form-control px-4 shadow-none"
+                  placeholder="Email or Username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  style={{
+                    height: 48,
+                    fontSize: '0.9rem',
+                    borderRadius: 999,
+                    background: '#f8fafc',
+                    border: '1.5px solid #e2e8f0',
+                    color: 'var(--text-primary)'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Password Field */}
+              <div className="mb-2">
+                <div className="position-relative d-flex align-items-center">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="form-control px-4 shadow-none"
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    style={{
+                      height: 48,
+                      fontSize: '0.9rem',
+                      paddingRight: 52,
+                      borderRadius: 999,
+                      background: '#f8fafc',
+                      border: '1.5px solid #e2e8f0',
+                      color: 'var(--text-primary)'
+                    }}
+                    maxLength={6}
+                    required
+                  />
+                  <i
+                    className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} position-absolute top-50 translate-middle-y`}
+                    style={{ right: 18, fontSize: '1rem', cursor: 'pointer', color: 'var(--text-secondary)', zIndex: 5 }}
+                    onClick={() => setShowPassword(!showPassword)}
+                  />
+                </div>
+              </div>
+
+              {/* Forgot Password Link */}
+              <div className="d-flex justify-content-start mb-4">
+                <a href="#contact" className="extra-small fw-bold text-decoration-none" style={{ color: 'var(--brand-orange)' }}>
+                  Forgot password?
+                </a>
+              </div>
+
+              {/* Error Message */}
+              {error && (
+                <div className="alert alert-danger py-2 px-3 extra-small rounded-3 mb-3 border-0 bg-danger bg-opacity-10 text-danger d-flex align-items-center">
+                  <i className="bi bi-exclamation-circle-fill me-2"></i>
+                  {error}
+                </div>
+              )}
+
+              {/* Sign In Button */}
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="btn w-100 border-0 d-flex align-items-center justify-content-center gap-2"
+                style={{
+                  height: 50,
+                  borderRadius: 999,
+                  background: 'linear-gradient(90deg, #ea580c 0%, #f97316 100%)',
+                  color: '#ffffff',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  letterSpacing: '0.01em',
+                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.35)',
+                  transition: 'opacity 0.2s ease, transform 0.2s ease'
+                }}
+              >
+                {isLoading ? (
+                  <span className="spinner-border spinner-border-sm" role="status" />
+                ) : (
+                  <>
+                    <i className="bi bi-box-arrow-in-right" /> Sign In
+                  </>
+                )}
+              </button>
+
+            </form>
+          </div>
+
+          {/* Footer */}
+          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: 'auto', color: 'var(--text-secondary)', fontSize: '0.7rem', opacity: 0.85 }}>
+            © {new Date().getFullYear()} Anvaya360 Inc. All rights reserved.
+          </div>
+
+        </div>
+
       </div>
 
-      <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Cinzel:wght@900&family=Orbitron:wght@700;900&display=swap');
-        
-        .font-sans {
-          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        }
-
-        .brand-text-kalki {
-          font-family: 'Cinzel', 'Orbitron', serif;
-          font-weight: 900;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          background: linear-gradient(135deg, #ffe066 0%, #ff7a00 40%, #ff5500 75%, #cc2200 100%);
-          -webkit-background-clip: text;
-          -webkit-text-fill-color: transparent;
-          filter: drop-shadow(0px 2px 4px rgba(255, 85, 0, 0.2));
-        }
-        
-        .right-panel {
-          position: relative;
-          overflow: hidden;
-        }
-
-        .custom-input-group {
-          border: 1px solid var(--border-color);
-          transition: all 0.2s ease-in-out;
-          background-color: var(--bg-card);
-        }
-
-        .custom-input-group:focus-within {
-          border-color: #ff6f00;
-          box-shadow: 0 0 0 3px rgba(255, 111, 0, 0.12);
-        }
-
-        .custom-checkbox {
-          width: 16px;
-          height: 16px;
-          border: 1px solid var(--border-color);
-          border-radius: 4px;
-          cursor: pointer;
-        }
-        
-        .custom-checkbox:checked {
-          background-color: #ff6f00;
-          border-color: #ff6f00;
-        }
-
-        .btn-orange-auth {
-          background: linear-gradient(135deg, #ff7a00 0%, #ff5500 100%) !important;
-          border: none !important;
-          color: var(--bg-card) !important;
-          box-shadow: 0 8px 15px -3px rgba(255, 111, 0, 0.3);
-        }
-
-        .btn-orange-auth:hover {
-          background: linear-gradient(135deg, #ff8c00 0%, #ff6f00 100%) !important;
-          transform: translateY(-1px);
-          box-shadow: 0 12px 20px -3px rgba(255, 111, 0, 0.4);
-        }
-
-        .btn-outline-sso {
-          border: 1px solid var(--border-color);
-          background: var(--bg-card);
-          border-radius: 8px;
-          color: var(--text-primary);
-          font-size: 0.8rem;
-          font-weight: 600;
-          transition: all 0.2s ease;
-        }
-
-        .btn-outline-sso:hover {
-          background: var(--bg-app);
-          border-color: var(--text-muted);
-        }
-
-        .form-label-custom {
-          font-size: 0.72rem;
-          font-weight: 700;
-          color: var(--text-primary);
-          text-transform: uppercase;
-          letter-spacing: 0.02em;
-        }
-
-        .hover-opacity:hover {
-          opacity: 0.8;
-        }
-
-        .mb-1.5 { margin-bottom: 6px; }
-        .mb-4.5 { margin-bottom: 24px; }
-
-        /* Glassmorphic Features Panel */
-        .glass-features-panel {
-          background: rgba(255, 255, 255, 0.05);
-          backdrop-filter: blur(12px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 20px;
-        }
-        .feature-circle {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          margin: 0 auto 8px auto;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          color: var(--bg-card);
-          font-size: 0.95rem;
-        }
-        .feature-circle.bg-blue { background: #2563eb; }
-        .feature-circle.bg-green { background: #10b981; }
-        .feature-circle.bg-orange { background: #ff6f00; }
-        .feature-circle.bg-purple { background: #8b5cf6; }
-        .feature-text {
-          font-size: 0.62rem;
-          color: var(--bg-card);
-          font-weight: 600;
-        }
-
-        /* Hide scrollbar */
-        .overflow-y-auto::-webkit-scrollbar {
-          width: 0;
-          background: transparent;
-        }
-      `}</style>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -14,7 +14,7 @@ const getStatusBadgeStyle = (status: string) => {
     case "Occupied":
       return { backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #dcfce7" };
     case "Reserved":
-      return { backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #ffedd5" };
+      return { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
     case "Available":
       return { backgroundColor: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe" };
     default:
@@ -462,8 +462,8 @@ export default function UnitsPageClient() {
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                backgroundColor: "#fff7ed",
-                color: "#ea580c"
+                backgroundColor: "var(--brand-orange)_BG",
+                color: "var(--brand-orange)"
               }}
             >
               <i className="bi bi-door-open" style={{ fontSize: "1rem" }}></i>

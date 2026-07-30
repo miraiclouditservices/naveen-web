@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { api } from "@/utils/api";
@@ -70,7 +70,7 @@ const DonutChart = ({ data, totalReceivedText }: { data: { label: string; value:
           })}
         </svg>
         <div className="position-absolute start-50 top-50 translate-middle text-center" style={{ width: "70%" }}>
-          <div className="fw-bold" style={{ fontSize: "0.85rem", color: "#202020", lineHeight: "1.1" }}>{totalReceivedText}</div>
+          <div className="fw-bold" style={{ fontSize: "0.85rem", color: "var(--text-primary)", lineHeight: "1.1" }}>{totalReceivedText}</div>
           <div className="text-muted" style={{ fontSize: "0.6rem" }}>Received</div>
         </div>
       </div>
@@ -79,11 +79,11 @@ const DonutChart = ({ data, totalReceivedText }: { data: { label: string; value:
           const percent = Math.round((item.value / total) * 100) || 0;
           return (
             <div key={i} className="d-flex justify-content-between align-items-center mb-2" style={{ fontSize: "0.75rem" }}>
-              <div className="d-flex align-items-center gap-2" style={{ color: "#787878", fontWeight: "500" }}>
+              <div className="d-flex align-items-center gap-2" style={{ color: "var(--text-muted)", fontWeight: "500" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: item.color, display: "inline-block" }}></span>
                 {item.label}
               </div>
-              <span className="fw-bold" style={{ color: "#202020" }}>{percent}%</span>
+              <span className="fw-bold" style={{ color: "var(--text-primary)" }}>{percent}%</span>
             </div>
           );
         })}
@@ -109,7 +109,7 @@ const CashFlowTrendChart = ({ months }: { months: { name: string; received: numb
 
   return (
     <div className="position-relative" style={{ height: "180px" }}>
-      <div className="d-flex justify-content-between align-items-end h-100 pb-3" style={{ borderBottom: "1px solid #E8E6E3" }}>
+      <div className="d-flex justify-content-between align-items-end h-100 pb-3" style={{ borderBottom: "1px solid var(--border-color)" }}>
         {months.map((m) => {
           const totalVal = m.received + m.pending + m.overdue;
           // Scale heights relative to the maximum month's total value
@@ -347,7 +347,7 @@ function LedgerContent() {
     {
       header: "Invoice No.",
       render: (inv) => (
-        <span className="fw-semibold" style={{ color: "#202020" }}>
+        <span className="fw-semibold" style={{ color: "var(--text-primary)" }}>
           {inv.invoiceNumber || `INV-${inv._id.toString().slice(-5).toUpperCase()}`}
         </span>
       )
@@ -358,7 +358,7 @@ function LedgerContent() {
         const leaseObj = inv.lease || inv.leaseId;
         const tenantName = inv.tenantName || leaseObj?.tenantName || inv.user?.name || inv.tenantId?.name || "—";
         return (
-          <span className="fw-bold" style={{ color: "#202020" }}>
+          <span className="fw-bold" style={{ color: "var(--text-primary)" }}>
             {tenantName}
           </span>
         );
@@ -370,7 +370,7 @@ function LedgerContent() {
         const leaseObj = inv.lease || inv.leaseId;
         const unitStr = leaseObj?.units?.[0]?.unitNumber || inv.user?.assignedFloors?.[0]?.floorName || inv.user?.assignedFloors?.[0]?.floorNumber || "—";
         const propStr = leaseObj?.property?.propertyName || inv.user?.assignedProperties?.[0]?.propertyName || "—";
-        return <span style={{ color: "#787878" }}>{propStr}, {unitStr}</span>;
+        return <span style={{ color: "var(--text-muted)" }}>{propStr}, {unitStr}</span>;
       }
     },
     {
@@ -378,7 +378,7 @@ function LedgerContent() {
       render: (inv) => {
         const dateVal = inv.invoiceDate || inv.paymentDate || inv.createdAt;
         return (
-          <span style={{ color: "#787878" }}>
+          <span style={{ color: "var(--text-muted)" }}>
             {dateVal ? new Date(dateVal).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
           </span>
         );
@@ -387,7 +387,7 @@ function LedgerContent() {
     {
       header: "Due Date",
       render: (inv) => (
-        <span style={{ color: "#787878" }}>
+        <span style={{ color: "var(--text-muted)" }}>
           {inv.dueDate ? new Date(inv.dueDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
         </span>
       )
@@ -474,7 +474,7 @@ function LedgerContent() {
         minHeight: "100vh",
         padding: "24px",
         fontFamily: "var(--font-geist-sans), Inter, sans-serif",
-        color: "#202020",
+        color: "var(--text-primary)",
       }}
     >
       {/* HEADER SECTION */}
@@ -483,7 +483,7 @@ function LedgerContent() {
           <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
             Payment Management
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
             Track, manage and reconcile all lease payments in one place
           </p>
         </div>
@@ -497,14 +497,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-money-send-01 text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Receivable
               </span>
             </div>
@@ -523,14 +523,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-money-receive-01 text-success" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Received
               </span>
             </div>
@@ -549,14 +549,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-clock-01 text-warning" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Pending Amount
               </span>
             </div>
@@ -575,14 +575,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-alert-circle text-danger" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Overdue Amount
               </span>
             </div>
@@ -601,14 +601,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-transaction text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Transactions
               </span>
             </div>
@@ -627,14 +627,14 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="hgi-stroke hgi-user-multiple-01 text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Active Tenants
               </span>
             </div>
@@ -651,7 +651,7 @@ function LedgerContent() {
       {/* FILTER TABS & SELECTORS */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
           {tabs.map((tab) => {
             const isAct = activeTab === tab;
             return (
@@ -668,7 +668,7 @@ function LedgerContent() {
                   padding: "6px 12px",
                   borderRadius: "6px",
                   backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "#787878",
+                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
                   border: "none",
                   transition: "all 0.2s",
                 }}
@@ -684,7 +684,7 @@ function LedgerContent() {
           {/* Date range filter */}
           <div
             className="bg-white px-3 py-1 rounded-3 d-flex align-items-center gap-2"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem" }}
           >
             <i className="hgi-stroke hgi-calendar-01 text-muted" />
             <span className="text-muted">From:</span>
@@ -695,7 +695,7 @@ function LedgerContent() {
                 setStartDate(e.target.value);
                 setPage(1);
               }}
-              style={{ border: "none", outline: "none", fontSize: "0.78rem", color: "#202020", backgroundColor: "transparent" }}
+              style={{ border: "none", outline: "none", fontSize: "0.78rem", color: "var(--text-primary)", backgroundColor: "transparent" }}
             />
             <span className="text-muted">To:</span>
             <input
@@ -705,13 +705,13 @@ function LedgerContent() {
                 setEndDate(e.target.value);
                 setPage(1);
               }}
-              style={{ border: "none", outline: "none", fontSize: "0.78rem", color: "#202020", backgroundColor: "transparent" }}
+              style={{ border: "none", outline: "none", fontSize: "0.78rem", color: "var(--text-primary)", backgroundColor: "transparent" }}
             />
           </div>
 
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "160px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "160px", outline: "none", boxShadow: "none" }}
             value={selectedProperty}
             onChange={(e) => {
               setSelectedProperty(e.target.value);
@@ -736,7 +736,7 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -761,7 +761,7 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -784,7 +784,7 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -807,9 +807,9 @@ function LedgerContent() {
                           width: "36px",
                           height: "36px",
                           backgroundColor: "#f9f7f3",
-                          color: "#202020",
+                          color: "var(--text-primary)",
                           fontSize: "0.8rem",
-                          border: "1px solid #E8E6E3",
+                          border: "1px solid var(--border-color)",
                         }}
                       >
                         {ot.name
@@ -818,7 +818,7 @@ function LedgerContent() {
                           .join("")}
                       </div>
                       <div>
-                        <div className="fw-bold" style={{ fontSize: "0.8rem", color: "#202020" }}>
+                        <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
                           {ot.name}
                         </div>
                         <div className="text-muted" style={{ fontSize: "0.68rem" }}>
@@ -827,7 +827,7 @@ function LedgerContent() {
                       </div>
                     </div>
                     <div className="text-end">
-                      <div className="fw-bold" style={{ fontSize: "0.8rem", color: "#202020" }}>
+                      <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
                         {ot.amount}
                       </div>
                       <div className="text-danger fw-semibold" style={{ fontSize: "0.68rem" }}>
@@ -849,7 +849,7 @@ function LedgerContent() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               overflow: "hidden",
             }}
           >
@@ -867,18 +867,18 @@ function LedgerContent() {
                     onChange={handleSearchChange}
                     onKeyDown={handleSearchKeyDown}
                     className="form-control form-control-sm"
-                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                    style={{ width: "260px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   />
                 </div>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: "120px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                  style={{ width: "120px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                 >
                   <option>100 per page</option>
                 </select>
                 <button
                   className="btn btn-sm btn-white"
-                  style={{ border: "1px solid #E8E6E3", borderRadius: "6px" }}
+                  style={{ border: "1px solid var(--border-color)", borderRadius: "6px" }}
                 >
                   <i className="hgi-stroke hgi-download-01" style={{ fontSize: "0.85rem" }} />
                 </button>
@@ -917,7 +917,7 @@ function LedgerContent() {
               maxWidth: "640px",
               maxHeight: "90vh",
               overflowY: "auto",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
             }}
           >
             {/* Modal Header */}
@@ -944,7 +944,7 @@ function LedgerContent() {
             {/* Invoice Body Card */}
             <div
               className="border p-4 rounded-3 bg-white"
-              style={{ borderColor: "#E8E6E3" }}
+              style={{ borderColor: "var(--border-color)" }}
             >
               {/* Top Section */}
               <div className="d-flex justify-content-between align-items-start border-bottom pb-3 mb-3">
@@ -1053,29 +1053,29 @@ function LedgerContent() {
                         </tr>
                       </thead>
                       <tbody>
-                        <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+                        <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
                           <td className="py-2 px-3 text-muted">Monthly Rent</td>
                           <td className="py-2 px-3 text-dark fw-bold text-end">
                             {rentVal.toFixed(2)}
                           </td>
                         </tr>
-                        <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+                        <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
                           <td className="py-2 px-3 text-muted">Maintenance Charges</td>
                           <td className="py-2 px-3 text-dark fw-bold text-end">
                             {maintVal.toFixed(2)}
                           </td>
                         </tr>
-                        <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+                        <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
                           <td className="py-2 px-3 text-muted">Other Charges</td>
                           <td className="py-2 px-3 text-dark fw-bold text-end">0.00</td>
                         </tr>
-                        <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+                        <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
                           <td className="py-2 px-3 fw-bold text-dark">Sub Total</td>
                           <td className="py-2 px-3 fw-bold text-dark text-end">
                             {subTotalVal.toFixed(2)}
                           </td>
                         </tr>
-                        <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+                        <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
                           <td className="py-2 px-3 text-muted">Tax (0%)</td>
                           <td className="py-2 px-3 text-muted text-end">0.00</td>
                         </tr>

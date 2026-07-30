@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -411,7 +411,7 @@ export default function VisitorsPage() {
         minHeight: "100vh",
         padding: "24px",
         fontFamily: "var(--font-geist-sans), Inter, sans-serif",
-        color: "#202020",
+        color: "var(--text-primary)",
       }}
     >
       {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
@@ -420,7 +420,7 @@ export default function VisitorsPage() {
           <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
             Visitor Management System
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
             Monitor, Manage & Secure Your Visitors
           </p>
         </div>
@@ -456,10 +456,10 @@ export default function VisitorsPage() {
       <div className="row g-3 mb-4">
         {/* Card 1: Total Visitors */}
         <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-people text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Visitors
               </span>
             </div>
@@ -474,10 +474,10 @@ export default function VisitorsPage() {
 
         {/* Card 2: Today's Visitors */}
         <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-calendar2-check text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Today's Visitors
               </span>
             </div>
@@ -492,10 +492,10 @@ export default function VisitorsPage() {
 
         {/* Card 3: Currently Inside */}
         <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-door-open text-primary" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Currently Inside
               </span>
             </div>
@@ -510,10 +510,10 @@ export default function VisitorsPage() {
 
         {/* Card 4: Pre-Registrations */}
         <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-journal-check text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Pre-Registrations
               </span>
             </div>
@@ -528,10 +528,10 @@ export default function VisitorsPage() {
 
         {/* Card 5: Blacklisted */}
         <div className="col" style={{ flex: "0 0 20%", maxInlineSize: "20%", minWidth: "180px" }}>
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-shield-slash text-danger" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Blacklisted
               </span>
             </div>
@@ -548,7 +548,7 @@ export default function VisitorsPage() {
       {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
           {[
             { label: "All Visitors", value: "All" },
             { label: "Inside", value: "Inside" },
@@ -569,7 +569,7 @@ export default function VisitorsPage() {
                   padding: "6px 12px",
                   borderRadius: "6px",
                   backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "#787878",
+                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
                   border: "none",
                   transition: "all 0.2s",
                 }}
@@ -585,7 +585,7 @@ export default function VisitorsPage() {
           {/* Property Filter */}
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={locationFilter}
             onChange={(e) => {
               setLocationFilter(e.target.value);
@@ -605,7 +605,7 @@ export default function VisitorsPage() {
           {/* Purpose Filter */}
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={purposeFilter}
             onChange={(e) => {
               setPurposeFilter(e.target.value);
@@ -625,7 +625,7 @@ export default function VisitorsPage() {
           <input
             type="date"
             className="form-control bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none", color: "#6b7280" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none", color: "var(--text-muted)" }}
             value={dateFilter}
             onChange={(e) => {
               setDateFilter(e.target.value);
@@ -642,7 +642,7 @@ export default function VisitorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               overflow: "hidden",
             }}
           >
@@ -659,7 +659,7 @@ export default function VisitorsPage() {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="form-control form-control-sm"
-                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                    style={{ width: "260px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   />
                 </div>
                 {(searchTerm || searchQuery || locationFilter !== "All" || statusFilter !== "All" || dateFilter || purposeFilter !== "All") && (
@@ -755,7 +755,7 @@ export default function VisitorsPage() {
                 >
                   <i className="bi bi-exclamation-triangle" style={{ fontSize: "1.6rem" }}></i>
                 </div>
-                <h5 className="fw-bold mb-2" style={{ fontSize: "1.1rem", color: "#202020" }}>Confirm Check-Out</h5>
+                <h5 className="fw-bold mb-2" style={{ fontSize: "1.1rem", color: "var(--text-primary)" }}>Confirm Check-Out</h5>
                 <p className="text-muted mb-4" style={{ fontSize: "0.85rem", lineHeight: "1.4" }}>
                   Are you sure you want to check out this visitor? This will update their status, out date, and out time.
                 </p>
@@ -765,7 +765,7 @@ export default function VisitorsPage() {
                     className="btn px-4 py-2 fw-semibold"
                     disabled={!!checkingOutId}
                     onClick={() => setConfirmCheckOutId(null)}
-                    style={{ border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.85rem", color: "#374151", backgroundColor: "#ffffff" }}
+                    style={{ border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.85rem", color: "#374151", backgroundColor: "#ffffff" }}
                   >
                     Cancel
                   </button>

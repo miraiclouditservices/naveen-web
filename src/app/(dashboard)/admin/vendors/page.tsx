@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -64,7 +64,7 @@ const DonutChart = ({ data, totalText }: { data: { label: string; value: number;
           })}
         </svg>
         <div className="position-absolute start-50 top-50 translate-middle text-center" style={{ width: "70%" }}>
-          <div className="fw-bold" style={{ fontSize: "0.85rem", color: "#202020", lineHeight: "1.1" }}>{totalText}</div>
+          <div className="fw-bold" style={{ fontSize: "0.85rem", color: "var(--text-primary)", lineHeight: "1.1" }}>{totalText}</div>
           <div className="text-muted" style={{ fontSize: "0.6rem" }}>Vendors</div>
         </div>
       </div>
@@ -73,11 +73,11 @@ const DonutChart = ({ data, totalText }: { data: { label: string; value: number;
           const percent = Math.round((item.value / total) * 100) || 0;
           return (
             <div key={i} className="d-flex justify-content-between align-items-center mb-2" style={{ fontSize: "0.75rem" }}>
-              <div className="d-flex align-items-center gap-2" style={{ color: "#787878", fontWeight: "500" }}>
+              <div className="d-flex align-items-center gap-2" style={{ color: "var(--text-muted)", fontWeight: "500" }}>
                 <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: item.color, display: "inline-block" }}></span>
                 {item.label}
               </div>
-              <span className="fw-bold" style={{ color: "#202020" }}>{percent}%</span>
+              <span className="fw-bold" style={{ color: "var(--text-primary)" }}>{percent}%</span>
             </div>
           );
         })}
@@ -92,7 +92,7 @@ const RatingDistributionChart = ({ ratings }: { ratings: { name: string; count: 
 
   return (
     <div className="position-relative" style={{ height: "180px" }}>
-      <div className="d-flex justify-content-between align-items-end h-100 pb-3" style={{ borderBottom: "1px solid #E8E6E3" }}>
+      <div className="d-flex justify-content-between align-items-end h-100 pb-3" style={{ borderBottom: "1px solid var(--border-color)" }}>
         {ratings.map((r) => {
           const heightPercent = maxVal > 0 ? (r.count / maxVal) * 100 : 0;
           return (
@@ -521,7 +521,7 @@ export default function VendorsPage() {
         minHeight: "100vh",
         padding: "24px",
         fontFamily: "var(--font-geist-sans), Inter, sans-serif",
-        color: "#202020",
+        color: "var(--text-primary)",
       }}
     >
       {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
@@ -530,7 +530,7 @@ export default function VendorsPage() {
           <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
             Vendor Management
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
             Manage service providers, contracts, payments and vendor performance
           </p>
         </div>
@@ -572,14 +572,14 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-people text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Vendors
               </span>
             </div>
@@ -598,14 +598,14 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-person-check text-success" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Active Vendors
               </span>
             </div>
@@ -624,14 +624,14 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-credit-card text-warning" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Pending Payments
               </span>
             </div>
@@ -650,14 +650,14 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "16px",
               height: "100%",
             }}
           >
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-shield-check text-info" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 AMC Vendors
               </span>
             </div>
@@ -674,7 +674,7 @@ export default function VendorsPage() {
       {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
           {["All Vendors", "Active", "Inactive"].map((tab) => {
             const isAct = (tab === "All Vendors" && statusFilter === "All") ||
                           (tab === "Active" && statusFilter === "Active") ||
@@ -693,7 +693,7 @@ export default function VendorsPage() {
                   padding: "6px 12px",
                   borderRadius: "6px",
                   backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "#787878",
+                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
                   border: "none",
                   transition: "all 0.2s",
                 }}
@@ -708,7 +708,7 @@ export default function VendorsPage() {
         <div className="d-flex gap-2 flex-wrap">
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "160px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "160px", outline: "none", boxShadow: "none" }}
             value={propertyFilter}
             onChange={(e) => {
               setPropertyFilter(e.target.value);
@@ -726,7 +726,7 @@ export default function VendorsPage() {
 
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={serviceTypeFilter}
             onChange={(e) => {
               setServiceTypeFilter(e.target.value);
@@ -754,7 +754,7 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -775,7 +775,7 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -798,7 +798,7 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               padding: "24px",
               height: "100%",
             }}
@@ -823,15 +823,15 @@ export default function VendorsPage() {
                             width: "36px",
                             height: "36px",
                             backgroundColor: "#f9f7f3",
-                            color: "#202020",
+                            color: "var(--text-primary)",
                             fontSize: "0.8rem",
-                            border: "1px solid #E8E6E3",
+                            border: "1px solid var(--border-color)",
                           }}
                         >
                           {initials}
                         </div>
                         <div>
-                          <div className="fw-bold" style={{ fontSize: "0.8rem", color: "#202020" }}>
+                          <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
                             {topv.companyName || topv.vendorName}
                           </div>
                           <div className="text-muted" style={{ fontSize: "0.68rem" }}>
@@ -840,7 +840,7 @@ export default function VendorsPage() {
                         </div>
                       </div>
                       <div className="text-end">
-                        <div className="fw-bold d-flex align-items-center gap-1" style={{ fontSize: "0.8rem", color: "#202020" }}>
+                        <div className="fw-bold d-flex align-items-center gap-1" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
                           <i className="bi bi-star-fill text-warning" style={{ fontSize: "0.75rem" }} />
                           {Number(topv.performance?.rating ?? 5.0).toFixed(1)}
                         </div>
@@ -864,7 +864,7 @@ export default function VendorsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               overflow: "hidden",
             }}
           >
@@ -881,12 +881,12 @@ export default function VendorsPage() {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="form-control form-control-sm"
-                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                    style={{ width: "260px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   />
                 </div>
                 <select
                   className="form-select form-select-sm"
-                  style={{ width: "120px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                  style={{ width: "120px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   value={statusFilter}
                   onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
                 >
@@ -896,7 +896,7 @@ export default function VendorsPage() {
                 </select>
                 <button
                   className="btn btn-sm btn-white"
-                  style={{ border: "1px solid #E8E6E3", borderRadius: "6px", backgroundColor: "#ffffff" }}
+                  style={{ border: "1px solid var(--border-color)", borderRadius: "6px", backgroundColor: "#ffffff" }}
                   onClick={() => alert("Exporting data as CSV...")}
                 >
                   <i className="bi bi-download" style={{ fontSize: "0.85rem" }} />
@@ -936,7 +936,7 @@ export default function VendorsPage() {
               maxWidth: "600px",
               maxHeight: "90vh",
               overflowY: "auto",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
             }}
           >
             {/* Modal Header */}

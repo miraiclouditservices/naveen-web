@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -477,7 +477,7 @@ export default function AssetsPage() {
         minHeight: "100vh",
         padding: "24px",
         fontFamily: "var(--font-geist-sans), Inter, sans-serif",
-        color: "#202020",
+        color: "var(--text-primary)",
       }}
     >
       {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
@@ -486,7 +486,7 @@ export default function AssetsPage() {
           <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
             Assets & AMC Management
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
             Comprehensive asset lifecycle tracking, AMC contracts, maintenance schedules, and financial ledger
           </p>
         </div>
@@ -517,10 +517,10 @@ export default function AssetsPage() {
       <div className="row g-3 mb-4">
         {/* KPI 1: Total Assets */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-box-seam text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Assets
               </span>
             </div>
@@ -535,10 +535,10 @@ export default function AssetsPage() {
 
         {/* KPI 2: Under AMC */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-shield-check text-success" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Under AMC
               </span>
             </div>
@@ -553,10 +553,10 @@ export default function AssetsPage() {
 
         {/* KPI 3: Expiring Soon */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Expiring Soon
               </span>
             </div>
@@ -571,10 +571,10 @@ export default function AssetsPage() {
 
         {/* KPI 4: AMC Expired */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-exclamation-triangle text-danger" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 AMC Expired
               </span>
             </div>
@@ -589,10 +589,10 @@ export default function AssetsPage() {
 
         {/* KPI 5: Total AMC Value */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-currency-rupee text-primary" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total AMC Value
               </span>
             </div>
@@ -607,10 +607,10 @@ export default function AssetsPage() {
 
         {/* KPI 6: Annual Cost */}
         <div className="col-md-2">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-wallet2 text-info" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Annual AMC Cost
               </span>
             </div>
@@ -627,7 +627,7 @@ export default function AssetsPage() {
       {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
           {["All Assets", "Active", "Inactive", "Under Maintenance", "Disposed"].map((tab) => {
             const targetStatus = tab === "All Assets" ? "All" : tab;
             const isAct = statusFilter === targetStatus;
@@ -645,7 +645,7 @@ export default function AssetsPage() {
                   padding: "6px 12px",
                   borderRadius: "6px",
                   backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "#787878",
+                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
                   border: "none",
                   transition: "all 0.2s",
                 }}
@@ -660,7 +660,7 @@ export default function AssetsPage() {
         <div className="d-flex gap-2 flex-wrap">
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={propertyFilter}
             onChange={(e) => {
               setPropertyFilter(e.target.value);
@@ -675,7 +675,7 @@ export default function AssetsPage() {
 
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={categoryFilter}
             onChange={(e) => {
               setCategoryFilter(e.target.value);
@@ -690,7 +690,7 @@ export default function AssetsPage() {
 
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
             value={vendorFilter}
             onChange={(e) => {
               setVendorFilter(e.target.value);
@@ -705,7 +705,7 @@ export default function AssetsPage() {
 
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "140px", outline: "none", boxShadow: "none" }}
             value={amcStatusFilter}
             onChange={(e) => {
               setAmcStatusFilter(e.target.value);
@@ -727,7 +727,7 @@ export default function AssetsPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               overflow: "hidden",
             }}
           >
@@ -744,7 +744,7 @@ export default function AssetsPage() {
                     value={searchQuery}
                     onChange={(e) => handleSearchChange(e.target.value)}
                     className="form-control form-control-sm"
-                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                    style={{ width: "260px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   />
                 </div>
                 {activeFiltersCount > 0 && (

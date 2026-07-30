@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -223,7 +223,7 @@ export default function HelpdeskPage() {
             title="Open Workspace"
             onClick={() => handleOpenModal("view", item)}
             style={{
-              width: 32, height: 32, borderRadius: "6px", border: "1px solid #E8E6E3",
+              width: 32, height: 32, borderRadius: "6px", border: "1px solid var(--border-color)",
               background: "#ffffff", cursor: "pointer", display: "flex",
               alignItems: "center", justifyContent: "center", color: "#1e293b",
               transition: "background 0.15s",
@@ -247,7 +247,7 @@ export default function HelpdeskPage() {
         minHeight: "100vh",
         padding: "24px",
         fontFamily: "var(--font-geist-sans), Inter, sans-serif",
-        color: "#202020",
+        color: "var(--text-primary)",
       }}
     >
       {/* ── 1. HEADER SECTION ─────────────────────────────────────────────── */}
@@ -256,7 +256,7 @@ export default function HelpdeskPage() {
           <h2 className="fw-bold m-0" style={{ color: "#000000", fontSize: "1.5rem" }}>
             Helpdesk & Complaints
           </h2>
-          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "#787878" }}>
+          <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
             Manage occupant issues, maintenance requests & support tickets
           </p>
         </div>
@@ -285,10 +285,10 @@ export default function HelpdeskPage() {
       <div className="row g-3 mb-4">
         {/* Card 1: Total Tickets */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-ticket-perforated text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Total Tickets
               </span>
             </div>
@@ -303,10 +303,10 @@ export default function HelpdeskPage() {
 
         {/* Card 2: Open Tickets */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-folder-symlink text-danger" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Open Tickets
               </span>
             </div>
@@ -321,10 +321,10 @@ export default function HelpdeskPage() {
 
         {/* Card 3: Assigned */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-person-workspace text-info" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Assigned
               </span>
             </div>
@@ -339,10 +339,10 @@ export default function HelpdeskPage() {
 
         {/* Card 4: In Progress */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 In Progress
               </span>
             </div>
@@ -357,10 +357,10 @@ export default function HelpdeskPage() {
 
         {/* Card 5: Resolved */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-check2-circle text-success" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Resolved
               </span>
             </div>
@@ -375,10 +375,10 @@ export default function HelpdeskPage() {
 
         {/* Card 6: Closed */}
         <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid #E8E6E3", padding: "16px", height: "100%" }}>
+          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
             <div className="d-flex align-items-center gap-2 mb-2">
               <i className="bi bi-archive text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "#787878" }}>
+              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
                 Closed
               </span>
             </div>
@@ -395,7 +395,7 @@ export default function HelpdeskPage() {
       {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
         {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid #E8E6E3" }}>
+        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
           {[
             { label: "All Tickets", value: "All" },
             { label: "Open", value: "OPEN" },
@@ -419,7 +419,7 @@ export default function HelpdeskPage() {
                   padding: "6px 12px",
                   borderRadius: "6px",
                   backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "#787878",
+                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
                   border: "none",
                   transition: "all 0.2s",
                 }}
@@ -435,7 +435,7 @@ export default function HelpdeskPage() {
           {/* Property Filter */}
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={propertyFilter}
             onChange={(e) => {
               setPropertyFilter(e.target.value);
@@ -451,7 +451,7 @@ export default function HelpdeskPage() {
           {/* Category Filter */}
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={categoryFilter}
             onChange={(e) => {
               setCategoryFilter(e.target.value);
@@ -473,7 +473,7 @@ export default function HelpdeskPage() {
           {/* Priority Filter */}
           <select
             className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid #E8E6E3", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
             value={priorityFilter}
             onChange={(e) => {
               setPriorityFilter(e.target.value);
@@ -496,7 +496,7 @@ export default function HelpdeskPage() {
             style={{
               backgroundColor: "#FFFFFF",
               borderRadius: "12px",
-              border: "1px solid #E8E6E3",
+              border: "1px solid var(--border-color)",
               overflow: "hidden",
             }}
           >
@@ -513,7 +513,7 @@ export default function HelpdeskPage() {
                     value={searchTerm}
                     onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                     className="form-control form-control-sm"
-                    style={{ width: "260px", border: "1px solid #E8E6E3", borderRadius: "6px", fontSize: "0.8rem" }}
+                    style={{ width: "260px", border: "1px solid var(--border-color)", borderRadius: "6px", fontSize: "0.8rem" }}
                   />
                 </div>
                 {(searchTerm || statusFilter !== "All" || priorityFilter !== "All" || categoryFilter !== "All" || propertyFilter !== "All") && (

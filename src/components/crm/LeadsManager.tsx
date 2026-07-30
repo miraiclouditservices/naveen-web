@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿﻿import React, { useState } from "react";
 import Table, { TableColumn } from "@/components/common/Table";
 import LeadDetailView from "./LeadDetailView";
 import { api } from "@/utils/api";
@@ -81,13 +81,13 @@ export default function LeadsManager({
               width: "24px",
               height: "24px",
               borderRadius: "50%",
-              backgroundColor: "#e2e8f0",
+              backgroundColor: "var(--border-light)",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               fontSize: "0.7rem",
               fontWeight: "600",
-              color: "#475569",
+              color: "var(--text-body)",
               border: "1px solid var(--border-color)",
               backgroundImage: item.owner_id?.profileImage ? `url(${item.owner_id.profileImage})` : "none",
               backgroundSize: "cover",
@@ -125,7 +125,7 @@ export default function LeadsManager({
         } else if (followUpDate.getTime() === today.getTime()) {
           // Today
           badgeBg = "rgba(249, 115, 22, 0.09)";
-          badgeColor = "#f97316";
+          badgeColor = "var(--brand-orange)_LIGHT";
         } else {
           // Future
           badgeBg = "rgba(22, 163, 74, 0.09)";
@@ -171,7 +171,7 @@ export default function LeadsManager({
             case "Site Visit":
               return { backgroundColor: "#f5f3ff", color: "#7c3aed", border: "1px solid #ede9fe" };
             case "Proposal":
-              return { backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #ffedd5" };
+              return { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
             case "Negotiation":
               return { backgroundColor: "#fefce8", color: "#ca8a04", border: "1px solid #fef9c3" };
             case "Won":
@@ -342,8 +342,8 @@ export default function LeadsManager({
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                backgroundColor: "#fff7ed",
-                color: "#f97316"
+                backgroundColor: "var(--brand-orange)_BG",
+                color: "var(--brand-orange)_LIGHT"
               }}
             >
               <i className="bi bi-clock-history" style={{ fontSize: "1rem" }}></i>

@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 
 import React from "react";
 
@@ -75,7 +75,7 @@ export default function AccountDetailView({
       case "Active":
         return { backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #dcfce7" };
       case "Inactive":
-        return { backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #ffedd5" };
+        return { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
       case "Blocked":
         return { backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fee2e2" };
       default:

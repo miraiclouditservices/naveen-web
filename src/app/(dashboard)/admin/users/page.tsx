@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -495,11 +495,11 @@ export default function UsersPage() {
         let bg = '#f3f4f6';
         let color = '#4b5563';
 
-        if (roleStr.includes('Super Admin')) { bg = '#fff7ed'; color = '#c2410c'; }
+        if (roleStr.includes('Super Admin')) { bg = 'var(--brand-orange)_BG'; color = 'var(--brand-orange-hover)'; }
         else if (roleStr.includes('Property Admin') || roleStr.includes('Tenant User')) { bg = '#eff6ff'; color = '#1d4ed8'; }
         else if (roleStr.includes('Floor Manager')) { bg = '#f3e8ff'; color = '#7e22ce'; }
         else if (roleStr.includes('Accounts Manager')) { bg = '#dcfce7'; color = '#15803d'; }
-        else if (roleStr.includes('Support Staff') || roleStr.includes('Security')) { bg = '#ffedd5'; color = '#c2410c'; }
+        else if (roleStr.includes('Support Staff') || roleStr.includes('Security')) { bg = 'var(--brand-orange-bg)'; color = 'var(--brand-orange-hover)'; }
 
         return (
           <span className="badge rounded-pill px-3 py-1" style={{ backgroundColor: bg, color: color, fontSize: '0.75rem', fontWeight: 600 }}>

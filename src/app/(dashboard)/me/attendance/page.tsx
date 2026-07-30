@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -242,7 +242,7 @@ export default function EmployeeAttendance() {
     };
 
     return (
-        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ fontFamily: "'Manrope', sans-serif" }}>
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
                 <div>

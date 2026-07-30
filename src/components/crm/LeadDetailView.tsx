@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 
@@ -128,7 +128,7 @@ export default function LeadDetailView({
       badgeColor = "#dc3545";
     } else if (followUpDate.getTime() === today.getTime()) {
       badgeBg = "rgba(249, 115, 22, 0.09)";
-      badgeColor = "#f97316";
+      badgeColor = "var(--brand-orange)_LIGHT";
     } else {
       badgeBg = "rgba(22, 163, 74, 0.09)";
       badgeColor = "#16a34a";

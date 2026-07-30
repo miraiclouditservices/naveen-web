@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 
 interface CommunicationTimelineProps {
   activities: any[];
@@ -32,7 +32,7 @@ export default function CommunicationTimeline({ activities }: CommunicationTimel
     padding: "10px 16px",
     fontSize: "0.825rem",
     fontWeight: isActive ? 600 : 500,
-    color: isActive ? "#5850ec" : "#64748b",
+    color: isActive ? "#5850ec" : "var(--text-muted)",
     borderBottom: isActive ? "2.3px solid #5850ec" : "2.3px solid transparent",
     background: "none",
     borderTop: "none",

@@ -1,0 +1,229 @@
+/* ==========================================================================
+   ANVAYA360 - Marketing Landing Page Custom CSS
+   Clean Compact Design System: Decreased Font Scale, Orange Accents, 10px Radius
+   ========================================================================== */
+
+:root {
+  --brand-orange: #ea580c;
+  --brand-orange-light: #f97316;
+  --brand-orange-bg: #fff7ed;
+  --brand-orange-border: #fed7aa;
+  --brand-orange-hover: #c2410c;
+  --dark-heading: #0f172a;
+  --text-body: #475569;
+  --border-light: #e2e8f0;
+  --radius-custom: 10px;
+}
+
+/* Fixed Glass Navbar & Modern Underline Animation */
+.mkt-navbar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 1000;
+  background: #ffffff;
+  /* backdrop-filter: blur(12px); */
+  /* -webkit-backdrop-filter: blur(12px); */
+  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.3s ease;
+}
+
+.mkt-nav-link {
+  position: relative;
+  color: var(--dark-heading) !important;
+  font-weight: 600;
+  font-size: 0.82rem;
+  padding: 6px 0;
+  transition: color 0.25s ease;
+  text-decoration: none !important;
+  display: inline-block;
+}
+
+.mkt-nav-link::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 100%;
+  height: 2.5px;
+  background-color: var(--brand-orange);
+  border-radius: 99px;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mkt-nav-link:hover,
+.mkt-nav-link.active {
+  color: var(--brand-orange) !important;
+}
+
+.mkt-nav-link:hover::after,
+.mkt-nav-link.active::after {
+  transform: scaleX(1);
+}
+
+/* Compact Badge styling */
+.mkt-badge {
+  background-color: var(--brand-orange-bg);
+  border: 1px solid var(--brand-orange-border);
+  color: var(--brand-orange);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.mkt-pulse-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--brand-orange-light);
+  display: inline-block;
+  animation: pulseDot 2s infinite ease-in-out;
+}
+
+@keyframes pulseDot {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0.7);
+  }
+
+  70% {
+    transform: scale(1.15);
+    box-shadow: 0 0 0 6px rgba(249, 115, 22, 0);
+  }
+
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(249, 115, 22, 0);
+  }
+}
+
+/* Compact Typography Scale */
+.mkt-title {
+  font-size: clamp(1.5rem, 2.8vw, 2.2rem);
+  color: var(--dark-heading) !important;
+  letter-spacing: -0.03em;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.mkt-subtitle {
+  font-size: 0.88rem;
+  color: var(--text-body);
+  max-width: 600px;
+  line-height: 1.55;
+}
+
+/* Compact Buttons */
+.btn-orange-primary {
+  background: var(--brand-orange);
+  color: #ffffff !important;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: var(--radius-custom);
+  padding: 9px 20px;
+  border: none;
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-orange-primary:hover {
+  background: var(--brand-orange-hover);
+  color: #ffffff !important;
+  transform: translateY(-2px);
+}
+
+.btn-orange-outline {
+  background: #ffffff;
+  color: var(--brand-orange) !important;
+  font-weight: 700;
+  font-size: 0.82rem;
+  border-radius: var(--radius-custom);
+  padding: 9px 20px;
+  border: 1.5px solid var(--brand-orange);
+  transition: all 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-orange-outline:hover {
+  background: var(--brand-orange-bg);
+  border-color: var(--brand-orange-hover);
+  color: var(--brand-orange-hover) !important;
+  transform: translateY(-2px);
+}
+
+/* Standard Clean Cards - 10px Radius, No Box-Shadow */
+.mkt-card-clean {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-custom) !important;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: none !important;
+}
+
+.mkt-card-clean:hover {
+  transform: translateY(-6px);
+  border-color: var(--brand-orange-border);
+  box-shadow: none !important;
+}
+
+/* Filter / Tab Pills */
+.mkt-tab-pill {
+  background: #ffffff;
+  border: 1px solid var(--border-light);
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  transition: all 0.25s ease;
+  cursor: pointer;
+}
+
+.mkt-tab-pill:hover {
+  border-color: var(--brand-orange-border);
+  color: var(--brand-orange);
+}
+
+.mkt-tab-pill.active {
+  background: var(--brand-orange);
+  color: #ffffff;
+  border-color: var(--brand-orange);
+}
+
+.extra-small {
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+}
+
+/* Hover Accent Color */
+.hover-orange:hover {
+  color: var(--brand-orange) !important;
+}
+
+/* Keyframe Animations */
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 20px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}

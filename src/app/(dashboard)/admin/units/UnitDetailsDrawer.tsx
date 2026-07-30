@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -271,7 +271,7 @@ export default function UnitDetailsDrawer({
                     <div style={{ position: "relative", width: "90px", height: "90px" }}>
                       <svg width="100%" height="100%" viewBox="0 0 42 42" className="donut">
                         <circle className="donut-hole" cx="21" cy="21" r="15.91549430918954" fill="#ffffff" />
-                        <circle className="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" strokeWidth="5.5" />
+                        <circle className="donut-ring" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="var(--border-light)" strokeWidth="5.5" />
                         <circle className="donut-segment" cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#22c55e" strokeWidth="5.5" strokeDasharray="84 16" strokeDashoffset="25" />
                       </svg>
                       <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%, -50%)", textAlign: "center" }}>
@@ -483,7 +483,7 @@ export default function UnitDetailsDrawer({
           {activeDetailTab === "Activity" && (
             <div style={{ fontSize: "0.8rem" }}>
               <div className="fw-bold text-dark mb-3" style={{ fontSize: "0.82rem" }}>Recent Space Activity</div>
-              <div className="position-relative ps-3" style={{ borderLeft: "2px solid #e2e8f0" }}>
+              <div className="position-relative ps-3" style={{ borderLeft: "2px solid var(--border-light)" }}>
                 <div className="mb-4 position-relative">
                   <div
                     className="position-absolute rounded-circle"

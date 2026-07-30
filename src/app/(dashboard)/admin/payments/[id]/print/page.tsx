@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -97,12 +97,12 @@ export default function InvoicePrintPage() {
   const paymentReference = inv.paymentReference || (inv._id ? `PAY-${inv._id.toString().slice(-6).toUpperCase()}` : "—");
 
   return (
-    <div style={{ backgroundColor: "#ffffff", color: "#202020", minHeight: "100vh", padding: "40px" }}>
+    <div style={{ backgroundColor: "#ffffff", color: "var(--text-primary)", minHeight: "100vh", padding: "40px" }}>
       <div 
         style={{
           maxWidth: "800px",
           margin: "0 auto",
-          border: "1px solid #E8E6E3",
+          border: "1px solid var(--border-color)",
           borderRadius: "12px",
           padding: "30px",
           boxSizing: "border-box",
@@ -193,23 +193,23 @@ export default function InvoicePrintPage() {
             </tr>
           </thead>
           <tbody>
-            <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+            <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
               <td className="py-2 px-3 text-muted">Monthly Rent</td>
               <td className="py-2 px-3 text-dark fw-bold text-end">{rentAmount.toFixed(2)}</td>
             </tr>
-            <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+            <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
               <td className="py-2 px-3 text-muted">Maintenance Charges</td>
               <td className="py-2 px-3 text-dark fw-bold text-end">{maintenanceCharges.toFixed(2)}</td>
             </tr>
-            <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+            <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
               <td className="py-2 px-3 text-muted">Other Charges</td>
               <td className="py-2 px-3 text-dark fw-bold text-end">0.00</td>
             </tr>
-            <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+            <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
               <td className="py-2 px-3 fw-bold text-dark">Sub Total</td>
               <td className="py-2 px-3 fw-bold text-dark text-end">{subTotal.toFixed(2)}</td>
             </tr>
-            <tr className="border-bottom" style={{ borderColor: "#E8E6E3" }}>
+            <tr className="border-bottom" style={{ borderColor: "var(--border-color)" }}>
               <td className="py-2 px-3 text-muted">Tax (0%)</td>
               <td className="py-2 px-3 text-muted text-end">0.00</td>
             </tr>

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 
 interface VendorFormModalProps {
@@ -201,7 +201,7 @@ export default function VendorFormModal({
   // Shared Styles
   const inputStyle: React.CSSProperties = {
     backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
+    border: "1px solid var(--border-light)",
     borderRadius: "6px",
     fontSize: "0.85rem",
     color: "#1e293b",
@@ -212,7 +212,7 @@ export default function VendorFormModal({
   const labelStyle: React.CSSProperties = {
     fontSize: "0.8rem",
     fontWeight: 600,
-    color: "#475569",
+    color: "var(--text-body)",
     marginBottom: "5px",
     display: "block",
   };
@@ -223,8 +223,8 @@ export default function VendorFormModal({
       padding: "10px 16px",
       fontSize: "0.85rem",
       fontWeight: isActive ? 600 : 500,
-      color: isActive ? "#0f172a" : "#64748b",
-      borderBottom: isActive ? "2px solid #0f172a" : "2px solid transparent",
+      color: isActive ? "var(--dark-heading)" : "var(--text-muted)",
+      borderBottom: isActive ? "2px solid var(--dark-heading)" : "2px solid transparent",
       background: "none",
       borderTop: "none",
       borderLeft: "none",
@@ -863,7 +863,7 @@ export default function VendorFormModal({
                   <button
                     type="button"
                     className="btn btn-sm text-white"
-                    style={{ backgroundColor: "#0f172a" }}
+                    style={{ backgroundColor: "var(--dark-heading)" }}
                     onClick={() => {
                       if (activeTab === "basic") setActiveTab("address");
                       else if (activeTab === "address") setActiveTab("bank");
@@ -886,7 +886,7 @@ export default function VendorFormModal({
                     <button
                       type="submit"
                       className="btn btn-sm text-white px-4 fw-bold"
-                      style={{ backgroundColor: "#0f172a" }}
+                      style={{ backgroundColor: "var(--dark-heading)" }}
                       disabled={isSubmitting}
                     >
                       {isSubmitting ? (
@@ -900,7 +900,7 @@ export default function VendorFormModal({
                     type="button"
                     onClick={onClose}
                     className="btn btn-sm text-white px-5 fw-bold"
-                    style={{ backgroundColor: "#0f172a" }}
+                    style={{ backgroundColor: "var(--dark-heading)" }}
                   >
                     Close
                   </button>

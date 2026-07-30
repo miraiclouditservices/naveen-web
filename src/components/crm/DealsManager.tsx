@@ -1,4 +1,4 @@
-"use client";
+﻿﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Table, { TableColumn } from "@/components/common/Table";
@@ -447,7 +447,7 @@ export default function DealsManager({}: DealsManagerProps) {
         } else if (stage === "Lost") {
           badgeStyle = { backgroundColor: "#fef2f2", color: "#dc2626", border: "1px solid #fee2e2" };
         } else if (stage === "Negotiation") {
-          badgeStyle = { backgroundColor: "#fff7ed", color: "#ea580c", border: "1px solid #ffedd5" };
+          badgeStyle = { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
         }
         return (
           <span className="badge px-2 py-1 fw-bold" style={{ fontSize: "0.725rem", borderRadius: "var(--radius-full)", ...badgeStyle }}>
@@ -559,8 +559,8 @@ export default function DealsManager({}: DealsManagerProps) {
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                backgroundColor: "#fff7ed",
-                color: "#ea580c"
+                backgroundColor: "var(--brand-orange)_BG",
+                color: "var(--brand-orange)"
               }}
             >
               <i className="bi bi-clock-history" style={{ fontSize: "1rem" }}></i>
@@ -903,7 +903,7 @@ export default function DealsManager({}: DealsManagerProps) {
                       >
                         {s.step}
                       </div>
-                      <span className="mt-1" style={{ fontSize: "0.68rem", fontWeight: isActive ? 600 : 500, color: isActive ? "#0f172a" : "#64748b" }}>
+                      <span className="mt-1" style={{ fontSize: "0.68rem", fontWeight: isActive ? 600 : 500, color: isActive ? "var(--dark-heading)" : "var(--text-muted)" }}>
                         {s.label}
                       </span>
                     </div>

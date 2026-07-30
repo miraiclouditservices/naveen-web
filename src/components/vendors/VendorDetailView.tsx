@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import { api } from "@/utils/api";
 
@@ -154,7 +154,7 @@ export default function VendorDetailView({
     fontSize: "0.78rem",
     fontWeight: 700,
     textTransform: "uppercase",
-    color: "#64748b",
+    color: "var(--text-muted)",
     letterSpacing: "0.05em",
     marginBottom: "12px",
     marginTop: "20px",
@@ -164,7 +164,7 @@ export default function VendorDetailView({
 
   const itemLabelStyle: React.CSSProperties = {
     fontSize: "0.8rem",
-    color: "#64748b",
+    color: "var(--text-muted)",
     fontWeight: 500,
     width: "130px",
     flexShrink: 0
@@ -172,7 +172,7 @@ export default function VendorDetailView({
 
   const itemValueStyle: React.CSSProperties = {
     fontSize: "0.82rem",
-    color: "#0f172a",
+    color: "var(--dark-heading)",
     fontWeight: 600,
     wordBreak: "break-word"
   };
@@ -203,7 +203,7 @@ export default function VendorDetailView({
   if (loading) {
     return (
       <div className="h-100 d-flex align-items-center justify-content-center text-muted flex-column gap-2 p-4">
-        <span className="spinner-border spinner-border-sm" style={{ color: "#0f172a" }} />
+        <span className="spinner-border spinner-border-sm" style={{ color: "var(--dark-heading)" }} />
         <span style={{ fontSize: "0.85rem" }}>Loading vendor details...</span>
       </div>
     );
@@ -251,7 +251,7 @@ export default function VendorDetailView({
             style={{
               width: 54,
               height: 54,
-              backgroundColor: "#0f172a",
+              backgroundColor: "var(--dark-heading)",
               fontSize: "1.1rem",
               letterSpacing: "0.05em"
             }}
@@ -411,7 +411,7 @@ export default function VendorDetailView({
             <button
               onClick={() => setActiveAction("contract")}
               className="btn btn-sm text-white flex-grow-1 fw-semibold py-2"
-              style={{ backgroundColor: "#0f172a", fontSize: "0.78rem" }}
+              style={{ backgroundColor: "var(--dark-heading)", fontSize: "0.78rem" }}
             >
               Create Contract
             </button>
@@ -553,7 +553,7 @@ export default function VendorDetailView({
               </div>
               <div className="d-flex justify-content-end gap-2 border-top pt-3 mt-2">
                 <button type="button" onClick={() => setActiveAction(null)} className="btn btn-sm btn-outline-secondary px-3">Cancel</button>
-                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "#0f172a" }}>
+                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "var(--dark-heading)" }}>
                   {actionSubmitting ? "Creating..." : "Create Contract"}
                 </button>
               </div>
@@ -664,7 +664,7 @@ export default function VendorDetailView({
               </div>
               <div className="d-flex justify-content-end gap-2 border-top pt-3 mt-2">
                 <button type="button" onClick={() => setActiveAction(null)} className="btn btn-sm btn-outline-secondary px-3">Cancel</button>
-                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "#0f172a" }}>
+                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "var(--dark-heading)" }}>
                   {actionSubmitting ? "Generating..." : "Generate Invoice"}
                 </button>
               </div>
@@ -767,7 +767,7 @@ export default function VendorDetailView({
               </div>
               <div className="d-flex justify-content-end gap-2 border-top pt-3 mt-2">
                 <button type="button" onClick={() => setActiveAction(null)} className="btn btn-sm btn-outline-secondary px-3">Cancel</button>
-                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "#0f172a" }}>
+                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "var(--dark-heading)" }}>
                   {actionSubmitting ? "Recording..." : "Record Payment"}
                 </button>
               </div>
@@ -834,7 +834,7 @@ export default function VendorDetailView({
               </div>
               <div className="d-flex justify-content-end gap-2 border-top pt-3 mt-2">
                 <button type="button" onClick={() => setActiveAction(null)} className="btn btn-sm btn-outline-secondary px-3">Cancel</button>
-                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "#0f172a" }}>
+                <button type="submit" disabled={actionSubmitting} className="btn btn-sm text-white px-4 fw-bold" style={{ backgroundColor: "var(--dark-heading)" }}>
                   {actionSubmitting ? "Raising..." : "Raise Ticket"}
                 </button>
               </div>

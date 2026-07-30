@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -106,7 +106,7 @@ export default function EmployeeProfile() {
     }
 
     return (
-        <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div style={{ fontFamily: "'Manrope', sans-serif" }}>
             {/* Header */}
             <div className="mb-4">
                 <h3 className="fw-bold text-dark mb-1">My Profile</h3>

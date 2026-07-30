@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -176,7 +176,7 @@ export default function AttendanceLogs() {
                                         let statusBadge = { backgroundColor: "#e2fbe8", color: "#16a34a" }; // PRESENT
                                         if (log.status === "ABSENT") statusBadge = { backgroundColor: "#fee2e2", color: "#dc2626" };
                                         if (log.status === "LATE") statusBadge = { backgroundColor: "#fffbeb", color: "#d97706" };
-                                        if (log.status === "HALF_DAY") statusBadge = { backgroundColor: "#fff7ed", color: "#ea580c" };
+                                        if (log.status === "HALF_DAY") statusBadge = { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)" };
                                         if (log.status === "LEAVE") statusBadge = { backgroundColor: "rgba(4,4,4,0.06)", color: "var(--dark-section)" };
                                         if (log.status === "WEEK_OFF" || log.status === "HOLIDAY") statusBadge = { backgroundColor: "#f3f4f6", color: "#374151" };
 

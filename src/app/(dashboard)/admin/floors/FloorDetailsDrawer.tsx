@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
@@ -376,7 +376,7 @@ export default function FloorDetailsDrawer({
           {activeTab === "Activity" && (
             <div style={{ fontSize: "0.8rem" }}>
               <div className="fw-bold text-dark mb-3" style={{ fontSize: "0.82rem" }}>Recent Floor Activity</div>
-              <div className="position-relative ps-3" style={{ borderLeft: "2px solid #e2e8f0" }}>
+              <div className="position-relative ps-3" style={{ borderLeft: "2px solid var(--border-light)" }}>
                 <div className="mb-4 position-relative">
                   <div
                     className="position-absolute rounded-circle"

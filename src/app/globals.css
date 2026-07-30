@@ -1,6 +1,7 @@
 @import url('https://cdn.hugeicons.com/font/hgi-stroke-rounded.css');
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import 'bootstrap-icons/font/bootstrap-icons.css';
+@import '../styles/marketing.css';
 
 :root {
   /* --- BRAND PALETTE --- */
@@ -45,12 +46,12 @@
   /* Bootstrap Overrides */
   --bs-body-bg: var(--bg-app);
   --bs-body-color: var(--text-main);
-  --bs-font-sans-serif: 'Inter', system-ui, -apple-system, sans-serif;
+  --bs-font-sans-serif: 'Manrope', system-ui, -apple-system, sans-serif;
 }
 
 body {
   background-color: var(--bg-app) !important;
-  font-family: var(--font-geist-sans), system-ui, -apple-system, sans-serif;
+  font-family: var(--font-manrope, 'Manrope', system-ui, -apple-system, sans-serif);
   color: var(--color-text-main);
   overflow-x: hidden;
 }

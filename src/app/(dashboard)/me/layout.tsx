@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -59,7 +59,7 @@ export default function EmployeeLayout({
         return (
             <div className="d-flex justify-content-center align-items-center min-vh-100 flex-column gap-3" style={{ backgroundColor: "#F4F5FA" }}>
                 <div className="spinner-border text-primary" style={{ color: "#1E2A78" }} role="status"></div>
-                <span style={{ color: "#787878", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>Loading Employee Portal...</span>
+                <span style={{ color: "var(--text-muted)", fontFamily: "'Manrope', sans-serif" }}>Loading Employee Portal...</span>
             </div>
         );
     }
@@ -72,7 +72,7 @@ export default function EmployeeLayout({
     ];
 
     return (
-        <div className="d-flex flex-column flex-md-row min-vh-100" style={{ backgroundColor: "#F4F5FA", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        <div className="d-flex flex-column flex-md-row min-vh-100" style={{ backgroundColor: "#F4F5FA", fontFamily: "'Manrope', sans-serif" }}>
             {/* Fonts Import */}
             <style jsx global>{`
                 @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
@@ -83,7 +83,7 @@ export default function EmployeeLayout({
                     --anvaya-bg: #F4F5FA;
                 }
                 body {
-                    font-family: 'Plus Jakarta Sans', sans-serif;
+                    font-family: 'Manrope', sans-serif;
                 }
                 /* Micro-animations */
                 .hover-scale {
@@ -223,9 +223,9 @@ export default function EmployeeLayout({
                             className={`d-flex flex-column align-items-center text-decoration-none ${
                                 isActive ? "text-primary" : "text-muted"
                             }`}
-                            style={{ fontSize: "0.72rem", fontWeight: 600, color: isActive ? "#1E2A78" : "#787878" }}
+                            style={{ fontSize: "0.72rem", fontWeight: 600, color: isActive ? "#1E2A78" : "var(--text-muted)" }}
                         >
-                            <IconComponent size={20} className="mb-0.5" style={{ color: isActive ? "#1E2A78" : "#787878" }} />
+                            <IconComponent size={20} className="mb-0.5" style={{ color: isActive ? "#1E2A78" : "var(--text-muted)" }} />
                             <span>{item.name}</span>
                         </Link>
                     );
