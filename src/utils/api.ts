@@ -1,6 +1,6 @@
 const DEFAULT_REMOTE = 'https://naveen-backend-s71y.onrender.com/api';
 const DEFAULT_LOCAL = 'http://localhost:5001/api';
-const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_LOCAL;
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_REMOTE;
 
 const inflightGetRequests = new Map<string, Promise<any>>();
 

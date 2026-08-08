@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { getStoredToken } from "@/utils/api";
+import { getStoredToken, API_URL } from "@/utils/api";
 import * as XLSX from "xlsx";
 
 const FIELD_STYLE: React.CSSProperties = {
@@ -212,9 +212,8 @@ export default function FloorBulkUploadModal({
       }
 
       const token = getStoredToken();
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api";
 
-      const response = await fetch(`${apiUrl}/floors/bulk-upload`, {
+      const response = await fetch(`${API_URL}/floors/bulk-upload`, {
         method: "POST",
         headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
