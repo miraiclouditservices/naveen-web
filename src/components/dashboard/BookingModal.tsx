@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { ModalMode } from "./AssetModal";
+import { getStoredUser } from "@/utils/api";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -114,14 +115,9 @@ export default function BookingModal({
   };
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const stored = localStorage.getItem("user");
-      if (stored) {
-        try {
-          const user = JSON.parse(stored);
-          setCanEditStatus(user.role === 'SUPER_ADMIN' || user.role === 'Admin' || user.role === 'FLOOR_ADMIN');
-        } catch {}
-      }
+    const user = getStoredUser();
+    if (user) {
+      setCanEditStatus(user.role === 'SUPER_ADMIN' || user.role === 'Admin' || user.role === 'FLOOR_ADMIN');
     }
   }, []);
 
@@ -135,12 +131,10 @@ export default function BookingModal({
         const dateStr = editData.bookingDate ? new Date(editData.bookingDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
         
         let initialBookedBy = editData.bookedBy || "";
-        if (!initialBookedBy && typeof window !== "undefined") {
-          const stored = localStorage.getItem("user");
-          if (stored) {
-            try {
-              initialBookedBy = JSON.parse(stored).name || "";
-            } catch {}
+        if (!initialBookedBy) {
+          const user = getStoredUser();
+          if (user) {
+            initialBookedBy = user.name || "";
           }
         }
 
@@ -155,7 +149,7 @@ export default function BookingModal({
           endTime: editData.endTime || "10:00",
           bookedBy: initialBookedBy,
           bookingParticulars: editData.bookingParticulars || "",
-          bookingStatus: editData.bookingStatus || "Pending"
+          bookingStatus: editData.bookingStatus || "Approved"
         });
       } else {
         const now = new Date();
@@ -166,13 +160,9 @@ export default function BookingModal({
         const defaultFloor = meetingRooms[0]?.floor?._id || meetingRooms[0]?.floor || "";
         
         let initialBookedBy = "";
-        if (typeof window !== "undefined") {
-          const stored = localStorage.getItem("user");
-          if (stored) {
-            try {
-              initialBookedBy = JSON.parse(stored).name || "";
-            } catch {}
-          }
+        const user = getStoredUser();
+        if (user) {
+          initialBookedBy = user.name || "";
         }
 
         setFormData({

@@ -1,26 +1,122 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import Link from "next/link";
 import { api } from "@/utils/api";
 import Table, { TableColumn } from "@/components/common/Table";
 import FloorModal from "@/components/dashboard/FloorModal";
+import FloorBulkUploadModal from "@/components/dashboard/FloorBulkUploadModal";
 import FloorFilterDrawer from "./FloorFilterDrawer";
-import FloorDetailsDrawer from "./FloorDetailsDrawer";
 
 const ITEMS_PER_PAGE = 10;
+
+function StatusBadgeDropdown({
+  floorId,
+  currentStatus,
+  onStatusChange,
+  disabled
+}: {
+  floorId: string;
+  currentStatus: string;
+  onStatusChange: (floorId: string, newStatus: string) => void;
+  disabled?: boolean;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const s = currentStatus || "Active";
+  const config: Record<string, { bg: string; text: string; dot: string; border: string }> = {
+    Active: { bg: "#f0fdf4", text: "#16a34a", dot: "#22c55e", border: "#dcfce7" },
+    Maintenance: { bg: "#fffbe6", text: "#d97706", dot: "#f59e0b", border: "#fef3c7" },
+    Inactive: { bg: "#fef2f2", text: "#dc2626", dot: "#ef4444", border: "#fee2e2" },
+  };
+  const style = config[s] || config.Active;
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isOpen]);
+
+  return (
+    <div className="position-relative d-inline-block" ref={dropdownRef} onClick={(e) => e.stopPropagation()}>
+      <span
+        onClick={() => !disabled && setIsOpen(!isOpen)}
+        className="badge rounded-pill px-2.5 py-1.5 fw-bold border d-inline-flex align-items-center gap-1.5 shadow-sm"
+        style={{
+          fontSize: "0.74rem",
+          backgroundColor: style.bg,
+          color: style.text,
+          borderColor: style.border,
+          userSelect: "none",
+          transition: "all 0.15s ease",
+          cursor: disabled ? "default" : "pointer"
+        }}
+      >
+        <span
+          className="rounded-circle d-inline-block"
+          style={{
+            width: 6,
+            height: 6,
+            backgroundColor: style.dot,
+            boxShadow: `0 0 5px ${style.dot}`
+          }}
+        />
+        {s}
+        {!disabled && <i className="bi bi-chevron-down ms-0.5" style={{ fontSize: "0.65rem" }} />}
+      </span>
+
+      {isOpen && !disabled && (
+        <div
+          className="position-absolute bg-white rounded-3 shadow-lg border p-1"
+          style={{
+            top: "100%",
+            left: 0,
+            marginTop: "4px",
+            zIndex: 1050,
+            minWidth: "135px",
+            fontSize: "0.8rem"
+          }}
+        >
+          {[
+            { label: "Active", dot: "#22c55e", text: "#16a34a" },
+            { label: "Maintenance", dot: "#f59e0b", text: "#d97706" },
+            { label: "Inactive", dot: "#ef4444", text: "#dc2626" },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              className={`btn btn-sm w-100 text-start d-flex align-items-center gap-2 px-2 py-1.5 rounded border-0 ${s === item.label ? 'fw-bold bg-light' : ''}`}
+              style={{ color: item.text, fontSize: "0.78rem" }}
+              onClick={() => {
+                setIsOpen(false);
+                if (s !== item.label) {
+                  onStatusChange(floorId, item.label);
+                }
+              }}
+            >
+              <span
+                className="rounded-circle d-inline-block"
+                style={{ width: 6, height: 6, backgroundColor: item.dot }}
+              />
+              {item.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function FloorsPageClient() {
   const [floors, setFloors] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
-
-  // Top Metrics state
-  const [metrics, setMetrics] = useState({
-    totalFloors: 0,
-    totalSft: 0,
-    occupiedSft: 0,
-    availableSft: 0,
-    activeAssignments: 0,
-  });
 
   // Filter state
   const [selectedPropertyId, setSelectedPropertyId] = useState("All");
@@ -34,13 +130,29 @@ export default function FloorsPageClient() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
 
-  // Selected Floor Details Sidebar
-  const [selectedFloor, setSelectedFloor] = useState<any>(null);
+  const handleStatusChange = async (floorId: string, newStatus: string) => {
+    setUpdatingStatusId(floorId);
+    try {
+      const res = await api.patch(`/floors/${floorId}/status`, { status: newStatus });
+      if (res.success) {
+        setFloors((prev) =>
+          prev.map((f) => (f._id === floorId ? { ...f, status: newStatus } : f))
+        );
+      }
+    } catch (err: any) {
+      console.error("Failed to update floor status:", err);
+    } finally {
+      setUpdatingStatusId(null);
+    }
+  };
 
   // Modal controls
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [editFloor, setEditFloor] = useState<any>(null);
+
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -79,8 +191,9 @@ export default function FloorsPageClient() {
     if (debouncedSearch.trim()) p.search = debouncedSearch.trim();
     if (selectedPropertyId !== "All") p.property = selectedPropertyId;
     if (statusFilter !== "All") p.status = statusFilter;
+    if (floorTypeFilter !== "All") p.floorType = floorTypeFilter;
     return new URLSearchParams(p).toString();
-  }, [currentPage, debouncedSearch, selectedPropertyId, statusFilter]);
+  }, [currentPage, debouncedSearch, selectedPropertyId, statusFilter, floorTypeFilter]);
 
   const fetchFloors = useCallback(async () => {
     setIsLoading(true);
@@ -97,38 +210,9 @@ export default function FloorsPageClient() {
     }
   }, [buildParams]);
 
-  const fetchMetrics = useCallback(async () => {
-    try {
-      let queryParts = [];
-      if (selectedPropertyId !== "All") queryParts.push(`propertyId=${selectedPropertyId}`);
-      const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
-      const res = await api.get(`/dashboard/metrics${queryString}`);
-      if (res.success && res.data?.metrics) {
-        const m = res.data.metrics;
-        setMetrics({
-          totalFloors: m.totalFloors || 0,
-          totalSft: m.totalSft || 0,
-          occupiedSft: m.occupiedSft || 0,
-          availableSft: (m.totalSft || 0) - (m.occupiedSft || 0),
-          activeAssignments: 0,
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [selectedPropertyId]);
-
   useEffect(() => {
     fetchFloors();
-    fetchMetrics();
-  }, [fetchFloors, fetchMetrics]);
-
-  useEffect(() => {
-    if (floors.length > 0) {
-      const count = floors.filter(f => f.assignedAdmin || f.assignedOwner).length;
-      setMetrics(prev => ({ ...prev, activeAssignments: count }));
-    }
-  }, [floors]);
+  }, [fetchFloors]);
 
   const fetchProperties = async () => {
     try {
@@ -144,7 +228,6 @@ export default function FloorsPageClient() {
       if (editFloor) await api.put(`/floors/${editFloor._id}`, data);
       else await api.post("/floors", data);
       fetchFloors();
-      fetchMetrics();
     } catch { }
     setIsModalOpen(false);
     setEditFloor(null);
@@ -185,13 +268,13 @@ export default function FloorsPageClient() {
             <i className="bi bi-layers" style={{ fontSize: "0.95rem" }} />
           </div>
           <div>
-            <button
-              onClick={() => setSelectedFloor(f)}
-              className="btn btn-link p-0 text-decoration-none fw-bold text-dark text-start border-0"
+            <Link
+              href={`/admin/floors/${f._id}`}
+              className="text-decoration-none fw-bold text-dark text-start d-block"
               style={{ fontSize: "0.85rem", lineHeight: 1.2 }}
             >
               {f.floorName || `Floor ${f.floorNumber}`}
-            </button>
+            </Link>
             <div className="text-muted small mt-0.5" style={{ fontSize: "0.75rem" }}>
               {f.property?.propertyName || "Commercial Property"}
             </div>
@@ -312,30 +395,22 @@ export default function FloorsPageClient() {
     },
     {
       header: "Status",
-      render: (f) => {
-        const isAct = f.status === "Active";
-        return (
-          <span
-            className="badge px-2.5 py-1.5 fw-bold"
-            style={{
-              fontSize: "0.75rem",
-              borderRadius: "var(--radius-full)",
-              backgroundColor: isAct ? "#f0fdf4" : "#fef2f2",
-              color: isAct ? "#16a34a" : "#dc2626",
-              border: `1px solid ${isAct ? "#dcfce7" : "#fee2e2"}`
-            }}
-          >
-            {f.status || "Active"}
-          </span>
-        );
-      },
+      render: (f) => (
+        <StatusBadgeDropdown
+          floorId={f._id}
+          currentStatus={f.status || "Active"}
+          onStatusChange={handleStatusChange}
+          disabled={updatingStatusId === f._id || !isSuperAdmin}
+        />
+      ),
     },
     {
       header: "Actions",
       style: { textAlign: "right" as const },
       render: (f) => (
         <div className="d-flex gap-2 align-items-center justify-content-end" onClick={(e) => e.stopPropagation()}>
-          <button
+          <Link
+            href={`/admin/floors/${f._id}`}
             className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"
             style={{
               width: "28px",
@@ -345,11 +420,10 @@ export default function FloorsPageClient() {
               border: "none",
               color: "var(--text-main)"
             }}
-            title="View Details"
-            onClick={() => setSelectedFloor(f)}
+            title="View Full Floor Page"
           >
             <i className="bi bi-eye" style={{ fontSize: "0.85rem" }} />
-          </button>
+          </Link>
           {isSuperAdmin && (
             <button
               className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"
@@ -393,6 +467,16 @@ export default function FloorsPageClient() {
         editData={editFloor}
       />
 
+      <FloorBulkUploadModal
+        isOpen={isBulkUploadOpen}
+        onClose={() => setIsBulkUploadOpen(false)}
+        onSuccess={() => {
+          fetchFloors();
+        }}
+        properties={properties}
+        defaultPropertyId={selectedPropertyId !== "All" ? selectedPropertyId : ""}
+      />
+
       <FloorFilterDrawer
         isOpen={showFilters}
         onClose={() => setShowFilters(false)}
@@ -410,163 +494,7 @@ export default function FloorsPageClient() {
         onReset={handleReset}
       />
 
-      {/* ── METRIC STAT CARDS ── */}
-      <div className="row g-2 mb-3 justify-content-start" style={{ marginTop: "-12px" }}>
-        {/* Card 1: Total Floors */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#eff6ff",
-                color: "#2563eb"
-              }}
-            >
-              <i className="bi bi-layers" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Total Floors</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.totalFloors}</div>
-            </div>
-          </div>
-        </div>
 
-        {/* Card 2: Total Capacity */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f5f3ff",
-                color: "#7c3aed"
-              }}
-            >
-              <i className="bi bi-pie-chart" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Total Capacity</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.totalSft.toLocaleString("en-IN")} SFT</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Occupied Area */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f0fdf4",
-                color: "#16a34a"
-              }}
-            >
-              <i className="bi bi-building-check" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Occupied Area</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.occupiedSft.toLocaleString("en-IN")} SFT</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Available Area */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "var(--brand-orange)_BG",
-                color: "var(--brand-orange)"
-              }}
-            >
-              <i className="bi bi-building-dash" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Available Area</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.availableSft.toLocaleString("en-IN")} SFT</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: Active Assignments */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f0fdf4",
-                color: "#0f766e"
-              }}
-            >
-              <i className="bi bi-person-badge" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Active Admins</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.activeAssignments}</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* ── MAIN CARD CONTAINER ── */}
       <div
@@ -618,23 +546,36 @@ export default function FloorsPageClient() {
               <i className="bi bi-funnel"></i> Filters {activeFilters > 0 && <span className="badge bg-dark rounded-pill ms-1">{activeFilters}</span>}
             </button>
 
-            {/* Add Floor Button */}
+            {/* Action Buttons */}
             {isSuperAdmin && (
-              <button
-                onClick={() => {
-                  setEditFloor(null);
-                  setIsModalOpen(true);
-                }}
-                className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
-                style={{
-                  backgroundColor: "var(--dark-section)",
-                  borderRadius: "10px",
-                  height: "36px",
-                  fontSize: "0.85rem"
-                }}
-              >
-                <i className="bi bi-plus-lg"></i> Add Floor
-              </button>
+              <>
+                <button
+                  onClick={() => setIsBulkUploadOpen(true)}
+                  className="btn btn-sm btn-outline-dark fw-bold px-3 d-flex align-items-center gap-2"
+                  style={{
+                    borderRadius: "10px",
+                    height: "36px",
+                    fontSize: "0.85rem"
+                  }}
+                >
+                  <i className="bi bi-file-earmark-arrow-up"></i> Bulk Upload
+                </button>
+                <button
+                  onClick={() => {
+                    setEditFloor(null);
+                    setIsModalOpen(true);
+                  }}
+                  className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
+                  style={{
+                    backgroundColor: "var(--dark-section)",
+                    borderRadius: "10px",
+                    height: "36px",
+                    fontSize: "0.85rem"
+                  }}
+                >
+                  <i className="bi bi-plus-lg"></i> Add Floor
+                </button>
+              </>
             )}
           </div>
         </div>
@@ -654,18 +595,6 @@ export default function FloorsPageClient() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      {/* RIGHT SIDEBAR DETAILS PANEL */}
-      {selectedFloor && (
-        <FloorDetailsDrawer
-          selectedFloor={selectedFloor}
-          onClose={() => setSelectedFloor(null)}
-          onEdit={(floor) => {
-            setEditFloor(floor);
-            setIsModalOpen(true);
-          }}
-        />
-      )}
     </div>
   );
 }

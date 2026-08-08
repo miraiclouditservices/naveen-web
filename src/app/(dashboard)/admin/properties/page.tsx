@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect, Suspense, useRef, useCallback, useMemo } from "react";
-import { api } from "@/utils/api";
-import Table, { TableColumn } from "@/components/common/Table";
-import PropertyModal from "@/components/dashboard/PropertyModal";
+import { api, getStoredUser } from "@/utils/api";
 
-const ITEMS_PER_PAGE = 10;
-
+// ── Types ───────────────────────────────────────────────────────────────────
 interface PropertyItem {
   _id: string;
   propertyName: string;
@@ -15,984 +13,592 @@ interface PropertyItem {
   propertyType?: string;
   propertyAddress?: string;
   location?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   totalFloors?: number;
   towers?: number;
+  totalUnits?: number;
+  occupiedUnits?: number;
+  availableUnits?: number;
   totalSft?: number;
   occupiedSft?: number;
   availableSft?: number;
-  status?: "Active" | "Inactive" | string;
-  createdBy?: {
-    _id?: string;
-    name?: string;
-  };
+  monthlyRevenue?: number;
+  maintenanceCost?: number;
+  status?: "Active" | "Inactive" | "Draft" | "Archived" | "Maintenance" | "Construction" | "Sold" | "Leased" | string;
+  managerName?: string;
+  managerAvatar?: string;
+  imageUrl?: string;
+  images?: Array<{ imageType?: string; imageUrl?: string; url?: string; isPrimary?: boolean }>;
+  createdBy?: { _id?: string; name?: string };
   createdAt?: string;
+  updatedAt?: string;
 }
 
-interface SummaryMetrics {
-  totalProperties: number;
-  activeProperties: number;
-  activePercent: number;
-  totalSft: number;
-  occupiedSft: number;
-  occupancyRate: number;
-}
-
-// ── Separate Status API Handler ──────────────────────────────────────────────
-export const updatePropertyStatusApi = async (id: string, newStatus: string) => {
-  try {
-    const res = await api.patch(`/properties/${id}/status`, { status: newStatus });
-    return res;
-  } catch (err: any) {
-    // Fallback to update property endpoint if dedicated status patch isn't defined
-    return await api.put(`/properties/${id}`, { status: newStatus });
+export const getPropertyImage = (p: any): string => {
+  if (!p) return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80";
+  if (typeof p.imageUrl === "string" && p.imageUrl.trim() !== "") {
+    return p.imageUrl;
   }
+  if (Array.isArray(p.images) && p.images.length > 0) {
+    const primary = p.images.find((img: any) => img?.isPrimary || img?.imageType === "FRONT_VIEW") || p.images[0];
+    const url = primary?.imageUrl || primary?.url;
+    if (typeof url === "string" && url.trim() !== "") {
+      return url;
+    }
+  }
+  if (typeof p.image === "string" && p.image.trim() !== "") {
+    return p.image;
+  }
+  return "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=800&q=80";
 };
 
-// ── Circular Gauge Component for Occupancy (Marketing Orange Accent) ───────────
-function CircularGauge({ percentage }: { percentage: number }) {
-  const radius = 22;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+// ── Status Badge Pills Component ───────────────────────────────────────────
+function StatusBadge({ status }: { status?: string }) {
+  const s = status || "Active";
+
+  const config: Record<string, { bg: string; text: string; dot: string; border: string; glow: string }> = {
+    Active: { bg: "rgba(236, 253, 245, 0.95)", text: "#047857", dot: "#10b981", border: "#a7f3d0", glow: "rgba(16, 185, 129, 0.6)" },
+    Leased: { bg: "rgba(240, 253, 244, 0.95)", text: "#15803d", dot: "#22c55e", border: "#bbf7d0", glow: "rgba(34, 197, 94, 0.6)" },
+    Maintenance: { bg: "rgba(255, 247, 237, 0.95)", text: "#c2410c", dot: "#f97316", border: "#fed7aa", glow: "rgba(249, 115, 22, 0.6)" },
+    Draft: { bg: "rgba(255, 251, 235, 0.95)", text: "#b45309", dot: "#f59e0b", border: "#fde68a", glow: "rgba(245, 158, 11, 0.6)" },
+    Inactive: { bg: "rgba(248, 250, 252, 0.95)", text: "#475569", dot: "#94a3b8", border: "#e2e8f0", glow: "rgba(148, 163, 184, 0.6)" },
+    Archived: { bg: "rgba(241, 245, 249, 0.95)", text: "#334155", dot: "#64748b", border: "#cbd5e1", glow: "rgba(100, 116, 139, 0.6)" },
+    Construction: { bg: "rgba(245, 243, 255, 0.95)", text: "#6d28d9", dot: "#8b5cf6", border: "#ddd6fe", glow: "rgba(139, 92, 246, 0.6)" },
+    Sold: { bg: "rgba(239, 246, 255, 0.95)", text: "#1d4ed8", dot: "#3b82f6", border: "#bfdbfe", glow: "rgba(59, 130, 246, 0.6)" },
+  };
+
+  const style = config[s] || config.Active;
 
   return (
-    <div className="position-relative d-inline-flex align-items-center justify-content-center" style={{ width: 54, height: 54 }}>
-      <svg width="54" height="54" viewBox="0 0 54 54" style={{ transform: "rotate(-90deg)" }}>
-        {/* Background track */}
-        <circle
-          cx="27"
-          cy="27"
-          r={radius}
-          stroke="var(--border-light, #e2e8f0)"
-          strokeWidth="5"
-          fill="transparent"
-        />
-        {/* Progress Arc */}
-        <circle
-          cx="27"
-          cy="27"
-          r={radius}
-          stroke="var(--brand-orange, #ea580c)"
-          strokeWidth="5"
-          fill="transparent"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          style={{ transition: "stroke-dashoffset 0.6s ease-in-out" }}
-        />
-      </svg>
-    </div>
-  );
-}
-
-// ── Format Large SFT Numbers (e.g., 12.4M, 545K, or exact formatted) ──────────
-function formatSftDisplay(sft: number): { value: string; unit: string } {
-  if (sft >= 1_000_000) {
-    return { value: (sft / 1_000_000).toFixed(1).replace(/\.0$/, ""), unit: "M SQFT" };
-  }
-  if (sft >= 100_000) {
-    return { value: (sft / 1_000).toFixed(0), unit: "K SQFT" };
-  }
-  return { value: sft.toLocaleString(), unit: "SQFT" };
-}
-
-// ── 1. KPI Summary Bar (Marketing Palette: Orange Accents, Dark Headings) ──────
-function PropertySummaryBar({ metrics }: { metrics: SummaryMetrics }) {
-  const formattedTotalSft = formatSftDisplay(metrics.totalSft);
-  const formattedOccupiedSft = formatSftDisplay(metrics.occupiedSft);
-
-  return (
-    <div
-      className="card border-0 p-3"
+    <span
+      className="badge rounded-pill px-2.5 py-1 fw-extrabold border d-inline-flex align-items-center gap-1.5 shadow-sm"
       style={{
-        backgroundColor: "#ffffff",
-        border: "1px solid var(--border-light, #e2e8f0)",
-        borderRadius: "var(--radius-custom, 10px)",
+        fontSize: "0.72rem",
+        letterSpacing: "0.02em",
+        backgroundColor: style.bg,
+        color: style.text,
+        borderColor: style.border,
+        backdropFilter: "blur(4px)",
       }}
     >
-      <div className="row g-3 align-items-center">
-        {/* Metric 1: Total Properties */}
-        <div className="col-12 col-sm-6 col-md">
-          <div className="d-flex flex-column px-2">
-            <div className="d-flex align-items-center gap-1.5 mb-1">
-              <span className="rounded-circle" style={{ width: 7, height: 7, backgroundColor: "var(--brand-orange, #ea580c)" }} />
-              <span className="fw-semibold" style={{ fontSize: "0.76rem", color: "var(--text-body, #475569)", letterSpacing: "-0.01em", marginLeft: "8px" }}>
-                Total Properties
-              </span>
-            </div>
-            <div className="d-flex align-items-baseline gap-1.5 ms-2.5">
-              <span className="fw-bold lh-1" style={{ fontSize: "1.35rem", color: "var(--dark-heading, #0f172a)" }}>
-                {metrics.totalProperties.toLocaleString()}
-              </span>
-              <span className="fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)" }}>
-                units
-              </span>
-            </div>
-          </div>
-        </div>
+      <span
+        className="rounded-circle d-inline-block"
+        style={{
+          width: 7,
+          height: 7,
+          backgroundColor: style.dot,
+          boxShadow: `0 0 6px ${style.glow}`,
+        }}
+      />
+      {s}
+    </span>
+  );
+}
 
-        {/* Metric 2: Active Properties */}
-        <div className="col-12 col-sm-6 col-md">
-          <div className="d-flex flex-column px-2" style={{ borderLeft: "1px solid var(--border-light, #e2e8f0)" }}>
-            <div className="d-flex align-items-center gap-1.5 mb-1">
-              <span className="rounded-circle" style={{ width: 7, height: 7, backgroundColor: "var(--brand-orange, #ea580c)" }} />
-              <span className="fw-semibold" style={{ fontSize: "0.76rem", color: "var(--text-body, #475569)", letterSpacing: "-0.01em", marginLeft: "8px" }}>
-                Active Properties
-              </span>
-            </div>
-            <div className="d-flex align-items-baseline gap-1.5 ms-2.5">
-              <span className="fw-bold lh-1" style={{ fontSize: "1.35rem", color: "var(--dark-heading, #0f172a)" }}>
-                {metrics.activeProperties.toLocaleString()}
-              </span>
-              <span className="fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)" }}>
-                units
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Metric 3: Total SFT */}
-        <div className="col-12 col-sm-6 col-md">
-          <div className="d-flex flex-column px-2" style={{ borderLeft: "1px solid var(--border-light, #e2e8f0)" }}>
-            <div className="d-flex align-items-center gap-1.5 mb-1">
-              <span className="rounded-circle" style={{ width: 7, height: 7, backgroundColor: "var(--brand-orange, #ea580c)" }} />
-              <span className="fw-semibold" style={{ fontSize: "0.76rem", color: "var(--text-body, #475569)", letterSpacing: "-0.01em", marginLeft: "8px" }}>
-                Total SFT
-              </span>
-            </div>
-            <div className="d-flex align-items-baseline gap-1.5 ms-2.5">
-              <span className="fw-bold lh-1" style={{ fontSize: "1.35rem", color: "var(--dark-heading, #0f172a)" }}>
-                {formattedTotalSft.value}
-              </span>
-              <span className="fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)" }}>
-                {formattedTotalSft.unit}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Metric 4: Occupied SFT */}
-        <div className="col-12 col-sm-6 col-md">
-          <div className="d-flex flex-column px-2" style={{ borderLeft: "1px solid var(--border-light, #e2e8f0)" }}>
-            <div className="d-flex align-items-center gap-1.5 mb-1">
-              <span className="rounded-circle" style={{ width: 7, height: 7, backgroundColor: "var(--brand-orange, #ea580c)" }} />
-              <span className="fw-semibold" style={{ fontSize: "0.76rem", color: "var(--text-body, #475569)", letterSpacing: "-0.01em", marginLeft: "8px" }}>
-                Occupied SFT
-              </span>
-            </div>
-            <div className="d-flex align-items-baseline gap-1.5 ms-2.5">
-              <span className="fw-bold lh-1" style={{ fontSize: "1.35rem", color: "var(--dark-heading, #0f172a)" }}>
-                {formattedOccupiedSft.value}
-              </span>
-              <span className="fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)", marginLeft: "8px" }}>
-                {formattedOccupiedSft.unit}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Metric 5: Occupancy Rate with Circular Progress */}
-        <div className="col-12 col-sm-6 col-md">
-          <div className="d-flex align-items-center justify-content-between px-2" style={{ borderLeft: "1px solid var(--border-light, #e2e8f0)" }}>
-            <div>
-              <div className="d-flex align-items-center gap-1.5 mb-1">
-                <span className="rounded-circle" style={{ width: 7, height: 7, backgroundColor: "var(--brand-orange, #ea580c)" }} />
-                <span className="fw-semibold" style={{ fontSize: "0.76rem", color: "var(--text-body, #475569)", letterSpacing: "-0.01em", marginLeft: "8px" }}>
-                  Occupancy Rate
-                </span>
-              </div>
-              <div className="ms-2.5">
-                <span className="fw-bold lh-1" style={{ fontSize: "1.35rem", color: "var(--dark-heading, #0f172a)" }}>
-                  {metrics.occupancyRate}%
-                </span>
+// ── Shimmer Skeleton Loading State ───────────────────────────────────────────
+function SkeletonLoader() {
+  return (
+    <div className="w-100 py-3">
+      <div className="row g-4">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <div key={i} className="col-12 col-md-6 col-lg-4">
+            <div className="card border p-3 rounded-3 shadow-none bg-white">
+              <div className="shimmer-wrapper rounded-3 mb-3" style={{ height: 160, width: "100%" }} />
+              <div className="shimmer-wrapper rounded-2 mb-2" style={{ height: 20, width: "70%" }} />
+              <div className="shimmer-wrapper rounded-2 mb-3" style={{ height: 14, width: "40%" }} />
+              <div className="d-flex justify-content-between">
+                <div className="shimmer-wrapper rounded-2" style={{ height: 30, width: "45%" }} />
+                <div className="shimmer-wrapper rounded-2" style={{ height: 30, width: "45%" }} />
               </div>
             </div>
-            <CircularGauge percentage={metrics.occupancyRate} />
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );
 }
 
-// ── 2. Filter Drawer (Marketing Orange Palette) ─────────────────────────────────
-interface FilterDrawerProps {
-  isOpen: boolean;
-  onClose: () => void;
-  statusFilter: string;
-  setStatusFilter: (val: string) => void;
-  typeFilter: string;
-  setTypeFilter: (val: string) => void;
-  onReset: () => void;
-}
-
-function PropertyFilterDrawer({
-  isOpen,
-  onClose,
-  statusFilter,
-  setStatusFilter,
-  typeFilter,
-  setTypeFilter,
-  onReset,
-}: FilterDrawerProps) {
-  if (!isOpen) return null;
-  return (
-    <>
-      <div
-        style={{
-          position: "fixed",
-          inset: 0,
-          backgroundColor: "rgba(15, 23, 42, 0.4)",
-          zIndex: 1040,
-          backdropFilter: "blur(2px)",
-        }}
-        onClick={onClose}
-      />
-      <div
-        style={{
-          position: "fixed",
-          top: 0,
-          right: 0,
-          bottom: 0,
-          width: 320,
-          backgroundColor: "#ffffff",
-          zIndex: 1050,
-          borderLeft: "1px solid var(--border-light, #e2e8f0)",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        <div className="d-flex justify-content-between align-items-center p-4 border-bottom" style={{ borderColor: "var(--border-light, #e2e8f0)" }}>
-          <h6 className="fw-bold mb-0 d-flex align-items-center gap-2" style={{ color: "var(--dark-heading, #0f172a)" }}>
-            <i className="bi bi-funnel-fill" style={{ color: "var(--brand-orange, #ea580c)" }}></i>
-            Filter Properties
-          </h6>
-          <button className="btn-close shadow-none" onClick={onClose} />
-        </div>
-
-        <div className="flex-grow-1 overflow-auto p-4 d-flex flex-column gap-4">
-          <div>
-            <label
-              className="form-label fw-bold mb-2"
-              style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-body, #475569)" }}
-            >
-              Status
-            </label>
-            <div className="d-grid gap-2" style={{ gridTemplateColumns: "1fr 1fr" }}>
-              {["All", "Active", "Inactive"].map((s) => (
-                <button
-                  key={s}
-                  onClick={() => setStatusFilter(s)}
-                  className={`btn btn-sm fw-semibold ${statusFilter === s ? "text-white" : "btn-light border"}`}
-                  style={{
-                    borderRadius: "var(--radius-custom, 10px)",
-                    height: 36,
-                    fontSize: "0.82rem",
-                    backgroundColor: statusFilter === s ? "var(--brand-orange, #ea580c)" : "#ffffff",
-                    color: statusFilter === s ? "#ffffff" : "var(--dark-heading, #0f172a)",
-                    borderColor: statusFilter === s ? "var(--brand-orange, #ea580c)" : "var(--border-light, #e2e8f0)",
-                  }}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label
-              className="form-label fw-bold mb-2"
-              style={{ fontSize: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--text-body, #475569)" }}
-            >
-              Property Type
-            </label>
-            <div className="d-grid gap-2" style={{ gridTemplateColumns: "1fr 1fr" }}>
-              {["All", "Office", "Commercial", "Residential", "IT Park", "Mixed Use", "Industrial"].map((t) => (
-                <button
-                  key={t}
-                  onClick={() => setTypeFilter(t)}
-                  className={`btn btn-sm fw-semibold ${typeFilter === t ? "text-white" : "btn-light border"}`}
-                  style={{
-                    borderRadius: "var(--radius-custom, 10px)",
-                    height: 36,
-                    fontSize: "0.82rem",
-                    backgroundColor: typeFilter === t ? "var(--brand-orange, #ea580c)" : "#ffffff",
-                    color: typeFilter === t ? "#ffffff" : "var(--dark-heading, #0f172a)",
-                    borderColor: typeFilter === t ? "var(--brand-orange, #ea580c)" : "var(--border-light, #e2e8f0)",
-                  }}
-                >
-                  {t}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4 border-top d-flex gap-2" style={{ borderColor: "var(--border-light, #e2e8f0)" }}>
-          <button
-            className="btn btn-light border flex-grow-1 fw-semibold"
-            style={{ borderRadius: "var(--radius-custom, 10px)", fontSize: "0.85rem", borderColor: "var(--border-light, #e2e8f0)", backgroundColor: "#ffffff", color: "var(--dark-heading, #0f172a)" }}
-            onClick={onReset}
-          >
-            Reset All
-          </button>
-          <button
-            className="btn btn-orange-primary flex-grow-1 justify-content-center"
-            onClick={onClose}
-          >
-            Apply
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ── 3. Main Properties Content ──────────────────────────────────────────────
+// ── MAIN PROPERTIES COMPONENT ────────────────────────────────────────────────
 function PropertiesContent() {
-  const [user, setUser] = useState<{ name: string; role: string } | null>(null);
+  const router = useRouter();
+  const [user, setUser] = useState<{ name: string; role: string } | null>(() => getStoredUser());
   const [properties, setProperties] = useState<PropertyItem[]>([]);
   const [allProperties, setAllProperties] = useState<PropertyItem[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [updatingStatusId, setUpdatingStatusId] = useState<string | null>(null);
-  const [ownerProfile, setOwnerProfile] = useState<any>(null);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editProperty, setEditProperty] = useState<PropertyItem | null>(null);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
-  // Search & Filters
+  const [selectedPropertyForDrawer, setSelectedPropertyForDrawer] = useState<PropertyItem | null>(null);
+  const [drawerTab, setDrawerTab] = useState<string>("Overview");
+  const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
+
+  // Search & Filter Controls
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
-  const [showFilters, setShowFilters] = useState(false);
+  const [sortOption, setSortOption] = useState("newest");
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const handleSearchChange = (val: string) => {
     setSearchQuery(val);
     if (debounceTimer.current) clearTimeout(debounceTimer.current);
     debounceTimer.current = setTimeout(() => {
       setDebouncedSearch(val);
       setCurrentPage(1);
-    }, 400);
+    }, 350);
   };
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [statusFilter, typeFilter]);
+  const [hasMore, setHasMore] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const s = localStorage.getItem("user");
-      if (s) {
-        try {
-          setUser(JSON.parse(s));
-        } catch { }
-      }
+  // Load properties with infinite scrolling support
+  const loadProperties = useCallback(async (pageNum: number, isAppending: boolean = false) => {
+    if (isAppending) {
+      setIsLoadingMore(true);
+    } else {
+      setIsLoading(true);
     }
-  }, []);
 
-  const buildParams = useCallback(() => {
-    const p: Record<string, string> = { page: String(currentPage), limit: String(ITEMS_PER_PAGE) };
-    if (debouncedSearch.trim()) p.search = debouncedSearch.trim();
-    if (statusFilter !== "All") p.status = statusFilter;
-    if (typeFilter !== "All") p.type = typeFilter;
-    return new URLSearchParams(p).toString();
-  }, [currentPage, debouncedSearch, statusFilter, typeFilter]);
-
-  const fetchProperties = useCallback(async () => {
-    setIsLoading(true);
     try {
-      const r = await api.get(`/properties?${buildParams()}`);
-      if (r.success) {
-        setProperties(r.data);
-        setTotalPages(r.pagination?.pages || 1);
-        setTotalItems(r.pagination?.total || r.data.length);
+      let queryUrl = `/properties?page=${pageNum}&limit=${itemsPerPage}`;
+      if (debouncedSearch.trim()) {
+        queryUrl += `&search=${encodeURIComponent(debouncedSearch.trim())}`;
+      }
+      if (sortOption) {
+        queryUrl += `&sort=${encodeURIComponent(sortOption)}`;
       }
 
-      const summaryRes = await api.get(`/properties?limit=1000`);
-      if (summaryRes.success && Array.isArray(summaryRes.data)) {
-        setAllProperties(summaryRes.data);
+      const r = await api.get(queryUrl);
+      if (r && r.success && Array.isArray(r.data)) {
+        const fetchedItems: PropertyItem[] = r.data;
+        const totalP = r.pagination?.pages || 1;
+        const totalCount = r.pagination?.total || fetchedItems.length;
+
+        setTotalPages(totalP);
+        setTotalItems(totalCount);
+        setHasMore(pageNum < totalP);
+
+        if (isAppending) {
+          setAllProperties((prev) => {
+            const existingIds = new Set(prev.map((item) => item._id));
+            const newItems = fetchedItems.filter((item) => !existingIds.has(item._id));
+            return [...prev, ...newItems];
+          });
+          setProperties((prev) => {
+            const existingIds = new Set(prev.map((item) => item._id));
+            const newItems = fetchedItems.filter((item) => !existingIds.has(item._id));
+            return [...prev, ...newItems];
+          });
+        } else {
+          setAllProperties(fetchedItems);
+          setProperties(fetchedItems);
+          if (fetchedItems.length === 0) setHasMore(false);
+        }
+      } else {
+        if (!isAppending) {
+          setAllProperties([]);
+          setProperties([]);
+        }
+        setHasMore(false);
       }
     } catch {
+      if (!isAppending) {
+        setAllProperties([]);
+        setProperties([]);
+      }
+      setHasMore(false);
     } finally {
       setIsLoading(false);
+      setIsLoadingMore(false);
     }
-  }, [buildParams]);
+  }, [itemsPerPage, debouncedSearch, sortOption]);
 
   useEffect(() => {
-    fetchProperties();
-  }, [fetchProperties]);
+    setCurrentPage(1);
+  }, [debouncedSearch, sortOption]);
 
   useEffect(() => {
-    if (user?.role === "Owner") {
-      fetchOwnerProfile();
+    if (currentPage === 1) {
+      loadProperties(1, false);
+    } else {
+      loadProperties(currentPage, true);
     }
-  }, [user]);
+  }, [currentPage, loadProperties]);
 
-  const fetchOwnerProfile = async () => {
-    try {
-      const r = await api.get("/owners/my-profile");
-      if (r.success) setOwnerProfile(r.data);
-    } catch { }
-  };
+  // Infinite Scroll Observer
+  useEffect(() => {
+    if (isLoading || isLoadingMore || !hasMore) return;
 
-  // ── Standalone Status Toggle Integration ────────────────────────────────────
-  const handleToggleStatus = async (property: PropertyItem) => {
-    const nextStatus = property.status === "Active" ? "Inactive" : "Active";
-    setUpdatingStatusId(property._id);
+    if (observerRef.current) observerRef.current.disconnect();
 
-    // Optimistic UI update
-    setProperties((prev) =>
-      prev.map((p) => (p._id === property._id ? { ...p, status: nextStatus } : p))
-    );
-    setAllProperties((prev) =>
-      prev.map((p) => (p._id === property._id ? { ...p, status: nextStatus } : p))
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          setCurrentPage((prev) => prev + 1);
+        }
+      },
+      { rootMargin: "120px", threshold: 0.01 }
     );
 
-    try {
-      const r = await updatePropertyStatusApi(property._id, nextStatus);
-      if (!r.success) {
-        fetchProperties();
-      }
-    } catch {
-      fetchProperties();
-    } finally {
-      setUpdatingStatusId(null);
+    if (sentinelRef.current) {
+      observerRef.current.observe(sentinelRef.current);
     }
-  };
 
-  const handleSave = async (data: any) => {
-    try {
-      const r = editProperty
-        ? await api.put(`/properties/${editProperty._id}`, data)
-        : await api.post("/properties", data);
-      if (r.success) fetchProperties();
-    } catch { }
-    setEditProperty(null);
-    setIsModalOpen(false);
-  };
+    return () => {
+      if (observerRef.current) observerRef.current.disconnect();
+    };
+  }, [hasMore, isLoading, isLoadingMore]);
 
-  const handleReset = () => {
+  // Filter & Search Logic
+  const filteredProperties = useMemo(() => {
+    return allProperties;
+  }, [allProperties]);
+
+  const handleResetFilters = () => {
     setSearchQuery("");
     setDebouncedSearch("");
-    setStatusFilter("All");
-    setTypeFilter("All");
+    setSortOption("newest");
     setCurrentPage(1);
   };
-
-  const activeFilters = [
-    debouncedSearch.trim() !== "",
-    statusFilter !== "All",
-    typeFilter !== "All",
-  ].filter(Boolean).length;
 
   const isAdmin = !user || ["Admin", "SUPER_ADMIN", "Super Admin"].includes(user.role || "");
 
-  // ── Summary Metrics Calculation ──────────────────────────────────────────────
-  const metrics: SummaryMetrics = useMemo(() => {
-    const list = allProperties.length > 0 ? allProperties : properties;
-    const totalProperties = totalItems > 0 ? totalItems : list.length;
-    const activeProperties = list.filter((p) => p.status === "Active").length;
-    const activePercent = totalProperties > 0 ? Math.round((activeProperties / totalProperties) * 100) : 0;
-    const totalSft = list.reduce((acc, p) => acc + (p.totalSft || 0), 0);
-    const occupiedSft = list.reduce((acc, p) => acc + (p.occupiedSft || 0), 0);
-    const occupancyRate = totalSft > 0 ? Math.round((occupiedSft / totalSft) * 100) : 0;
-
-    return {
-      totalProperties,
-      activeProperties,
-      activePercent,
-      totalSft,
-      occupiedSft,
-      occupancyRate,
-    };
-  }, [allProperties, properties, totalItems]);
-
-  // ── Directory Table Columns ──────────────────────────────────────────────────
-  const columns: TableColumn<PropertyItem>[] = [
-    {
-      header: "Building / Property Name",
-      style: { position: "sticky", left: 0, zIndex: 6, minWidth: "220px" },
-      render: (p) => (
-        <div className="d-flex align-items-center gap-3">
-          <div
-            className="rounded-3 d-flex align-items-center justify-content-center flex-shrink-0"
-            style={{
-              width: 36,
-              height: 36,
-              fontSize: "1.05rem",
-              backgroundColor: "var(--brand-orange-bg, #fff7ed)",
-              color: "var(--brand-orange, #ea580c)",
-              border: "1px solid var(--brand-orange-border, #fed7aa)",
-            }}
-          >
-            <i className="bi bi-building"></i>
-          </div>
-          <div>
-            <Link
-              href={`/admin/properties/${p._id}`}
-              className="fw-bold text-decoration-none hover-orange"
-              style={{ fontSize: "0.88rem", color: "var(--dark-heading, #0f172a)" }}
-            >
-              {p.propertyName}
-            </Link>
-            <div className="text-truncate" style={{ fontSize: "0.74rem", maxWidth: "260px", color: "var(--text-body, #475569)" }}>
-              <i className="bi bi-geo-alt me-1 opacity-75"></i>
-              {p.propertyAddress || p.location || "No address provided"}
-            </div>
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Property Type",
-      render: (p) => (
-        <span
-          className="badge border px-2.5 py-1.5 fw-semibold"
-          style={{
-            fontSize: "0.75rem",
-            borderRadius: "var(--radius-custom, 10px)",
-            color: "var(--dark-heading, #0f172a)",
-            backgroundColor: "#f8fafc",
-            borderColor: "var(--border-light, #e2e8f0)",
-          }}
-        >
-          {p.propertyType || "Office"}
-        </span>
-      ),
-    },
-    {
-      header: "Structure",
-      render: (p) => (
-        <div>
-          <div className="fw-semibold" style={{ fontSize: "0.84rem", color: "var(--dark-heading, #0f172a)" }}>
-            {p.totalFloors || 1} Floors
-          </div>
-          <div style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)" }}>
-            {p.towers || 1} Tower(s)
-          </div>
-        </div>
-      ),
-    },
-    {
-      header: "Total SFT",
-      render: (p) => (
-        <span className="fw-bold" style={{ fontSize: "0.85rem", color: "var(--dark-heading, #0f172a)" }}>
-          {p.totalSft ? p.totalSft.toLocaleString() : "0"}{" "}
-          <span className="small fw-semibold" style={{ color: "var(--text-body, #475569)" }}>SFT</span>
-        </span>
-      ),
-    },
-    {
-      header: "Occupied SFT",
-      render: (p) => {
-        const occPercent = p.totalSft && p.totalSft > 0 ? Math.round(((p.occupiedSft || 0) / p.totalSft) * 100) : 0;
-        return (
-          <div style={{ minWidth: "120px" }}>
-            <div className="d-flex justify-content-between align-items-center mb-1">
-              <span className="fw-bold" style={{ fontSize: "0.84rem", color: "var(--dark-heading, #0f172a)" }}>
-                {p.occupiedSft ? p.occupiedSft.toLocaleString() : "0"} <span className="small" style={{ color: "var(--text-body, #475569)" }}>SFT</span>
-              </span>
-              <span className="fw-bold" style={{ fontSize: "0.7rem", color: "var(--text-body, #475569)" }}>
-                {occPercent}%
-              </span>
-            </div>
-            <div className="progress" style={{ height: "5px", backgroundColor: "var(--border-light, #e2e8f0)", borderRadius: "4px" }}>
-              <div
-                className="progress-bar rounded-pill"
-                role="progressbar"
-                style={{ width: `${Math.min(occPercent, 100)}%`, backgroundColor: "var(--brand-orange, #ea580c)" }}
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
-      header: "Added By",
-      render: (p) => (
-        <div className="d-flex align-items-center gap-1.5" style={{ fontSize: "0.8rem", color: "var(--text-body, #475569)" }}>
-          <i className="bi bi-person-circle opacity-75"></i>
-          <span>{p.createdBy?.name || "Admin"}</span>
-        </div>
-      ),
-    },
-    {
-      header: "Status",
-      style: { position: "sticky", right: "90px", zIndex: 5, minWidth: "120px" },
-      render: (p) => {
-        const isActive = p.status === "Active";
-        const isUpdating = updatingStatusId === p._id;
-
-        return (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!isUpdating && isAdmin) handleToggleStatus(p);
-            }}
-            disabled={isUpdating || !isAdmin}
-            title={isAdmin ? `Click to switch to ${isActive ? "Inactive" : "Active"}` : undefined}
-            className="btn btn-sm badge rounded-pill px-2.5 py-1.5 fw-bold border text-decoration-none d-inline-flex align-items-center gap-1"
-            style={{
-              fontSize: "0.73rem",
-              cursor: isAdmin ? "pointer" : "default",
-              backgroundColor: isActive ? "var(--brand-orange-bg, #fff7ed)" : "#f8fafc",
-              color: isActive ? "var(--brand-orange, #ea580c)" : "var(--text-body, #475569)",
-              borderColor: isActive ? "var(--brand-orange-border, #fed7aa)" : "var(--border-light, #e2e8f0)",
-            }}
-          >
-            {isUpdating ? (
-              <span className="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true" style={{ width: 10, height: 10 }} />
-            ) : (
-              <span className="rounded-circle" style={{ width: 6, height: 6, backgroundColor: isActive ? "var(--brand-orange, #ea580c)" : "#94a3b8" }} />
-            )}
-            {p.status || "Active"}
-          </button>
-        );
-      },
-    },
-    {
-      header: "Actions",
-      style: { position: "sticky", right: 0, zIndex: 5, minWidth: "90px", width: "90px", textAlign: "center" as const },
-      render: (p) => (
-        <div className="d-flex gap-2 align-items-center justify-content-center" onClick={(e) => e.stopPropagation()}>
-          <Link
-            href={`/admin/properties/${p._id}`}
-            title="View Details"
-            className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center border"
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "9999px",
-              backgroundColor: "#ffffff",
-              borderColor: "var(--border-light, #e2e8f0)",
-              color: "var(--dark-heading, #0f172a)",
-            }}
-          >
-            <i className="bi bi-eye" style={{ fontSize: "0.85rem" }}></i>
-          </Link>
-          {isAdmin && (
-            <button
-              title="Edit Property"
-              onClick={() => {
-                setEditProperty(p);
-                setIsModalOpen(true);
-              }}
-              className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center border"
-              style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "9999px",
-                backgroundColor: "#ffffff",
-                borderColor: "var(--border-light, #e2e8f0)",
-                color: "var(--dark-heading, #0f172a)",
-              }}
-            >
-              <i className="bi bi-pencil" style={{ fontSize: "0.85rem" }}></i>
-            </button>
-          )}
-        </div>
-      ),
-    },
-  ];
-
-  // ── Owner View ───────────────────────────────────────────────────────────────
-  if (user?.role === "Owner") {
-    return (
-      <div className="p-4" style={{ backgroundColor: "#ffffff" }}>
-        <div className="mb-4">
-          <h2 className="fw-bold mb-1" style={{ fontSize: "1.1rem", color: "var(--dark-heading, #0f172a)" }}>
-            My Office Details
-          </h2>
-          <p className="small mb-0" style={{ color: "var(--text-body, #475569)" }}>View your assigned office details and active units.</p>
-        </div>
-        <div className="row g-4">
-          <div className="col-lg-6">
-            <div className="border p-4 h-100" style={{ backgroundColor: "#ffffff", borderRadius: "var(--radius-custom, 10px)", borderColor: "var(--border-light, #e2e8f0)" }}>
-              <div className="d-flex align-items-center gap-3 mb-3">
-                <div
-                  className="rounded-3 d-flex align-items-center justify-content-center"
-                  style={{ width: 48, height: 48, backgroundColor: "var(--brand-orange-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}
-                >
-                  <i className="bi bi-briefcase-fill" style={{ fontSize: "1.4rem" }}></i>
-                </div>
-                <div>
-                  <h5 className="fw-bold mb-0" style={{ color: "var(--dark-heading, #0f172a)" }}>{ownerProfile?.ownerName || "Office Profile"}</h5>
-                  <span className="badge fw-semibold" style={{ fontSize: "0.72rem", backgroundColor: "var(--brand-orange-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}>
-                    Active Profile
-                  </span>
-                </div>
-              </div>
-              <hr className="opacity-10" />
-              {[
-                ["Contact Person", ownerProfile?.contactPerson],
-                ["Designation", ownerProfile?.designation],
-                ["Email", ownerProfile?.emailId],
-                ["Phone", ownerProfile?.contactNumber],
-                ["GST", ownerProfile?.gstNumber],
-                ["Type", ownerProfile?.ownerType],
-              ].map(([l, v]) => (
-                <div
-                  key={l}
-                  className="d-flex justify-content-between align-items-center py-2"
-                  style={{ borderBottom: "1px solid var(--border-light, #e2e8f0)", fontSize: "0.85rem" }}
-                >
-                  <span className="fw-semibold" style={{ color: "var(--text-body, #475569)" }}>{l}</span>
-                  <span className="fw-bold" style={{ color: "var(--dark-heading, #0f172a)" }}>{v || "—"}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="col-lg-6">
-            <div className="border p-4 h-100" style={{ backgroundColor: "#ffffff", borderRadius: "var(--radius-custom, 10px)", borderColor: "var(--border-light, #e2e8f0)" }}>
-              <h6 className="fw-bold mb-3 d-flex align-items-center gap-2" style={{ color: "var(--dark-heading, #0f172a)" }}>
-                <i className="bi bi-building" style={{ color: "var(--brand-orange, #ea580c)" }}></i> Assigned Units
-              </h6>
-              <div className="d-flex flex-column gap-2 overflow-auto" style={{ maxHeight: 340 }}>
-                {ownerProfile?.unitsAssigned?.length > 0 ? (
-                  ownerProfile.unitsAssigned.map((u: any) => (
-                    <div
-                      key={u._id}
-                      className="p-3 border rounded-3 d-flex align-items-center justify-content-between"
-                      style={{ backgroundColor: "#ffffff", borderColor: "var(--border-light, #e2e8f0)" }}
-                    >
-                      <div className="d-flex align-items-center gap-3">
-                        <div
-                          className="rounded-3 d-flex align-items-center justify-content-center"
-                          style={{ width: 38, height: 38, backgroundColor: "var(--brand-orange-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}
-                        >
-                          <i className="bi bi-door-open-fill"></i>
-                        </div>
-                        <div>
-                          <div className="fw-bold small" style={{ color: "var(--dark-heading, #0f172a)" }}>Unit {u.unitNumber}</div>
-                          <div style={{ fontSize: "0.74rem", color: "var(--text-body, #475569)" }}>
-                            {u.property?.propertyName || "—"}
-                          </div>
-                        </div>
-                      </div>
-                      <div className="text-end">
-                        <span className="badge d-block mb-1 small fw-bold" style={{ backgroundColor: "var(--brand-orange-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}>
-                          Floor {u.floorNumber}
-                        </span>
-                        <span className="small fw-bold" style={{ color: "var(--text-body, #475569)" }}>
-                          {u.sqft ? Math.round(u.sqft).toLocaleString() : "N/A"} SFT
-                        </span>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-5" style={{ color: "var(--text-body, #475569)" }}>
-                    <i className="bi bi-building-dash d-block mb-2" style={{ fontSize: "2rem" }}></i>
-                    <span className="small">No units assigned.</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Admin Directory View ────────────────────────────────────────────────────
   return (
-    <div className="p-3 pt-2 d-flex flex-column gap-3 min-vh-100" style={{ backgroundColor: "#ffffff" }}>
-      <PropertyModal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          setEditProperty(null);
-        }}
-        onSave={handleSave}
-        editData={editProperty}
-      />
-
-      {/* ── Top Clean KPI Summary Bar (Marketing Orange Theme) ───────────────── */}
-      <PropertySummaryBar metrics={metrics} />
-
-      {/* ── Table Card Container ───────────────────────────────────────────── */}
+    <div className="p-0 d-flex flex-column gap-3 min-vh-100" style={{ backgroundColor: "var(--page-bg, #f8fafc)" }}>
+      {/* ── 1. Sticky Search & Filter Toolbar ────────────────────────────────────── */}
       <div
-        className="card border-0 p-3 flex-grow-1 d-flex flex-column"
+        className="card border p-3 rounded-3 mb-1 sticky-top"
         style={{
+          top: 0,
+          zIndex: 100,
           backgroundColor: "#ffffff",
-          border: "1px solid var(--border-light, #e2e8f0)",
-          borderRadius: "var(--radius-custom, 10px)",
+          borderColor: "var(--border, #e2e8f0)",
+          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)"
         }}
       >
-        {/* Controls Bar */}
-        <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-2">
-          <div className="d-flex align-items-center gap-2">
-            <h5 className="fw-bold m-0" style={{ color: "var(--dark-heading, #0f172a)", fontSize: "1.05rem" }}>
-              Property Directory
-            </h5>
-          </div>
-
-          <div className="d-flex gap-2 flex-wrap align-items-center">
-            {/* Search Input */}
-            <div className="position-relative">
-              <i
-                className="bi bi-search position-absolute"
-                style={{ left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem", color: "var(--text-body, #475569)" }}
-              />
+        <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
+          {/* Left: Search Bar */}
+          <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ maxWidth: "600px" }}>
+            <div className="position-relative flex-grow-1">
+              <i className="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-muted" style={{ fontSize: "0.85rem" }}></i>
               <input
                 type="text"
-                placeholder="Search name, address, type..."
-                className="form-control form-control-sm"
+                placeholder="Search by property name, code, city, type..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                style={{
-                  width: "220px",
-                  paddingLeft: "30px",
-                  borderColor: "var(--border-light, #e2e8f0)",
-                  borderRadius: "var(--radius-custom, 10px)",
-                  height: "36px",
-                  fontSize: "0.85rem",
-                  backgroundColor: "#ffffff",
-                  color: "var(--dark-heading, #0f172a)",
-                }}
+                className="form-control form-control-sm ps-5 border"
+                style={{ height: 38, borderRadius: "var(--radius, 10px)", fontSize: "0.85rem" }}
               />
               {searchQuery && (
-                <button
-                  onClick={() => handleSearchChange("")}
-                  className="btn btn-link p-0 position-absolute text-decoration-none"
-                  style={{ right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.9rem", color: "var(--text-body, #475569)" }}
-                >
-                  ×
-                </button>
+                <button className="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted text-decoration-none" onClick={() => handleSearchChange("")}>×</button>
               )}
             </div>
+          </div>
 
-
-            {/* Filter Drawer Trigger */}
-            <button
-              className="btn btn-sm border d-flex align-items-center gap-1.5 px-3"
-              onClick={() => setShowFilters(true)}
-              style={{
-                borderRadius: "var(--radius-custom, 10px)",
-                height: "36px",
-                fontSize: "0.85rem",
-                borderColor: "var(--border-light, #e2e8f0)",
-                backgroundColor: showFilters ? "var(--brand-orange, #ea580c)" : "#ffffff",
-                color: showFilters ? "#ffffff" : "var(--dark-heading, #0f172a)",
-              }}
+          {/* Right: Sort & Add Property Button */}
+          <div className="d-flex align-items-center gap-2">
+            <select
+              className="form-select form-select-sm border fw-semibold text-dark shadow-xs"
+              value={sortOption}
+              onChange={(e) => setSortOption(e.target.value)}
+              style={{ width: "175px", height: 38, borderRadius: "10px", fontSize: "0.83rem", borderColor: "#e2e8f0" }}
             >
-              <i className="bi bi-funnel"></i>
-              {/* <span className="fw-semibold">Filter</span> */}
-              {activeFilters > 0 && (
-                <span className="badge rounded-pill ms-0.5" style={{ fontSize: "0.65rem", backgroundColor: "var(--brand-orange, #ea580c)" }}>
-                  {activeFilters}
-                </span>
-              )}
-            </button>
+              <option value="newest">Sort: Newest First</option>
+              <option value="oldest">Sort: Oldest First</option>
+              <option value="name-asc">Sort: Name (A-Z)</option>
+              <option value="name-desc">Sort: Name (Z-A)</option>
+              <option value="revenue-desc">Sort: Revenue (High-Low)</option>
+              <option value="occupancy-desc">Sort: Occupancy (High-Low)</option>
+            </select>
 
-            {/* Add Property Button */}
             {isAdmin && (
-              <button
-                onClick={() => {
-                  setEditProperty(null);
-                  setIsModalOpen(true);
-                }}
-                className="btn btn-orange-primary"
-                style={{ height: "36px" }}
+              <Link
+                href="/admin/properties/add"
+                className="btn btn-orange-primary shadow-sm fw-bold px-3 d-flex align-items-center gap-1.5 text-decoration-none"
+                style={{ height: 38, borderRadius: "var(--radius, 10px)" }}
               >
-                <i className="bi bi-plus-lg"></i>
+                <i className="bi bi-plus-lg me-1"></i>
                 <span>Add Property</span>
-              </button>
+              </Link>
             )}
           </div>
         </div>
+      </div>
 
-        {/* Filter Chips */}
-        {activeFilters > 0 && (
-          <div className="d-flex align-items-center gap-2 py-2 mb-2 border rounded-3 px-3 flex-wrap" style={{ backgroundColor: "#f8fafc", borderColor: "var(--border-light, #e2e8f0)" }}>
-            <span className="fw-bold" style={{ fontSize: "0.72rem", color: "var(--text-body, #475569)" }}>
-              ACTIVE FILTERS:
-            </span>
-            {debouncedSearch && (
-              <span className="badge border px-2.5 py-1 rounded-2" style={{ fontSize: "0.75rem", backgroundColor: "#ffffff", color: "var(--dark-heading, #0f172a)", borderColor: "var(--border-light, #e2e8f0)" }}>
-                Search: <strong>{debouncedSearch}</strong>
-                <button
-                  onClick={() => handleSearchChange("")}
-                  className="btn btn-link p-0 ms-1 text-decoration-none"
-                  style={{ fontSize: "0.85rem", lineHeight: 1, color: "var(--text-body, #475569)" }}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {statusFilter !== "All" && (
-              <span className="badge border px-2.5 py-1 rounded-2" style={{ fontSize: "0.75rem", backgroundColor: "#ffffff", color: "var(--dark-heading, #0f172a)", borderColor: "var(--border-light, #e2e8f0)" }}>
-                Status: <strong>{statusFilter}</strong>
-                <button
-                  onClick={() => setStatusFilter("All")}
-                  className="btn btn-link p-0 ms-1 text-decoration-none"
-                  style={{ fontSize: "0.85rem", lineHeight: 1, color: "var(--text-body, #475569)" }}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            {typeFilter !== "All" && (
-              <span className="badge border px-2.5 py-1 rounded-2" style={{ fontSize: "0.75rem", backgroundColor: "#ffffff", color: "var(--dark-heading, #0f172a)", borderColor: "var(--border-light, #e2e8f0)" }}>
-                Type: <strong>{typeFilter}</strong>
-                <button
-                  onClick={() => setTypeFilter("All")}
-                  className="btn btn-link p-0 ms-1 text-decoration-none"
-                  style={{ fontSize: "0.85rem", lineHeight: 1, color: "var(--text-body, #475569)" }}
-                >
-                  ×
-                </button>
-              </span>
-            )}
-            <button
-              onClick={handleReset}
-              className="btn btn-link p-0 fw-semibold ms-auto text-decoration-none text-danger"
-              style={{ fontSize: "0.75rem" }}
-            >
-              Reset all filters
+      {/* Bulk Action Toolbar */}
+      {selectedPropertyIds.length > 0 && (
+        <div className="p-3 bg-dark text-white rounded-3 d-flex align-items-center justify-content-between animate-fade-up shadow-lg">
+          <div className="d-flex align-items-center gap-2">
+            <span className="badge bg-orange text-white fw-bold px-2 py-1">{selectedPropertyIds.length} Selected</span>
+            <span className="small text-light">Properties selected for bulk action</span>
+          </div>
+          <div className="d-flex align-items-center gap-2">
+            <button className="btn btn-sm btn-outline-light" onClick={() => alert(`Exporting ${selectedPropertyIds.length} properties...`)}>
+              <i className="bi bi-download me-1"></i> Export Selected
+            </button>
+            <button className="btn btn-sm btn-link text-white-50 text-decoration-none ms-2" onClick={() => setSelectedPropertyIds([])}>
+              Cancel
             </button>
           </div>
+        </div>
+      )}
+
+      {/* ── 2. PROPERTY GRID ──────────────────────────────────────────────── */}
+      {isLoading ? (
+        <SkeletonLoader />
+      ) : filteredProperties.length === 0 ? (
+        /* ── Empty State ── */
+        <div className="card border bg-white p-5 text-center rounded-3 my-4">
+          <div
+            className="rounded-circle mx-auto d-flex align-items-center justify-content-center mb-3"
+            style={{ width: 80, height: 80, backgroundColor: "var(--brand-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}
+          >
+            <i className="bi bi-building-dash fs-1"></i>
+          </div>
+          <h5 className="fw-bold text-dark mb-1">No Properties Found</h5>
+          <p className="text-muted small mx-auto mb-4" style={{ maxWidth: 420 }}>
+            We couldn't find any property records matching your search query.
+          </p>
+          <div className="d-flex gap-2 justify-content-center">
+            <button className="btn btn-light border fw-bold text-dark px-4" onClick={handleResetFilters}>
+              Reset Search
+            </button>
+            {isAdmin && (
+              <Link href="/admin/properties/add" className="btn btn-orange-primary text-decoration-none">
+                + Add Property
+              </Link>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* ── GRID VIEW ── */
+        <div className="row g-4">
+          {filteredProperties.map((p) => {
+            const occPercent = p.totalSft ? Math.round(((p.occupiedSft || 0) / p.totalSft) * 100) : 0;
+
+            return (
+              <div key={p._id} className="col-12 col-md-6 col-lg-4">
+                <div
+                  className="card border bg-white rounded-3 h-100 mkt-card-clean overflow-hidden d-flex flex-column transition-all cursor-pointer"
+                  style={{ borderColor: "var(--border, #e2e8f0)", borderRadius: "var(--radius, 10px)" }}
+                  onClick={() => router.push(`/admin/properties/${p._id}`)}
+                >
+                  {/* Property Image & Badges Overlay */}
+                  <div
+                    className="position-relative overflow-hidden"
+                    style={{ height: 180, backgroundColor: "#f1f5f9" }}
+                  >
+                    <img
+                      src={getPropertyImage(p)}
+                      alt={p.propertyName}
+                      className="w-100 h-100 object-fit-cover transition-all"
+                      style={{ transition: "transform 0.5s ease" }}
+                    />
+
+                    {/* Top Badges */}
+                    <div className="position-absolute top-0 start-0 p-3 d-flex gap-2 align-items-center">
+                      <StatusBadge status={p.status} />
+                      <span className="badge bg-dark bg-opacity-75 text-white extra-small fw-semibold">
+                        {p.propertyType || "Commercial"}
+                      </span>
+                    </div>
+
+                    {/* Bottom Image Overlay Info */}
+                    <div
+                      className="position-absolute bottom-0 start-0 end-0 p-2 px-3 d-flex justify-content-between align-items-center text-white"
+                      style={{ background: "linear-gradient(to top, rgba(15,23,42,0.85), transparent)" }}
+                    >
+                      <span className="extra-small fw-bold">
+                        <i className="bi bi-geo-alt me-1 text-warning"></i>{p.city || "Location"}, {p.country || "USA"}
+                      </span>
+                      <span className="extra-small fw-bold opacity-75">{p.propertyCode || "PROP-001"}</span>
+                    </div>
+                  </div>
+
+                  {/* Card Content Body */}
+                  <div className="p-3 d-flex flex-column flex-grow-1">
+                    <h6
+                      className="fw-extrabold text-dark mb-1 text-truncate hover-orange"
+                      style={{ fontSize: "1rem" }}
+                    >
+                      {p.propertyName}
+                    </h6>
+                    <p className="text-muted extra-small text-truncate mb-3">
+                      {p.propertyAddress || "Financial District, Main Avenue"}
+                    </p>
+
+                    {/* Quick Specs Grid */}
+                    <div className="p-2 bg-light rounded-2 mb-3 extra-small">
+                      <span className="text-muted d-block">Total Area</span>
+                      <strong className="text-dark">{p.totalSft ? (p.totalSft / 1000).toFixed(0) + "K" : "0"} SFT</strong>
+                    </div>
+
+                    {/* Occupancy Progress Bar */}
+                    <div>
+                      <div className="d-flex justify-content-between align-items-center mb-1 extra-small">
+                        <span className="fw-semibold text-muted">Occupancy</span>
+                        <span className="fw-bold text-dark">{occPercent}%</span>
+                      </div>
+                      <div className="progress" style={{ height: 6, borderRadius: 4, backgroundColor: "#e2e8f0" }}>
+                        <div
+                          className="progress-bar rounded-pill"
+                          role="progressbar"
+                          style={{ width: `${occPercent}%`, backgroundColor: "var(--brand-orange, #ea580c)" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Infinite Scroll Sentinel */}
+      <div ref={sentinelRef} className="py-3 text-center" style={{ minHeight: 50 }}>
+        {isLoadingMore && (
+          <div className="d-flex align-items-center justify-content-center gap-2 text-muted py-2">
+            <div className="spinner-border spinner-border-sm text-orange" role="status" style={{ color: "var(--brand-orange, #ea580c)" }}>
+              <span className="visually-hidden">Loading...</span>
+            </div>
+            <span className="fw-semibold extra-small text-dark">Loading more properties...</span>
+          </div>
         )}
-
-        {/* Filter Drawer */}
-        <PropertyFilterDrawer
-          isOpen={showFilters}
-          onClose={() => setShowFilters(false)}
-          statusFilter={statusFilter}
-          setStatusFilter={(v) => {
-            setStatusFilter(v);
-            setCurrentPage(1);
-          }}
-          typeFilter={typeFilter}
-          setTypeFilter={(v) => {
-            setTypeFilter(v);
-            setCurrentPage(1);
-          }}
-          onReset={handleReset}
-        />
-
-        {/* Table */}
-        <Table
-          columns={columns}
-          data={properties}
-          isLoading={isLoading}
-          loadingMessage="Loading property directory..."
-          emptyMessage={
-            activeFilters > 0
-              ? "No property records match the active filter criteria."
-              : "No property records found. Click 'Add Property' to create your first asset."
-          }
-          containerClassName="table-responsive-container table-responsive mt-0 flex-grow-1"
-          currentPage={currentPage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          itemsPerPage={ITEMS_PER_PAGE}
-          onPageChange={setCurrentPage}
-        />
       </div>
+
+      {/* ── 4. PROPERTY DETAILS SLIDE-OVER DRAWER (Right) ───────────────────── */}
+      {selectedPropertyForDrawer && (
+        <>
+          <div
+            className="position-fixed inset-0 bg-dark bg-opacity-50"
+            style={{ zIndex: 1045, backdropFilter: "blur(2px)" }}
+            onClick={() => setSelectedPropertyForDrawer(null)}
+          />
+          <div
+            className="position-fixed top-0 end-0 bottom-0 bg-white shadow-lg d-flex flex-column animate-fade-up"
+            style={{ width: "min(650px, 100vw)", zIndex: 1050, borderLeft: "1px solid var(--border, #e2e8f0)" }}
+          >
+            {/* Drawer Header */}
+            <div className="p-4 border-bottom d-flex justify-content-between align-items-center bg-light">
+              <div className="d-flex align-items-center gap-3">
+                <div
+                  className="rounded-3 d-flex align-items-center justify-content-center text-orange fw-bold"
+                  style={{ width: 44, height: 44, backgroundColor: "var(--brand-bg, #fff7ed)", color: "var(--brand-orange, #ea580c)" }}
+                >
+                  <i className="bi bi-building fs-4"></i>
+                </div>
+                <div>
+                  <h5 className="fw-bold mb-0 text-dark">{selectedPropertyForDrawer.propertyName}</h5>
+                  <span className="text-muted extra-small">{selectedPropertyForDrawer.propertyAddress || selectedPropertyForDrawer.city}</span>
+                </div>
+              </div>
+              <button className="btn-close shadow-none" onClick={() => setSelectedPropertyForDrawer(null)} />
+            </div>
+
+            {/* Drawer Tabs Navigation */}
+            <div className="border-bottom bg-white px-3 overflow-auto no-scrollbar d-flex gap-1">
+              {[
+                "Overview", "Buildings", "Floors", "Units", "Owners",
+                "Documents", "Tenants", "Leases", "Maintenance",
+                "Invoices", "Gallery", "History"
+              ].map((tab) => (
+                <button
+                  key={tab}
+                  className={`tab-item extra-small ${drawerTab === tab ? "active fw-bold text-dark" : "text-muted"}`}
+                  onClick={() => setDrawerTab(tab)}
+                  style={{ whiteSpace: "nowrap" }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* Drawer Body Content */}
+            <div className="flex-grow-1 overflow-auto p-4">
+              {drawerTab === "Overview" && (
+                <div className="d-flex flex-column gap-4">
+                  <div className="row g-3">
+                    <div className="col-6">
+                      <div className="p-3 border rounded-3 bg-light">
+                        <span className="text-muted extra-small d-block">Property Code</span>
+                        <strong className="text-dark small">{selectedPropertyForDrawer.propertyCode || "PROP-001"}</strong>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="p-3 border rounded-3 bg-light">
+                        <span className="text-muted extra-small d-block">Property Type</span>
+                        <strong className="text-dark small">{selectedPropertyForDrawer.propertyType || "Commercial"}</strong>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="p-3 border rounded-3 bg-light">
+                        <span className="text-muted extra-small d-block">Total SFT</span>
+                        <strong className="text-dark small">{selectedPropertyForDrawer.totalSft?.toLocaleString() || "0"} SQFT</strong>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="p-3 border rounded-3 bg-light">
+                        <span className="text-muted extra-small d-block">Occupied SFT</span>
+                        <strong className="text-dark small">{selectedPropertyForDrawer.occupiedSft?.toLocaleString() || "0"} SQFT</strong>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <h6 className="fw-bold text-dark mb-2">Structure & Capacity</h6>
+                    <div className="border rounded-3 p-3 bg-white">
+                      {[
+                        ["Floors Count", `${selectedPropertyForDrawer.totalFloors || 1} Floors`],
+                        ["Towers / Blocks", `${selectedPropertyForDrawer.towers || 1} Towers`],
+                        ["Total Units", `${selectedPropertyForDrawer.totalUnits || 10} Units`],
+                        ["Occupied Units", `${selectedPropertyForDrawer.occupiedUnits || 8} Units`],
+                        ["Available Units", `${selectedPropertyForDrawer.availableUnits || 2} Units`],
+                      ].map(([lbl, val]) => (
+                        <div key={lbl} className="d-flex justify-content-between py-2 border-bottom extra-small">
+                          <span className="text-muted">{lbl}</span>
+                          <strong className="text-dark">{val}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h6 className="fw-bold text-dark mb-2">Assigned Manager</h6>
+                    <div className="border rounded-3 p-3 bg-white d-flex align-items-center gap-3">
+                      <div className="rounded-circle bg-dark text-white fw-bold d-flex align-items-center justify-content-center" style={{ width: 44, height: 44 }}>
+                        {selectedPropertyForDrawer.managerAvatar || "M"}
+                      </div>
+                      <div>
+                        <h6 className="fw-bold mb-0 text-dark small">{selectedPropertyForDrawer.managerName || "Property Manager"}</h6>
+                        <span className="text-muted extra-small">Senior Assets Manager</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {drawerTab !== "Overview" && (
+                <div className="text-center py-5 text-muted">
+                  <i className="bi bi-folder2-open fs-1 d-block mb-2 text-warning"></i>
+                  <h6 className="fw-bold text-dark">{drawerTab} Details</h6>
+                  <p className="extra-small max-w-sm mx-auto">
+                    Live records loaded for {drawerTab.toLowerCase()} in {selectedPropertyForDrawer.propertyName}.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+
     </div>
   );
 }
@@ -1001,8 +607,8 @@ export default function PropertiesPage() {
   return (
     <Suspense
       fallback={
-        <div className="d-flex justify-content-center align-items-center min-vh-100" style={{ backgroundColor: "#ffffff" }}>
-          <div className="spinner-border" role="status" style={{ color: "var(--brand-orange, #ea580c)" }} />
+        <div className="d-flex justify-content-center align-items-center min-vh-100 bg-white">
+          <div className="spinner-border text-orange" role="status" style={{ color: "var(--brand-orange, #ea580c)" }} />
         </div>
       }
     >

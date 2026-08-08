@@ -62,8 +62,8 @@ export default function Footer() {
                   </div>
                   <div className="d-flex align-items-center gap-2">
                     <i className="bi bi-envelope-fill text-orange" style={{ color: '#ea580c' }}></i>
-                    <a href="mailto:tungananaveen6@gmail.com" className="text-white text-decoration-none hover-orange">
-                      tungananaveen6@gmail.com
+                    <a href="mailto:sales.anvaya360@gmail.com" className="text-white text-decoration-none hover-orange">
+                      sales.anvaya360@gmail.com
                     </a>
                   </div>
                   <div className="d-flex align-items-center gap-2">

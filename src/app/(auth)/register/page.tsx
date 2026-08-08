@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api } from "@/utils/api";
+import { api, setStoredToken, setStoredUser } from "@/utils/api";
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -80,10 +80,10 @@ export default function RegisterPage() {
         otp: otp.trim()
       });
 
-      if (response.success) {
-        if (response.token) {
-          localStorage.setItem('token', response.token);
-          localStorage.setItem('user', JSON.stringify(response.user));
+      if (response && response.success) {
+        if (response.token && response.user) {
+          setStoredToken(response.token);
+          setStoredUser(response.user);
           router.replace('/admin/dashboard');
         } else {
           alert("Account provisioned successfully.");
@@ -100,20 +100,20 @@ export default function RegisterPage() {
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center p-2 p-sm-3 p-lg-4"
       style={{ backgroundColor: "#f1f5f9", fontFamily: "var(--font-manrope, 'Manrope', system-ui, sans-serif)" }}>
-      
+
       {/* Payoneer Style Floating Split Card — Responsive across Mobile, Tablet, Laptop & Desktop */}
-      <div 
+      <div
         className="w-100 bg-white shadow-lg overflow-hidden row g-0 position-relative border border-secondary border-opacity-10"
         style={{ maxWidth: 1040, minHeight: 560, borderRadius: 28, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
       >
 
         {/* Left Panel: Dark Elegant Brand & Hero Preview (Visible on Large Screens) */}
-        <div 
+        <div
           className="col-lg-6 d-none d-lg-flex flex-column justify-content-between p-4 p-xl-5 text-white position-relative overflow-hidden"
           style={{ background: '#1c1917' }}
         >
           {/* Subtle Glow Orb */}
-          <div 
+          <div
             className="position-absolute top-0 end-0 translate-middle-y rounded-circle pointer-events-none opacity-25"
             style={{
               width: 350,
@@ -139,9 +139,9 @@ export default function RegisterPage() {
 
             {/* Mobile / App Platform Preview */}
             <div className="d-flex justify-content-center mt-3 position-relative">
-              <img 
-                src="/hero-right.png" 
-                alt="ANVAYA360 Platform" 
+              <img
+                src="/hero-right.png"
+                alt="ANVAYA360 Platform"
                 className="img-fluid rounded-4 shadow-lg border border-secondary border-opacity-25"
                 style={{ maxWidth: '88%', maxHeight: 260, objectFit: 'cover', transform: 'rotate(-2deg)' }}
               />
@@ -157,13 +157,13 @@ export default function RegisterPage() {
 
         {/* Right Panel: White Clean Register Form */}
         <div className="col-lg-6 col-12 bg-white p-4 p-sm-5 d-flex flex-column justify-content-between">
-          
+
           {/* Right Header: Logo & Sign In Link */}
           <div className="d-flex align-items-center justify-content-between mb-4 pb-2">
             <Link href="/" className="d-flex align-items-center text-decoration-none">
-              <img 
-                src="/brand-logo.png" 
-                alt="ANVAYA360" 
+              <img
+                src="/brand-logo.png"
+                alt="ANVAYA360"
                 style={{ height: 46 }}
                 className="w-auto object-fit-contain"
               />
@@ -187,7 +187,7 @@ export default function RegisterPage() {
 
           {/* Form Content Container */}
           <div className="py-2 my-auto" style={{ maxWidth: 380, width: '100%', margin: '0 auto' }}>
-            
+
             {step === 1 ? (
               <>
                 <h2 style={{ fontSize: '2rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }} className="mb-1">
@@ -198,7 +198,7 @@ export default function RegisterPage() {
                 </p>
 
                 <form onSubmit={handleSendOtp}>
-                  
+
                   {/* Full Name */}
                   <div className="mb-3">
                     <input

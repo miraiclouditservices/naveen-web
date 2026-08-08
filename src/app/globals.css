@@ -4,21 +4,33 @@
 @import '../styles/marketing.css';
 
 :root {
+  /* --- BRAND ORANGE SYSTEM --- */
+  --brand-orange: #ea580c;
+  --brand-orange-light: #f97316;
+  --brand-orange-hover: #c2410c;
+  --brand-bg: #fff7ed;
+  --brand-border: #fed7aa;
+  --page-bg: #f8fafc;
+  --card-bg: #ffffff;
+  --dark-heading: #0f172a;
+  --text-body: #475569;
+  --text-light: #94a3b8;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --danger: #dc2626;
+  --info: #2563eb;
+  --border: #e2e8f0;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(15,23,42,.05);
+
   /* --- BRAND PALETTE --- */
-  --bg-app: #F9F7F3;
-  /* Main page background (cream) */
+  --bg-app: #f8fafc;
   --bg-card: #ffffff;
-  /* Card background */
-  --dark-section: #040404;
-  /* Footer / Dark sections */
-  --text-main: #000000;
-  /* Main heading text */
-  --text-primary: #202020;
-  /* Primary text */
-  --text-muted: #787878;
-  /* Secondary text */
-  --border-color: #E8E6E3;
-  /* Border color */
+  --dark-section: #0f172a;
+  --text-main: #0f172a;
+  --text-primary: #0f172a;
+  --text-muted: #64748b;
+  --border-color: #e2e8f0;
 
   /* Shadows (Enterprise Standard) */
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
@@ -39,13 +51,13 @@
 
   /* Border Radius */
   --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
   --radius-full: 9999px;
 
   /* Bootstrap Overrides */
-  --bs-body-bg: var(--bg-app);
-  --bs-body-color: var(--text-main);
+  --bs-body-bg: var(--page-bg);
+  --bs-body-color: var(--dark-heading);
   --bs-font-sans-serif: 'Manrope', system-ui, -apple-system, sans-serif;
 }
 

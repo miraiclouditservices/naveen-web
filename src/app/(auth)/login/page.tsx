@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api } from "@/utils/api";
+import { api, setStoredToken, setStoredUser } from "@/utils/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -11,14 +11,24 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: "error" | "success" } | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 4000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!email || !password) {
-      setError("Please enter your email and password.");
+      const errMsg = "Please enter your email/username and password.";
+      setError(errMsg);
+      setToast({ message: errMsg, type: "error" });
       return;
     }
 
@@ -26,19 +36,29 @@ export default function LoginPage() {
 
     try {
       const response = await api.post('/auth/login', {
-        email,
+        email: email.trim(),
         password
       });
 
-      if (response && response.success) {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        router.replace('/admin/dashboard');
+      if (response && response.success && response.token && response.user) {
+        setStoredToken(response.token);
+        setStoredUser(response.user);
+        setToast({ message: "Login successful! Redirecting...", type: "success" });
+        setTimeout(() => {
+          router.replace('/admin/dashboard');
+        }, 400);
       } else if (response && response.error) {
         setError(response.error);
+        setToast({ message: response.error, type: "error" });
+      } else {
+        const errMsg = response?.message || "Invalid credentials. Please try again.";
+        setError(errMsg);
+        setToast({ message: errMsg, type: "error" });
       }
     } catch (err: any) {
-      setError(err.message || "Invalid credentials. Please try again.");
+      const errMsg = err.message || "Invalid credentials. Please try again.";
+      setError(errMsg);
+      setToast({ message: errMsg, type: "error" });
     } finally {
       setIsLoading(false);
     }
@@ -46,6 +66,65 @@ export default function LoginPage() {
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center p-2 p-sm-3 p-lg-4" style={{ backgroundColor: "#f1f5f9", fontFamily: "system-ui, -apple-system, sans-serif" }}>
+
+      {/* Floating Toast Notification SMS Banner */}
+      {toast && (
+        <div
+          className="position-fixed top-0 end-0 p-3 p-md-4"
+          style={{
+            zIndex: 9999,
+            animation: "toastSlideIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)"
+          }}
+        >
+          <style>{`
+            @keyframes toastSlideIn {
+              from { transform: translateY(-16px) scale(0.96); opacity: 0; }
+              to { transform: translateY(0) scale(1); opacity: 1; }
+            }
+          `}</style>
+          <div
+            className="bg-white border rounded-4 shadow-lg p-3 d-flex align-items-center justify-content-between gap-3"
+            style={{
+              minWidth: 320,
+              maxWidth: 420,
+              borderColor: toast.type === "error" ? "#fecaca" : "#bbf7d0",
+              borderLeft: `4px solid ${toast.type === "error" ? "#dc2626" : "#16a34a"}`,
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.05)"
+            }}
+          >
+            <div className="d-flex align-items-center gap-3" style={{ minWidth: 0 }}>
+              <div
+                className="d-flex align-items-center justify-content-center flex-shrink-0 rounded-3"
+                style={{
+                  width: 38,
+                  height: 38,
+                  backgroundColor: toast.type === "error" ? "#fef2f2" : "#f0fdf4",
+                  color: toast.type === "error" ? "#dc2626" : "#16a34a"
+                }}
+              >
+                <i className={`bi ${toast.type === "error" ? "bi-exclamation-triangle-fill" : "bi-check-circle-fill"}`} style={{ fontSize: "1.15rem" }}></i>
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <div className="fw-bold text-dark text-truncate" style={{ fontSize: "0.88rem", lineHeight: 1.25 }}>
+                  {toast.type === "error" ? "Authentication Error" : "Success"}
+                </div>
+                <div className="text-secondary text-truncate" style={{ fontSize: "0.8rem", marginTop: 2, lineHeight: 1.3 }}>
+                  {toast.message}
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-sm p-1 border-0 text-muted shadow-none flex-shrink-0 d-flex align-items-center justify-content-center"
+              onClick={() => setToast(null)}
+              style={{ width: 24, height: 24, fontSize: "0.85rem", lineHeight: 1 }}
+            >
+              <i className="bi bi-x-lg"></i>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Payoneer Style Floating Split Card — Responsive across Mobile, Tablet, Laptop & Desktop */}
       <div
@@ -143,10 +222,10 @@ export default function LoginPage() {
 
             <form onSubmit={handleLogin}>
 
-              {/* Email Field */}
+              {/* Email / Username Field */}
               <div className="mb-3">
                 <input
-                  type="email"
+                  type="text"
                   className="form-control px-4 shadow-none"
                   placeholder="Email or Username"
                   value={email}
@@ -171,7 +250,7 @@ export default function LoginPage() {
                     className="form-control px-4 shadow-none"
                     placeholder="Password"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    onChange={(e) => setPassword(e.target.value)}
                     style={{
                       height: 48,
                       fontSize: '0.9rem',
@@ -181,7 +260,6 @@ export default function LoginPage() {
                       border: '1.5px solid #e2e8f0',
                       color: 'var(--text-primary)'
                     }}
-                    maxLength={6}
                     required
                   />
                   <i
@@ -198,14 +276,6 @@ export default function LoginPage() {
                   Forgot password?
                 </a>
               </div>
-
-              {/* Error Message */}
-              {error && (
-                <div className="alert alert-danger py-2 px-3 extra-small rounded-3 mb-3 border-0 bg-danger bg-opacity-10 text-danger d-flex align-items-center">
-                  <i className="bi bi-exclamation-circle-fill me-2"></i>
-                  {error}
-                </div>
-              )}
 
               {/* Sign In Button */}
               <button
@@ -248,3 +318,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

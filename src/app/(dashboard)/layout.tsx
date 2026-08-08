@@ -10,13 +10,14 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const hideSidebar = pathname === "/admin/users/create" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/")) || pathname?.includes("/print") || pathname?.startsWith("/me");
+  const isPropertyDetailPage = pathname?.startsWith("/admin/properties/") && pathname !== "/admin/properties/add";
+  const hideSidebar = isPropertyDetailPage || pathname === "/admin/users/create" || pathname === "/admin/properties/add" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/")) || pathname?.includes("/print") || pathname?.startsWith("/me");
 
   return (
     <div className="d-flex" style={{ backgroundColor: 'var(--color-bg-dashboard)', minHeight: '100vh', fontFamily: 'var(--font-geist-sans)' }}>
       {/* Fixed Sidebar */}
       {!hideSidebar && <Sidebar />}
-      
+
       {/* Main Content Area */}
       <div className="flex-grow-1" style={{ marginLeft: hideSidebar ? '0px' : '220px', transition: 'margin-left 0.3s ease', minWidth: 0 }}>
         {!hideSidebar && <Header />}

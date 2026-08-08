@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 
@@ -81,9 +81,9 @@ export default function Contact() {
                   <i className="bi bi-envelope-fill fs-5"></i>
                 </div>
                 <div>
-                  <span className="extra-small text-muted fw-bold text-uppercase d-block mb-0.5">24/7 Technical Ticket Email</span>
-                  <a href="mailto:tungananaveen6@gmail.com" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange text-break">
-                    tungananaveen6@gmail.com
+                  <span className="extra-small text-muted fw-bold text-uppercase d-block mb-0.5">24/7 Support & Sales Email</span>
+                  <a href="mailto:sales.anvaya360@gmail.com" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange text-break">
+                    sales.anvaya360@gmail.com
                   </a>
                   <span className="extra-small text-muted d-block mt-0.5">Priority Response SLA within 15 mins</span>
                 </div>

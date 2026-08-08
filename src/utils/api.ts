@@ -1,60 +1,165 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://naveen-backend-s71y.onrender.com/api';
+const DEFAULT_REMOTE = 'https://naveen-backend-s71y.onrender.com/api';
+const DEFAULT_LOCAL = 'http://localhost:5001/api';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || DEFAULT_LOCAL;
+
+const inflightGetRequests = new Map<string, Promise<any>>();
+
+export const getStoredToken = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const token = localStorage.getItem('token');
+        if (!token || token === 'undefined' || token === 'null') {
+            if (token === 'undefined' || token === 'null') {
+                localStorage.removeItem('token');
+            }
+            return null;
+        }
+        return token;
+    } catch {
+        return null;
+    }
+};
+
+export const setStoredToken = (token: string | null | undefined): void => {
+    if (typeof window === 'undefined') return;
+    if (token && token !== 'undefined' && token !== 'null') {
+        localStorage.setItem('token', token);
+    } else {
+        localStorage.removeItem('token');
+    }
+};
+
+export const getStoredUser = (): any | null => {
+    if (typeof window === 'undefined') return null;
+    try {
+        const stored = localStorage.getItem('user');
+        if (!stored || stored === 'undefined' || stored === 'null') {
+            if (stored === 'undefined' || stored === 'null') {
+                localStorage.removeItem('user');
+            }
+            return null;
+        }
+        const parsed = JSON.parse(stored);
+        if (parsed && typeof parsed === 'object') {
+            return parsed;
+        }
+        localStorage.removeItem('user');
+        return null;
+    } catch {
+        localStorage.removeItem('user');
+        return null;
+    }
+};
+
+export const setStoredUser = (user: any): void => {
+    if (typeof window === 'undefined') return;
+    if (user && typeof user === 'object') {
+        localStorage.setItem('user', JSON.stringify(user));
+    } else {
+        localStorage.removeItem('user');
+    }
+};
+
+export const clearStoredAuth = (): void => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+};
 
 export const fetchApi = async (endpoint: string, options: any = {}) => {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const method = (options.method || 'GET').toUpperCase();
+    const cacheKey = `${method}:${endpoint}`;
 
-    const headers = {
-        'Content-Type': 'application/json',
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers,
-    };
+    // Deduplicate concurrent GET requests
+    if (method === 'GET' && inflightGetRequests.has(cacheKey)) {
+        return inflightGetRequests.get(cacheKey);
+    }
 
-    try {
-        const response = await fetch(`${API_URL}${endpoint}`, {
-            ...options,
-            headers,
-        });
+    const executeRequest = async () => {
+        const token = getStoredToken();
 
-        let data: any = {};
+        const headers = {
+            'Content-Type': 'application/json',
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            ...options.headers,
+        };
+
+        const tryFetch = async (baseUrl: string) => {
+            const response = await fetch(`${baseUrl}${endpoint}`, {
+                ...options,
+                headers,
+            });
+
+            let data: any = {};
+            try {
+                data = await response.json();
+            } catch (jsonErr) {
+                data = {};
+            }
+
+            if (!response.ok) {
+                if (response.status === 401 && typeof window !== 'undefined') {
+                    const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
+                    if (!isAuthEndpoint) {
+                        clearStoredAuth();
+                        window.location.href = '/login';
+                    }
+                }
+                const error = new Error(data.error || data.message || `Request failed with status ${response.status}`) as any;
+                error.status = response.status;
+                error.requiresVerification = data.requiresVerification;
+                error.email = data.email;
+                throw error;
+            }
+
+            return data;
+        };
+
         try {
-            data = await response.json();
-        } catch (jsonErr) {
-            data = {};
-        }
+            return await tryFetch(API_URL);
+        } catch (error: any) {
+            // If HTTP status exists (e.g. 400, 401, 404, 500), throw directly
+            if (error.status) {
+                throw error;
+            }
 
-        if (!response.ok) {
-            if (response.status === 401 && typeof window !== 'undefined') {
-                // Do not force redirect for login or register endpoints
-                const isAuthEndpoint = endpoint.includes('/auth/login') || endpoint.includes('/auth/register');
-                if (!isAuthEndpoint) {
-                    // Clear invalid token and user data
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    // Redirect to login page
-                    window.location.href = '/login';
+            // If primary URL failed to fetch (e.g. remote Render backend sleeping or offline), retry with local backend
+            if (API_URL !== DEFAULT_LOCAL) {
+                try {
+                    return await tryFetch(DEFAULT_LOCAL);
+                } catch (fallbackErr: any) {
+                    if (fallbackErr.status) throw fallbackErr;
                 }
             }
-            const error = new Error(data.error || data.message || `Request failed with status ${response.status}`) as any;
-            error.status = response.status;
-            error.requiresVerification = data.requiresVerification;
-            error.email = data.email;
-            throw error;
-        }
 
-        return data;
-    } catch (error: any) {
-        // If it's an HTTP error response thrown from above, re-throw it
-        if (error.status) {
-            throw error;
+            // Handle network failure gracefully
+            console.warn(`API Network Connection Failed [${endpoint}]`);
+
+            const isAuthEndpoint = endpoint.includes('/auth/');
+            if (isAuthEndpoint) {
+                throw new Error('Unable to connect to server. Please check backend connection.');
+            }
+
+            return {
+                success: false,
+                offlineFallback: true,
+                data: null,
+                message: 'Server unreachable. Operation saved in offline mode.'
+            };
+        } finally {
+            if (method === 'GET') {
+                inflightGetRequests.delete(cacheKey);
+            }
         }
-        // Otherwise, it's a network-level fetch exception (e.g. Failed to fetch)
-        console.error(`API Network Failure [${endpoint}]:`, error);
-        throw new Error(
-            error.message === 'Failed to fetch' || !error.message
-                ? 'Server is currently unreachable. Please verify if the backend service is running.'
-                : error.message
-        );
+    };
+
+    const requestPromise = executeRequest();
+
+    if (method === 'GET') {
+        inflightGetRequests.set(cacheKey, requestPromise);
     }
+
+    return requestPromise;
 };
 
 export const api = {

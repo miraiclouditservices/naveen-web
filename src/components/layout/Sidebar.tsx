@@ -1,43 +1,42 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useLayoutEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import styles from "@/styles/modules/Sidebar.module.css";
-import { api } from "@/utils/api";
+import { api, getStoredUser, setStoredUser } from "@/utils/api";
 
 export default function Sidebar() {
   const pathname = usePathname();
+
+  // useState(null) keeps SSR and client initial renders identical → no hydration mismatch.
+  // useLayoutEffect runs synchronously before the browser paints on the client,
+  // so the menu items appear immediately without a visible flash.
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   const [isCRMOpen, setIsCRMOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(true);
   const [activeCRMTab, setActiveCRMTab] = useState("dashboard");
 
+  // Sync user from localStorage before first paint (client only)
+  useLayoutEffect(() => {
+    const stored = getStoredUser();
+    if (stored) setUser(stored);
+  }, []);
+
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const storedUser = localStorage.getItem("user");
-      if (storedUser) {
-        try {
-          setUser(JSON.parse(storedUser));
-        } catch (e) {
-          console.error("Failed to parse user from localStorage", e);
+    // Fetch fresh profile from server and keep localStorage in sync
+    const fetchFreshProfile = async () => {
+      try {
+        const res = await api.get('/auth/profile');
+        if (res && res.success && res.user) {
+          setStoredUser(res.user);
+          setUser(res.user);
         }
+      } catch (err) {
+        // Quietly handle network or profile sync errors
       }
-
-      const fetchFreshProfile = async () => {
-        try {
-          const res = await api.get('/auth/profile');
-          if (res.success && res.user) {
-            localStorage.setItem('user', JSON.stringify(res.user));
-            setUser(res.user);
-          }
-        } catch (err) {
-          console.error("Failed to sync sidebar profile:", err);
-        }
-      };
-
-      fetchFreshProfile();
-    }
+    };
+    fetchFreshProfile();
   }, []);
 
   // Sync active CRM tab from URL parameters

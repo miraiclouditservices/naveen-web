@@ -39,6 +39,17 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
     }
   }, [floorId]);
 
+  const handleStatusChange = async (newStatus: string) => {
+    try {
+      const r = await api.patch(`/floors/${floorId}/status`, { status: newStatus });
+      if (r.success) {
+        setFloor((prev: any) => ({ ...prev, status: newStatus }));
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   const handleSave = async (data: any) => {
     try {
       const r = await api.put(`/floors/${floorId}`, data);
@@ -113,12 +124,37 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
                 src="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=600&auto=format&fit=crop"
                 alt="Floor View" className="w-100 h-100" style={{ objectFit: "cover" }}
               />
-              <div
-                className="position-absolute bg-white px-3 py-1 shadow-sm d-flex align-items-center gap-2"
-                style={{ bottom: 12, right: 12, borderRadius: 20, fontSize: "0.72rem", fontWeight: 700 }}
-              >
-                <span style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: floor.status === "Active" ? "#10b981" : "#f59e0b", display: "inline-block" }}></span>
-                <span className="text-dark">{floor.status || "Active"}</span>
+              <div className="position-absolute dropdown" style={{ bottom: 12, right: 12 }}>
+                <span
+                  className="bg-white px-3 py-1 shadow-sm d-flex align-items-center gap-2 cursor-pointer dropdown-toggle"
+                  data-bs-toggle="dropdown"
+                  aria-expanded="false"
+                  style={{ borderRadius: 20, fontSize: "0.72rem", fontWeight: 700, userSelect: "none" }}
+                >
+                  <span
+                    style={{
+                      width: 8,
+                      height: 8,
+                      borderRadius: "50%",
+                      backgroundColor: floor.status === "Active" ? "#10b981" : floor.status === "Maintenance" ? "#f59e0b" : "#ef4444",
+                      display: "inline-block"
+                    }}
+                  />
+                  <span className="text-dark">{floor.status || "Active"}</span>
+                </span>
+                <ul className="dropdown-menu dropdown-menu-end shadow-sm border-0 rounded-3 p-1" style={{ fontSize: "0.8rem", minWidth: "130px" }}>
+                  {["Active", "Maintenance", "Inactive"].map((st) => (
+                    <li key={st}>
+                      <button
+                        type="button"
+                        className="dropdown-item py-1.5 px-3 rounded fw-semibold"
+                        onClick={() => handleStatusChange(st)}
+                      >
+                        {st}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
 

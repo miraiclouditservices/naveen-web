@@ -30,6 +30,7 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
     property: "",
     floorNumber: "",
     floorName: "",
+    floorType: "Commercial",
     totalSft: "",
     status: "Active"
   });
@@ -48,11 +49,12 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
         property: editData.property?._id || editData.property || "",
         floorNumber: editData.floorNumber || "",
         floorName: editData.floorName || "",
+        floorType: editData.floorType || "Commercial",
         totalSft: editData.totalSft || "",
         status: editData.status || "Active"
       });
     } else {
-      setFormData({ property: "", floorNumber: "", floorName: "", totalSft: "", status: "Active" });
+      setFormData({ property: "", floorNumber: "", floorName: "", floorType: "Commercial", totalSft: "", status: "Active" });
     }
   }, [editData, isOpen]);
 
@@ -199,6 +201,16 @@ export default function FloorModal({ isOpen, onClose, onSave, editData }: any) {
                   )}
                 </div>
                 
+                <div className="col-md-6">
+                  <label style={LABEL_STYLE}>Floor Type</label>
+                  <select name="floorType" value={formData.floorType} onChange={handleChange} style={FIELD_STYLE}>
+                    <option value="Commercial">Commercial</option>
+                    <option value="Residential">Residential</option>
+                    <option value="Retail">Retail</option>
+                    <option value="Parking">Parking</option>
+                  </select>
+                </div>
+
                 <div className="col-md-6">
                   <label style={LABEL_STYLE}>Status</label>
                   <select name="status" value={formData.status} onChange={handleChange} style={FIELD_STYLE}>

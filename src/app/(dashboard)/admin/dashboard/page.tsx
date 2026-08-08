@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 import { useState, useEffect, Suspense, lazy } from "react";
 import Link from "next/link";
-import { api } from "@/utils/api";
+import { api, getStoredUser } from "@/utils/api";
 
 // ── Lazy-loaded role dashboards ───────────────────────────────────────────────
 const FloorAdminDash = lazy(() => import("@/components/dashboard/FloorAdminDashboard"));
@@ -143,7 +143,8 @@ export default function DashboardPage() {
   const [selectedStatus, setSelectedStatus] = useState("All");
 
   useEffect(() => {
-    try { setUser(JSON.parse(localStorage.getItem("user") || "{}")); } catch { }
+    const u = getStoredUser();
+    if (u) setUser(u);
 
     // Fetch properties
     api.get("/properties").then(res => {
