@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, Suspense, useRef, useCallback, useMemo } from "react";
 import { api, getStoredUser } from "@/utils/api";
+import PropertyModal from "@/components/dashboard/PropertyModal";
 
 // ── Types ───────────────────────────────────────────────────────────────────
 interface PropertyItem {
@@ -135,6 +136,22 @@ function PropertiesContent() {
   const [selectedPropertyForDrawer, setSelectedPropertyForDrawer] = useState<PropertyItem | null>(null);
   const [drawerTab, setDrawerTab] = useState<string>("Overview");
   const [selectedPropertyIds, setSelectedPropertyIds] = useState<string[]>([]);
+  const [isPropertyModalOpen, setIsPropertyModalOpen] = useState(false);
+
+  const handleSaveProperty = async (newProp: any) => {
+    const res = await api.post("/properties", newProp);
+    if (res && res.success) {
+      setIsLoading(true);
+      const updatedList = await api.get("/properties").catch(() => null);
+      if (updatedList && updatedList.success) {
+        setAllProperties(updatedList.data || []);
+        setProperties(updatedList.data || []);
+      }
+      setIsLoading(false);
+    } else {
+      throw new Error(res?.error || "Failed to create property.");
+    }
+  };
 
   // Search & Filter Controls
   const [searchQuery, setSearchQuery] = useState("");
@@ -267,65 +284,141 @@ function PropertiesContent() {
     setCurrentPage(1);
   };
 
-  const isAdmin = !user || ["Admin", "SUPER_ADMIN", "Super Admin"].includes(user.role || "");
+  const isUltraSuperAdmin = user?.role === "ULTRA_SUPER_ADMIN" || user?.role === "Ultra Super Admin";
+  const canCreateProperty = isUltraSuperAdmin;
 
   return (
-    <div className="p-0 d-flex flex-column gap-3 min-vh-100" style={{ backgroundColor: "var(--page-bg, #f8fafc)" }}>
+    <div className="px-4 d-flex flex-column gap-3 min-vh-100" style={{ backgroundColor: "var(--background, #F9F7F3)" }}>
       {/* ── 1. Sticky Search & Filter Toolbar ────────────────────────────────────── */}
       <div
-        className="card border p-3 rounded-3 mb-1 sticky-top"
+        className="card border p-2 rounded-3 mb-1 sticky-top shadow-none"
         style={{
-          top: 0,
+          top: "50px",
           zIndex: 100,
-          backgroundColor: "#ffffff",
-          borderColor: "var(--border, #e2e8f0)",
-          boxShadow: "0 4px 12px rgba(15, 23, 42, 0.08)"
+          backgroundColor: "var(--surface, #ffffff)",
+          borderColor: "var(--border, #E8E6E3)",
+          boxShadow: "none"
         }}
       >
         <div className="d-flex flex-wrap align-items-center justify-content-between gap-3">
-          {/* Left: Search Bar */}
-          <div className="d-flex align-items-center gap-2 flex-grow-1" style={{ maxWidth: "600px" }}>
-            <div className="position-relative flex-grow-1">
+          {/* Left: Properties Page Title */}
+          <div className="d-flex align-items-center gap-2">
+            <h5 className="fw-semibold mb-0 text-dark" style={{ fontSize: "1rem", letterSpacing: "-0.01em", color: "var(--text-primary, #000000)" }}>
+              Properties
+            </h5>
+          </div>
+
+          {/* Right: Search Bar, Sort & Add Property Button */}
+          <div className="d-flex align-items-center gap-2 ms-auto flex-wrap">
+            {/* Search Bar */}
+            <div className="position-relative" style={{ width: "320px" }}>
               <i className="bi bi-search position-absolute top-50 translate-middle-y ms-3 text-muted" style={{ fontSize: "0.85rem" }}></i>
               <input
                 type="text"
                 placeholder="Search by property name, code, city, type..."
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                className="form-control form-control-sm ps-5 border"
-                style={{ height: 38, borderRadius: "var(--radius, 10px)", fontSize: "0.85rem" }}
+                className="form-control form-control-sm ps-5 border shadow-none"
+                style={{
+                  height: 38,
+                  borderRadius: "var(--radius, 10px)",
+                  fontSize: "0.85rem",
+                  borderColor: "var(--border, #E8E6E3)",
+                  backgroundColor: "var(--surface, #ffffff)"
+                }}
               />
               {searchQuery && (
-                <button className="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted text-decoration-none" onClick={() => handleSearchChange("")}>×</button>
+                <button
+                  className="btn btn-link p-0 position-absolute end-0 top-50 translate-middle-y me-3 text-muted text-decoration-none"
+                  onClick={() => handleSearchChange("")}
+                >
+                  ×
+                </button>
               )}
             </div>
-          </div>
 
-          {/* Right: Sort & Add Property Button */}
-          <div className="d-flex align-items-center gap-2">
-            <select
-              className="form-select form-select-sm border fw-semibold text-dark shadow-xs"
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              style={{ width: "175px", height: 38, borderRadius: "10px", fontSize: "0.83rem", borderColor: "#e2e8f0" }}
-            >
-              <option value="newest">Sort: Newest First</option>
-              <option value="oldest">Sort: Oldest First</option>
-              <option value="name-asc">Sort: Name (A-Z)</option>
-              <option value="name-desc">Sort: Name (Z-A)</option>
-              <option value="revenue-desc">Sort: Revenue (High-Low)</option>
-              <option value="occupancy-desc">Sort: Occupancy (High-Low)</option>
-            </select>
+            {/* Modern Custom Sort Dropdown */}
+            <div className="dropdown">
+              <button
+                className="btn border d-flex align-items-center justify-content-between px-3 shadow-none text-dark fw-semibold"
+                type="button"
+                data-bs-toggle="dropdown"
+                aria-expanded="false"
+                style={{
+                  width: "185px",
+                  height: 38,
+                  borderRadius: "10px",
+                  fontSize: "0.83rem",
+                  borderColor: "var(--border, #E8E6E3)",
+                  backgroundColor: "var(--surface, #ffffff)"
+                }}
+              >
+                <span>
+                  {sortOption === "oldest" ? "Sort: Oldest First"
+                    : sortOption === "name-asc" ? "Sort: Name (A-Z)"
+                      : sortOption === "name-desc" ? "Sort: Name (Z-A)"
+                        : sortOption === "revenue-desc" ? "Sort: Revenue (High-Low)"
+                          : sortOption === "occupancy-desc" ? "Sort: Occupancy (High-Low)"
+                            : "Sort: Newest First"}
+                </span>
+                <i className="bi bi-chevron-down ms-1" style={{ fontSize: "0.75rem", color: "var(--text-secondary)" }}></i>
+              </button>
 
-            {isAdmin && (
-              <Link
-                href="/admin/properties/add"
-                className="btn btn-orange-primary shadow-sm fw-bold px-3 d-flex align-items-center gap-1.5 text-decoration-none"
-                style={{ height: 38, borderRadius: "var(--radius, 10px)" }}
+              <ul
+                className="dropdown-menu dropdown-menu-end border shadow-none p-1.5 rounded-3 mt-1.5"
+                style={{
+                  width: "185px",
+                  zIndex: 1060,
+                  backgroundColor: "var(--surface, #ffffff)",
+                  borderColor: "var(--border, #E8E6E3)",
+                  boxShadow: "none"
+                }}
+              >
+                {[
+                  { value: "newest", label: "Sort: Newest First" },
+                  { value: "oldest", label: "Sort: Oldest First" },
+                  { value: "name-asc", label: "Sort: Name (A-Z)" },
+                  { value: "name-desc", label: "Sort: Name (Z-A)" },
+                  { value: "revenue-desc", label: "Sort: Revenue (High-Low)" },
+                  { value: "occupancy-desc", label: "Sort: Occupancy (High-Low)" }
+                ].map((opt) => (
+                  <li key={opt.value}>
+                    <button
+                      className={`dropdown-item rounded-2 py-1.5 px-2.5 d-flex align-items-center justify-content-between ${sortOption === opt.value ? "fw-bold" : ""
+                        }`}
+                      style={{
+                        fontSize: "0.82rem",
+                        color: sortOption === opt.value ? "var(--text-primary)" : "var(--text-secondary)",
+                        backgroundColor: sortOption === opt.value ? "var(--muted, #F2F0EC)" : "transparent"
+                      }}
+                      onClick={() => setSortOption(opt.value)}
+                    >
+                      <span>{opt.label}</span>
+                      {sortOption === opt.value && (
+                        <i className="bi bi-check2 text-dark" style={{ fontSize: "0.85rem" }}></i>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Add Property Action Button (ULTRA_SUPER_ADMIN only) */}
+            {canCreateProperty && (
+              <button
+                onClick={() => setIsPropertyModalOpen(true)}
+                className="btn btn-dark shadow-none fw-bold px-3 d-flex align-items-center gap-1.5"
+                style={{
+                  height: 38,
+                  borderRadius: "var(--radius, 10px)",
+                  backgroundColor: "var(--button-primary, #040404)",
+                  color: "var(--button-text, #ffffff)",
+                  fontSize: "0.85rem"
+                }}
               >
                 <i className="bi bi-plus-lg me-1"></i>
                 <span>Add Property</span>
-              </Link>
+              </button>
             )}
           </div>
         </div>
@@ -369,7 +462,7 @@ function PropertiesContent() {
             <button className="btn btn-light border fw-bold text-dark px-4" onClick={handleResetFilters}>
               Reset Search
             </button>
-            {isAdmin && (
+            {canCreateProperty && (
               <Link href="/admin/properties/add" className="btn btn-orange-primary text-decoration-none">
                 + Add Property
               </Link>
@@ -598,6 +691,15 @@ function PropertiesContent() {
         </>
       )}
 
+
+      {/* Property Creation Modal (ULTRA_SUPER_ADMIN only) */}
+      {isPropertyModalOpen && (
+        <PropertyModal
+          isOpen={isPropertyModalOpen}
+          onClose={() => setIsPropertyModalOpen(false)}
+          onSave={handleSaveProperty}
+        />
+      )}
 
     </div>
   );

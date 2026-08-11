@@ -216,8 +216,9 @@ function BookingsContent() {
 
 
 
-  const isAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin' || currentUser?.role === 'FLOOR_ADMIN' || currentUser?.role === 'Floor Admin';
-  const isRoomAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'Admin' || currentUser?.role === 'Super Admin' || currentUser?.role === 'FLOOR_ADMIN' || currentUser?.role === 'Floor Admin';
+  const adminRoles = ["SUPER_ADMIN", "Super Admin", "ADMIN", "COWORKING_ADMIN", "FLOOR_ADMIN", "Floor Admin", "STAFF_ADMIN"];
+  const isAdmin = adminRoles.includes(currentUser?.role);
+  const isRoomAdmin = adminRoles.includes(currentUser?.role);
 
 
   // Bookings Table Columns

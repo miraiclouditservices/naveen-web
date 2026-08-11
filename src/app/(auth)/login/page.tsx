@@ -194,20 +194,11 @@ export default function LoginPage() {
               />
             </Link>
 
-            <Link
-              href="/register"
-              className="text-decoration-none d-inline-flex align-items-center gap-2 fw-semibold"
-              style={{
-                fontSize: '0.8rem',
-                color: 'var(--text-primary)',
-                border: '1.5px solid var(--text-primary)',
-                borderRadius: 999,
-                padding: '6px 18px',
-                transition: 'all 0.2s'
-              }}
-            >
-              <i className="bi bi-person-plus" /> Sign Up
-            </Link>
+            <div className="d-flex align-items-center gap-2">
+              <span className="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em' }}>
+                <i className="bi bi-shield-lock-fill text-warning me-1" /> Enterprise SaaS Portal
+              </span>
+            </div>
           </div>
 
           {/* Form Content Container */}

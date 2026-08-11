@@ -114,32 +114,33 @@ export default function MeetingRoomFormModal({
   });
 
   const filteredUnits = units.filter(u => {
-    const floorId = u.floor?._id || u.floor || "";
-    return floorId === formData.floor;
+    if (!formData.property) return true;
+    const propId = u.property?._id || u.property || u.floor?.property?._id || u.floor?.property || "";
+    return !propId || propId === formData.property;
   });
 
   const handleUnitChange = (unitId: string) => {
     const selectedUnit = units.find(u => u._id === unitId);
     if (selectedUnit) {
+      const uFloor = selectedUnit.floor?._id || selectedUnit.floor || "";
       setFormData({
         ...formData,
         unit: unitId,
-        sqft: selectedUnit.sqft || 0,
-        roomName: selectedUnit.unitName || `Room ${selectedUnit.unitNumber}`
+        floor: uFloor || formData.floor,
+        sqft: selectedUnit.sqft || formData.sqft || 150,
+        roomName: formData.roomName || selectedUnit.unitName || `Unit ${selectedUnit.unitNumber}`
       });
     } else {
       setFormData({
         ...formData,
-        unit: "",
-        sqft: 0,
-        roomName: ""
+        unit: ""
       });
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.property || !formData.floor || !formData.roomName || formData.sqft <= 0) {
+    if (!formData.property || !formData.roomName || formData.sqft <= 0) {
       setValidationError("Please fill out all required fields with valid values.");
       return;
     }
@@ -147,7 +148,8 @@ export default function MeetingRoomFormModal({
     setIsSubmitting(true);
     setValidationError(null);
     try {
-      await onSave(formData);
+      const targetFloor = formData.floor || filteredFloors[0]?._id || "";
+      await onSave({ ...formData, floor: targetFloor });
       onClose();
     } catch (err: any) {
       setValidationError(err.message || "Failed to save meeting room.");
@@ -284,14 +286,14 @@ export default function MeetingRoomFormModal({
                   )}
                 </div>
 
-                {/* Searchable Floor Selection */}
-                <div className="col-12 position-relative" ref={floorContainerRef}>
-                  <label className="form-label small fw-semibold text-dark mb-1">Select Floor Level *</label>
+                {/* Searchable Unit Mapping */}
+                <div className="col-12 position-relative" ref={unitContainerRef}>
+                  <label className="form-label small fw-semibold text-dark mb-1">Convert Floor Unit (Optional)</label>
                   <div
                     className={`form-control d-flex justify-content-between align-items-center ${!formData.property ? "bg-white text-muted" : "bg-white"}`}
                     onClick={() => {
                       if (formData.property) {
-                        setShowFloorDropdown(prev => !prev);
+                        setShowUnitDropdown(prev => !prev);
                       }
                     }}
                     style={{
@@ -303,107 +305,6 @@ export default function MeetingRoomFormModal({
                     <span>
                       {(() => {
                         if (!formData.property) return "Select Property first";
-                        const floorObj = filteredFloors.find(f => f._id === formData.floor);
-                        return floorObj ? (floorObj.floorName || `Floor ${floorObj.floorNumber}`) : "Select Floor...";
-                      })()}
-                    </span>
-                    <i className={`bi bi-chevron-${showFloorDropdown ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }} />
-                  </div>
-
-                  {showFloorDropdown && formData.property && (
-                    <div
-                      className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
-                      style={{
-                        top: "100%", left: 12, right: 12, zIndex: 1050,
-                        marginTop: "4px", maxHeight: "280px", display: "flex", flexDirection: "column"
-                      }}
-                    >
-                      <div className="position-relative mb-2">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm ps-3"
-                          placeholder="Search floor..."
-                          value={floorSearch}
-                          onChange={e => setFloorSearch(e.target.value)}
-                          style={{ fontSize: "0.8rem", height: "32px", paddingRight: "28px" }}
-                          autoFocus
-                        />
-                        {floorSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setFloorSearch("")}
-                            className="position-absolute border-0 bg-transparent text-muted"
-                            style={{ right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="overflow-auto flex-grow-1" style={{ maxHeight: "180px" }}>
-                        {(() => {
-                          const filtered = filteredFloors.filter(f =>
-                            (f.floorName || `Floor ${f.floorNumber}`).toLowerCase().includes(floorSearch.toLowerCase())
-                          );
-                          if (filtered.length === 0) {
-                            return <div className="text-muted text-center py-2 small">No matches found</div>;
-                          }
-                          return filtered.map(f => (
-                            <div
-                              key={f._id}
-                              onClick={() => {
-                                setFormData({ ...formData, floor: f._id, unit: "" });
-                                setShowFloorDropdown(false);
-                                setFloorSearch("");
-                              }}
-                              className="px-3 py-2 rounded-2 small"
-                              style={{
-                                cursor: "pointer",
-                                backgroundColor: formData.floor === f._id ? "var(--border-color)" : "transparent",
-                                color: formData.floor === f._id ? "var(--dark-section)" : "var(--text-primary)",
-                                fontWeight: formData.floor === f._id ? 600 : 400,
-                              }}
-                              onMouseEnter={e => {
-                                if (formData.floor !== f._id) {
-                                  e.currentTarget.style.backgroundColor = "var(--bg-app)";
-                                  e.currentTarget.style.color = "var(--text-main)";
-                                }
-                              }}
-                              onMouseLeave={e => {
-                                if (formData.floor !== f._id) {
-                                  e.currentTarget.style.backgroundColor = "transparent";
-                                  e.currentTarget.style.color = "var(--text-primary)";
-                                }
-                              }}
-                            >
-                              {f.floorName || `Floor ${f.floorNumber}`}
-                            </div>
-                          ));
-                        })()}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Searchable Unit Mapping */}
-                <div className="col-12 position-relative" ref={unitContainerRef}>
-                  <label className="form-label small fw-semibold text-dark mb-1">Convert Floor Unit (Optional)</label>
-                  <div
-                    className={`form-control d-flex justify-content-between align-items-center ${!formData.floor ? "bg-white text-muted" : "bg-white"}`}
-                    onClick={() => {
-                      if (formData.floor) {
-                        setShowUnitDropdown(prev => !prev);
-                      }
-                    }}
-                    style={{
-                      fontSize: "0.85rem", padding: "8px 12px",
-                      cursor: formData.floor ? "pointer" : "not-allowed",
-                      border: "1px solid #ced4da", borderRadius: "0.375rem", userSelect: "none"
-                    }}
-                  >
-                    <span>
-                      {(() => {
-                        if (!formData.floor) return "Select Floor level first";
                         const unitObj = filteredUnits.find(u => u._id === formData.unit);
                         return unitObj ? `${unitObj.unitNumber} ${unitObj.unitName ? `- ${unitObj.unitName}` : ""} (${unitObj.sqft} SFT)` : "-- Standalone Meeting Room (No Unit Link) --";
                       })()}
@@ -411,7 +312,7 @@ export default function MeetingRoomFormModal({
                     <i className={`bi bi-chevron-${showUnitDropdown ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }} />
                   </div>
 
-                  {showUnitDropdown && formData.floor && (
+                  {showUnitDropdown && formData.property && (
                     <div
                       className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
                       style={{

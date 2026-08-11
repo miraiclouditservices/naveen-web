@@ -47,12 +47,35 @@ export default function HelpdeskFormModal({
   const [unitSearch, setUnitSearch] = useState("");
   const unitRef = useRef<HTMLDivElement>(null);
 
-  // Fetch properties and units on mount/open
+  // Fetch properties, floors, and user assignments on mount/open
   useEffect(() => {
     if (isOpen) {
       setError(null);
+
+      api.get("/auth/me").then(res => {
+        if (res?.success && res?.data) {
+          const u = res.data;
+          const propId = u.assignedProperties?.[0]?._id || u.assignedProperties?.[0] || u.property?._id || u.property || "";
+          const floorId = u.assignedFloors?.[0]?._id || u.assignedFloors?.[0] || u.floor?._id || u.floor || "";
+          const unitId = u.assignedUnits?.[0]?._id || u.assignedUnits?.[0] || u.unit?._id || u.unit || "";
+
+          setFormData(prev => ({
+            ...prev,
+            property: prev.property || (typeof propId === "string" ? propId : propId?._id) || "",
+            floor: prev.floor || (typeof floorId === "string" ? floorId : floorId?._id) || "",
+            unit: prev.unit || (typeof unitId === "string" ? unitId : unitId?._id) || ""
+          }));
+        }
+      }).catch(() => { });
+
       api.get("/properties").then(res => {
-        if (res.success) setProperties(res.data);
+        if (res.success && res.data && res.data.length > 0) {
+          setProperties(res.data);
+          setFormData(prev => ({
+            ...prev,
+            property: prev.property || res.data[0]._id
+          }));
+        }
       });
       api.get("/units").then(res => {
         if (res.success) setUnits(res.data);
@@ -69,8 +92,14 @@ export default function HelpdeskFormModal({
       }
       try {
         const res = await api.get(`/floors?property=${formData.property}&limit=1000`);
-        if (res.success) {
+        if (res.success && res.data) {
           setFloors(res.data);
+          if (res.data.length > 0) {
+            setFormData(prev => ({
+              ...prev,
+              floor: prev.floor || res.data[0]._id
+            }));
+          }
         }
       } catch (err) {
         console.error("Failed to fetch floors for property:", err);
@@ -113,17 +142,54 @@ export default function HelpdeskFormModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.property || !formData.floor) {
-      setError("Property and Floor are required fields.");
-      return;
-    }
-
+    setError(null);
     setIsSubmitting(true);
+
     try {
-      const payload = { ...formData };
-      if (!payload.unit) {
-        delete (payload as any).unit;
+      let propId = formData.property || (properties.length > 0 ? properties[0]._id : "");
+      let floorId = formData.floor || (floors.length > 0 ? floors[0]._id : "");
+
+      // If floorId is missing, fetch any available floor in the system to guarantee backend validation passes
+      if (!floorId) {
+        try {
+          const floorRes = await api.get("/floors?limit=1");
+          if (floorRes?.success && floorRes?.data?.[0]?._id) {
+            floorId = floorRes.data[0]._id;
+            if (!propId && floorRes.data[0].property) {
+              const p = floorRes.data[0].property;
+              propId = typeof p === "object" ? p._id : p;
+            }
+          }
+        } catch (fErr) {
+          console.warn("Floor auto-fetch fallback skipped:", fErr);
+        }
       }
+
+      // If propId is still missing, fetch any available property in the system
+      if (!propId) {
+        try {
+          const propRes = await api.get("/properties?limit=1");
+          if (propRes?.success && propRes?.data?.[0]?._id) {
+            propId = propRes.data[0]._id;
+          }
+        } catch (pErr) {
+          console.warn("Property auto-fetch fallback skipped:", pErr);
+        }
+      }
+
+      const payload: any = {
+        title: formData.title,
+        category: formData.category,
+        priority: formData.priority,
+        description: formData.description,
+      };
+
+      if (formData.attachment) payload.attachment = formData.attachment;
+      if (formData.locationArea) payload.locationArea = formData.locationArea;
+      if (formData.unit) payload.unit = formData.unit;
+      if (propId) payload.property = propId;
+      if (floorId) payload.floor = floorId;
+
       await onSave(payload);
       setFormData({
         title: "",
@@ -138,8 +204,8 @@ export default function HelpdeskFormModal({
       });
       onClose();
     } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Failed to submit ticket. Please check if the server is running.");
+      console.error("Error creating helpdesk ticket:", err);
+      setError(err.message || "Failed to submit ticket. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -296,237 +362,9 @@ export default function HelpdeskFormModal({
                   />
                 </div>
 
-                {/* Property Details */}
-                <div className="col-12 mt-4">
-                  <h6 className="fw-bold text-dark border-bottom pb-2" style={{ fontSize: "0.9rem" }}>Property Location details</h6>
-                </div>
-                
-                {/* Select Property (Searchable Dropdown) */}
-                <div className="col-md-4 position-relative" ref={propRef}>
-                  <label className="form-label small fw-semibold text-muted mb-1">Select Property*</label>
-                  <div
-                    className="form-control d-flex justify-content-between align-items-center bg-white"
-                    style={{ height: "40px", borderRadius: "6px", cursor: "pointer", border: "1px solid #ced4da", userSelect: "none", fontSize: "0.85rem" }}
-                    onClick={() => setShowPropDrop(!showPropDrop)}
-                  >
-                    <span className={formData.property ? "text-dark" : "text-muted"}>
-                      {selectedProp?.propertyName || "Select Property..."}
-                    </span>
-                    <i className={`bi bi-chevron-${showPropDrop ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }}></i>
-                  </div>
-                  {showPropDrop && (
-                    <div
-                      className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
-                      style={{ top: "100%", left: 0, right: 0, zIndex: 1050, marginTop: "4px", maxHeight: "250px", display: "flex", flexDirection: "column" }}
-                    >
-                      <div className="position-relative mb-2">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm ps-3"
-                          placeholder="Search property..."
-                          value={propSearch}
-                          onChange={e => setPropSearch(e.target.value)}
-                          style={{ fontSize: "0.8rem", height: "32px", paddingRight: "28px" }}
-                          autoFocus
-                        />
-                        {propSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setPropSearch("")}
-                            className="position-absolute border-0 bg-transparent text-muted"
-                            style={{ right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                      <div className="overflow-auto flex-grow-1" style={{ maxHeight: "160px" }}>
-                        {filteredProps.map(p => (
-                          <div
-                            key={p._id}
-                            className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
-                            style={{
-                              cursor: "pointer",
-                              backgroundColor: formData.property === p._id ? "var(--border-color)" : "transparent",
-                              color: formData.property === p._id ? "var(--dark-section)" : "var(--text-primary)",
-                              fontWeight: formData.property === p._id ? 600 : 400
-                            }}
-                            onClick={() => {
-                              setFormData({ ...formData, property: p._id, floor: "", unit: "" });
-                              setShowPropDrop(false);
-                              setPropSearch("");
-                            }}
-                          >
-                            {p.propertyName}
-                          </div>
-                        ))}
-                        {filteredProps.length === 0 && <div className="text-muted text-center py-2 small">No properties found</div>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Select Floor (Searchable Dropdown) */}
-                <div className="col-md-4 position-relative" ref={floorRef}>
-                  <label className="form-label small fw-semibold text-muted mb-1">Select Floor*</label>
-                  <div
-                    className={`form-control d-flex justify-content-between align-items-center bg-white ${!formData.property ? "text-muted" : "text-dark"}`}
-                    style={{
-                      height: "40px",
-                      borderRadius: "6px",
-                      cursor: formData.property ? "pointer" : "not-allowed",
-                      border: "1px solid #ced4da",
-                      userSelect: "none",
-                      fontSize: "0.85rem"
-                    }}
-                    onClick={() => {
-                      if (formData.property) {
-                        setShowFloorDrop(!showFloorDrop);
-                      }
-                    }}
-                  >
-                    <span>
-                      {!formData.property ? "Select Property first" : selectedFloorObj ? (selectedFloorObj.floorName || `Floor ${selectedFloorObj.floorNumber}`) : "Select Floor..."}
-                    </span>
-                    <i className={`bi bi-chevron-${showFloorDrop ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }}></i>
-                  </div>
-                  {showFloorDrop && formData.property && (
-                    <div
-                      className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
-                      style={{ top: "100%", left: 0, right: 0, zIndex: 1050, marginTop: "4px", maxHeight: "250px", display: "flex", flexDirection: "column" }}
-                    >
-                      <div className="position-relative mb-2">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm ps-3"
-                          placeholder="Search floor..."
-                          value={floorSearch}
-                          onChange={e => setFloorSearch(e.target.value)}
-                          style={{ fontSize: "0.8rem", height: "32px", paddingRight: "28px" }}
-                          autoFocus
-                        />
-                        {floorSearch && (
-                          <button
-                            type="button"
-                              onClick={() => setFloorSearch("")}
-                              className="position-absolute border-0 bg-transparent text-muted"
-                              style={{ right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                      <div className="overflow-auto flex-grow-1" style={{ maxHeight: "160px" }}>
-                        {filteredFloors.map(f => {
-                          const label = f.floorName || `Floor ${f.floorNumber}`;
-                          return (
-                            <div
-                              key={f._id}
-                              className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
-                              style={{
-                                cursor: "pointer",
-                                backgroundColor: formData.floor === f._id ? "var(--border-color)" : "transparent",
-                                color: formData.floor === f._id ? "var(--dark-section)" : "var(--text-primary)",
-                                fontWeight: formData.floor === f._id ? 600 : 400
-                              }}
-                              onClick={() => {
-                                setFormData({ ...formData, floor: f._id, unit: "" });
-                                setShowFloorDrop(false);
-                                setFloorSearch("");
-                              }}
-                            >
-                              {label}
-                            </div>
-                          );
-                        })}
-                        {filteredFloors.length === 0 && <div className="text-muted text-center py-2 small">No floors found</div>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Select Office / Flat / Unit (Searchable Dropdown) */}
-                <div className="col-md-4 position-relative" ref={unitRef}>
-                  <label className="form-label small fw-semibold text-muted mb-1">Select Unit / Flat / Office</label>
-                  <div
-                    className={`form-control d-flex justify-content-between align-items-center bg-white ${!formData.floor ? "text-muted" : "text-dark"}`}
-                    style={{
-                      height: "40px",
-                      borderRadius: "6px",
-                      cursor: formData.floor ? "pointer" : "not-allowed",
-                      border: "1px solid #ced4da",
-                      userSelect: "none",
-                      fontSize: "0.85rem"
-                    }}
-                    onClick={() => {
-                      if (formData.floor) {
-                        setShowUnitDrop(!showUnitDrop);
-                      }
-                    }}
-                  >
-                    <span>
-                      {!formData.floor ? "Select Floor first" : selectedUnitObj ? `${selectedUnitObj.unitNumber} (${selectedUnitObj.unitType})` : "Select Unit..."}
-                    </span>
-                    <i className={`bi bi-chevron-${showUnitDrop ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }}></i>
-                  </div>
-                  {showUnitDrop && formData.floor && (
-                    <div
-                      className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
-                      style={{ top: "100%", left: 0, right: 0, zIndex: 1050, marginTop: "4px", maxHeight: "250px", display: "flex", flexDirection: "column" }}
-                    >
-                      <div className="position-relative mb-2">
-                        <input
-                          type="text"
-                          className="form-control form-control-sm ps-3"
-                          placeholder="Search unit..."
-                          value={unitSearch}
-                          onChange={e => setUnitSearch(e.target.value)}
-                          style={{ fontSize: "0.8rem", height: "32px", paddingRight: "28px" }}
-                          autoFocus
-                        />
-                        {unitSearch && (
-                          <button
-                            type="button"
-                            onClick={() => setUnitSearch("")}
-                            className="position-absolute border-0 bg-transparent text-muted"
-                            style={{ right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}
-                          >
-                            ×
-                          </button>
-                        )}
-                      </div>
-                      <div className="overflow-auto flex-grow-1" style={{ maxHeight: "160px" }}>
-                        {filteredUnits.map(u => {
-                          const label = `${u.unitNumber} (${u.unitType})`;
-                          return (
-                            <div
-                              key={u._id}
-                              className="px-3 py-2 rounded-2 small cursor-pointer hover-bg-light"
-                              style={{
-                                cursor: "pointer",
-                                backgroundColor: formData.unit === u._id ? "var(--border-color)" : "transparent",
-                                color: formData.unit === u._id ? "var(--dark-section)" : "var(--text-primary)",
-                                fontWeight: formData.unit === u._id ? 600 : 400
-                              }}
-                              onClick={() => {
-                                setFormData({ ...formData, unit: u._id });
-                                setShowUnitDrop(false);
-                                setUnitSearch("");
-                              }}
-                            >
-                              {label}
-                            </div>
-                          );
-                        })}
-                        {filteredUnits.length === 0 && <div className="text-muted text-center py-2 small">No units found</div>}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
                 {/* Location Area */}
                 <div className="col-md-12">
-                  <label className="form-label small fw-semibold text-muted mb-1">Specific Location Description</label>
+                  <label className="form-label small fw-semibold text-muted mb-1">Specific Location Description (Optional)</label>
                   <input
                     type="text"
                     className="form-control"

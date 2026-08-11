@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect, useRef } from "react";
 import { api } from "@/utils/api";
@@ -191,10 +191,21 @@ export default function HelpdeskDetailView({
   const assignableUsers = users.filter(u => u.role === selectedAssignRole);
 
   // Permission helpers
-  const canAssign = (currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "FLOOR_ADMIN") && (viewItem.status === "OPEN" || viewItem.status === "ASSIGNED");
-  const canUpdateStatus = (currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "FLOOR_ADMIN" || currentUser?.role === "STAFF_ADMIN") && viewItem.status !== "CLOSED";
-  const canResolve = (currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "FLOOR_ADMIN" || currentUser?.role === "STAFF_ADMIN") && viewItem.status !== "RESOLVED" && viewItem.status !== "CLOSED";
-  const canClose = (currentUser?.role === "SUPER_ADMIN" || currentUser?.role === "FLOOR_ADMIN") && viewItem.status === "RESOLVED";
+  const isTenantRole = ["COWORKING_TENANT", "COWORKING_MEMBER", "Tenant", "OFFICE_OWNER", "Owner"].includes(currentUser?.role);
+  const isMyTicket = isTenantRole && (
+    viewItem.raisedUserId === currentUser?.id ||
+    viewItem.raisedUserId === currentUser?._id ||
+    viewItem.createdBy === currentUser?.id ||
+    viewItem.createdBy === currentUser?._id ||
+    viewItem.raisedBy === currentUser?.name
+  );
+
+  const isAdminRole = ["SUPER_ADMIN", "COWORKING_ADMIN", "FLOOR_ADMIN", "STAFF_ADMIN"].includes(currentUser?.role);
+
+  const canAssign = isAdminRole && (viewItem.status === "OPEN" || viewItem.status === "ASSIGNED");
+  const canUpdateStatus = isAdminRole && viewItem.status !== "CLOSED";
+  const canResolve = isAdminRole && viewItem.status !== "RESOLVED" && viewItem.status !== "CLOSED";
+  const canClose = isAdminRole && viewItem.status !== "CLOSED";
 
   return (
     <div

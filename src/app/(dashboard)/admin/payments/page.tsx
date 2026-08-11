@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { api } from "@/utils/api";
@@ -165,6 +165,21 @@ function LedgerContent() {
   const [activeTab, setActiveTab] = useState("All Payments");
   const [isLoading, setIsLoading] = useState(true);
   const [properties, setProperties] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        try {
+          setCurrentUser(JSON.parse(stored));
+        } catch (e) {}
+      }
+    }
+  }, []);
+
+  const rawRole = currentUser?.role || "";
+  const isTenantRole = rawRole === "COWORKING_TENANT" || rawRole === "Co-Working Member" || rawRole === "Coworking Tenant" || rawRole === "Tenant" || rawRole === "COWORKING TENANT";
 
   // Filters State
   const [selectedProperty, setSelectedProperty] = useState("All Properties");
@@ -271,8 +286,10 @@ function LedgerContent() {
   }, []);
 
   useEffect(() => {
-    fetchFinanceReport();
-  }, [fetchFinanceReport]);
+    if (!isTenantRole) {
+      fetchFinanceReport();
+    }
+  }, [fetchFinanceReport, isTenantRole]);
 
   useEffect(() => {
     fetchFinanceData();
@@ -484,12 +501,13 @@ function LedgerContent() {
             Payment Management
           </h2>
           <p className="text-muted m-0 mt-1" style={{ fontSize: "0.825rem", color: "var(--text-muted)" }}>
-            Track, manage and reconcile all lease payments in one place
+            {isTenantRole ? "View your payment receipts, rent history, and active invoices." : "Track, manage and reconcile all lease payments in one place"}
           </p>
         </div>
       </div>
 
-      {/* STAT CARDS GRID */}
+      {/* STAT CARDS GRID (Admin only) */}
+      {!isTenantRole && (
       <div className="row g-3 mb-4">
         {/* Card 1 */}
         <div className="col-md-4 col-lg-2">
@@ -647,6 +665,7 @@ function LedgerContent() {
           </div>
         </div>
       </div>
+      )}
 
       {/* FILTER TABS & SELECTORS */}
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -728,7 +747,8 @@ function LedgerContent() {
         </div>
       </div>
 
-      {/* MIDDLE ANALYTICS SECTION */}
+      {/* MIDDLE ANALYTICS SECTION (Admin only) */}
+      {!isTenantRole && (
       <div className="row g-4 mb-4">
         {/* 1. Payment Overview */}
         <div className="col-lg-4">
@@ -841,6 +861,7 @@ function LedgerContent() {
           </div>
         </div>
       </div>
+      )}
 
       {/* BOTTOM LAYOUT GRID: Transactions Table */}
       <div className="row g-4">

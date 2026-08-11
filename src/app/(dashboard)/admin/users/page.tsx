@@ -1,7 +1,8 @@
-﻿﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { api } from "@/utils/api";
 import Table, { TableColumn } from "@/components/common/Table";
 import FilterDrawer from "@/components/users/FilterDrawer";
@@ -11,8 +12,21 @@ import ResetPasswordModal from "@/components/users/modals/ResetPasswordModal";
 import RecordPaymentModal from "@/components/users/modals/RecordPaymentModal";
 
 export default function UsersPage() {
+  const router = useRouter();
   const [users, setUsers] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("user");
+      if (stored) {
+        setCurrentUser(JSON.parse(stored));
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  }, []);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('All Roles');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -258,22 +272,9 @@ export default function UsersPage() {
   };
 
   const startEditing = () => {
-    setEditForm({
-      name: viewUser.name,
-      email: viewUser.email,
-      phoneNumber: viewUser.phoneNumber || '',
-      emergencyNumber: viewUser.emergencyNumber || '',
-      address: viewUser.address || '',
-      agreementStatus: viewUser.agreementStatus || 'Active',
-      monthlyManagementAmount: viewUser.monthlyManagementAmount || 0,
-      totalAgreementAmount: viewUser.totalAgreementAmount || 0,
-      paymentType: viewUser.paymentType || 'Monthly Installment',
-      paymentDueDay: viewUser.paymentDueDay || 5,
-      floorAssignmentStartDate: viewUser.floorAssignmentStartDate ? viewUser.floorAssignmentStartDate.split('T')[0] : '',
-      floorAssignmentEndDate: viewUser.floorAssignmentEndDate ? viewUser.floorAssignmentEndDate.split('T')[0] : '',
-      role: viewUser.role
-    });
-    setIsEditingUser(true);
+    if (viewUser && viewUser._id) {
+      router.push(`/admin/users/create?edit=${viewUser._id}`);
+    }
   };
 
   // Distinct Premium Badges for Roles
@@ -557,23 +558,33 @@ export default function UsersPage() {
     },
     {
       header: "ACTIONS",
-      render: (user) => (
-        <div className="d-flex gap-2">
-          <button
-            className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
-            style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
-            onClick={() => setViewUser(user)}
-          >
-            <i className="hgi-stroke hgi-view text-dark" style={{ fontSize: '1rem' }}></i>
-          </button>
-          <button
-            className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
-            style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
-          >
-            <i className="hgi-stroke hgi-more-vertical text-dark" style={{ fontSize: '1rem' }}></i>
-          </button>
-        </div>
-      )
+      render: (user) => {
+        const isFloorAdmin = currentUser?.role === 'FLOOR_ADMIN';
+        const isSelf = currentUser?._id && user._id === currentUser._id;
+        const hideEditOptions = isFloorAdmin || isSelf;
+
+        return (
+          <div className="d-flex gap-2">
+            <button
+              className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
+              style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
+              onClick={() => setViewUser(user)}
+              title="View Details"
+            >
+              <i className="hgi-stroke hgi-view text-dark" style={{ fontSize: '1rem' }}></i>
+            </button>
+            {!hideEditOptions && (
+              <button
+                className="btn btn-sm bg-white border d-flex align-items-center justify-content-center"
+                style={{ width: '32px', height: '32px', borderRadius: '8px', borderColor: '#e5e7eb', boxShadow: '0 1px 2px rgba(0,0,0,0.02)' }}
+                title="More Options"
+              >
+                <i className="hgi-stroke hgi-more-vertical text-dark" style={{ fontSize: '1rem' }}></i>
+              </button>
+            )}
+          </div>
+        );
+      }
     }
   ];
 

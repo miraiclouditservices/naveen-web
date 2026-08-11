@@ -1,9 +1,11 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { api } from "@/utils/api";
 import RecordPaymentModal from "@/components/users/modals/RecordPaymentModal";
+import { exportLeaseAgreementPdf } from "@/utils/exportLeaseAgreementPdf";
+import { exportTaxInvoicePdf } from "@/utils/exportTaxInvoicePdf";
 
 const STATUS_COLOR: Record<string, string> = {
   Paid: "success",
@@ -22,7 +24,6 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function LeaseDetailClient({ userId }: { userId: string }) {
   const [user, setUser] = useState<any>(null);
-  const [lease, setLease] = useState<any>(null);
   const [agreement, setAgreement] = useState<any>(null);
   const [billingData, setBillingData] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -51,50 +52,43 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [selectedInvoiceForReceipt, setSelectedInvoiceForReceipt] = useState<any>(null);
 
-  // Actions loading states
+  // Actions loading & invoice modal states
   const [isGeneratingInvoice, setIsGeneratingInvoice] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [invoiceMonthInput, setInvoiceMonthInput] = useState("July");
+  const [invoiceYearInput, setInvoiceYearInput] = useState(2026);
 
   const fetchDetails = async () => {
     setIsLoading(true);
     try {
       // Fetch user profile
       const resUser = await api.get(`/users/${userId}`);
-      if (resUser.success) {
+      if (resUser.success && resUser.data) {
         const userData = resUser.data;
         setUser(userData);
 
-        // Fetch lease for this user
-        try {
-          const resLease = await api.get(`/leases?limit=100`);
-          if (resLease.success && resLease.data) {
-            const matched = resLease.data.find(
-              (l: any) =>
-                l.tenantEmail === userData.email || l.tenantName === userData.name
-            );
-            setLease(matched || null);
-          }
-        } catch (err) {
-          console.error("Error fetching lease details:", err);
+        // Fetch agreement & billing details concurrently (parallel requests)
+        const [resAgreement, resBilling] = await Promise.all([
+          api.get(`/agreements/user/${userId}`).catch((err: any) => {
+            if (err?.status !== 404 && err?.message !== 'No agreement active for this user.') {
+              console.error("Error fetching agreement details:", err);
+            }
+            return null;
+          }),
+          api.get(`/users/${userId}/billing`).catch((err: any) => {
+            console.error("Error fetching billing details:", err);
+            return null;
+          })
+        ]);
+
+        if (resAgreement && resAgreement.success && resAgreement.data) {
+          setAgreement(resAgreement.data.agreements?.[0] || null);
+        } else {
+          setAgreement(null);
         }
 
-        // Fetch agreement details
-        try {
-          const resAgreement = await api.get(`/agreements/user/${userId}`);
-          if (resAgreement.success && resAgreement.data) {
-            setAgreement(resAgreement.data.agreements?.[0] || null);
-          }
-        } catch (err: any) {
-          if (err.status === 404 || err.message === 'No agreement active for this user.') {
-            setAgreement(null);
-          } else {
-            console.error("Error fetching agreement details:", err);
-          }
-        }
-
-        // Fetch billing invoices & payments
-        const resBilling = await api.get(`/users/${userId}/billing`);
-        if (resBilling.success) {
+        if (resBilling && resBilling.success) {
           setBillingData(resBilling.data);
         }
       }
@@ -165,12 +159,13 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   // Filter and Paginated Invoices
   const filteredInvoices = (billingData?.invoices || []).filter((inv: any) => {
     const query = searchQuery.trim().toLowerCase();
-    const matchesSearch =
-      inv.invoiceId.toLowerCase().includes(query) ||
-      inv.billingPeriod.toLowerCase().includes(query);
+    const invId = (inv?.invoiceId || "").toString().toLowerCase();
+    const billPeriod = (inv?.billingPeriod || "").toString().toLowerCase();
+    const matchesSearch = invId.includes(query) || billPeriod.includes(query);
+    const invStatus = (inv?.status || "").toString().toLowerCase();
     const matchesStatus =
       statusFilter === "All" ||
-      inv.status.toLowerCase() === statusFilter.toLowerCase();
+      invStatus === statusFilter.toLowerCase();
     return matchesSearch && matchesStatus;
   });
 
@@ -190,10 +185,17 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   };
 
   // Actions trigger functions
+  const handleReceivePaymentClick = () => {
+    if (!paymentAmountInput) {
+      setPaymentAmountInput(String(pendingAmount || 0));
+    }
+    setShowPaymentModal(true);
+  };
+
   const handlePayNowClick = (inv: any) => {
     const needed = inv.pendingAmount || inv.amount || 0;
     setPaymentAmountInput(String(needed));
-    setNotesInput(`Payment for ${inv.billingPeriod} (${inv.invoiceId})`);
+    setNotesInput(`Payment for ${inv.billingPeriod || 'Invoice'} (${inv.invoiceId || 'INV'})`);
     setShowPaymentModal(true);
   };
 
@@ -234,11 +236,8 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     }
   };
 
-  // Trigger manual invoice generation
-  const handleGenerateInvoice = async () => {
-    if (isGeneratingInvoice) return;
-    
-    // Determine month and year based on last invoice or current date
+  // Open Generate Invoice Modal
+  const handleGenerateInvoice = () => {
     let targetMonth = "July";
     let targetYear = 2026;
     
@@ -261,19 +260,23 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
         }
       }
     }
+    setInvoiceMonthInput(targetMonth);
+    setInvoiceYearInput(targetYear);
+    setShowInvoiceModal(true);
+  };
 
-    if (!confirm(`Are you sure you want to generate billing invoice for ${targetMonth} ${targetYear}?`)) {
-      return;
-    }
-
+  const handleGenerateInvoiceSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isGeneratingInvoice) return;
     setIsGeneratingInvoice(true);
     try {
       const res = await api.post("/finance/generate", {
-        month: targetMonth,
-        year: targetYear
+        month: invoiceMonthInput,
+        year: Number(invoiceYearInput)
       });
       if (res.success) {
-        alert(res.message || "Invoice generated successfully!");
+        setShowInvoiceModal(false);
+        alert(res.message || `Invoice for ${invoiceMonthInput} ${invoiceYearInput} generated successfully!`);
         await fetchDetails();
       } else {
         alert(res.error || "Failed to generate invoice");
@@ -284,6 +287,14 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     } finally {
       setIsGeneratingInvoice(false);
     }
+  };
+
+  const handleDownloadTaxInvoicePdf = (inv: any) => {
+    exportTaxInvoicePdf({
+      invoice: inv,
+      user,
+      agreement
+    });
   };
 
   // Trigger send reminder email
@@ -327,6 +338,14 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
     a.setAttribute("href", url);
     a.setAttribute("download", `Billing_Statement_${user.name.replace(/\s+/g, "_")}.csv`);
     a.click();
+  };
+
+  const handleDownloadAgreementPdf = () => {
+    exportLeaseAgreementPdf({
+      user,
+      agreement,
+      billingData,
+    });
   };
 
   const handleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -447,7 +466,7 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
         {/* Core Actions Bar */}
         <div className="d-flex flex-wrap gap-2 align-items-center">
           <button
-            onClick={() => setShowPaymentModal(true)}
+            onClick={handleReceivePaymentClick}
             className="btn btn-sm text-white d-flex align-items-center gap-2 fw-semibold px-3 py-2"
             style={{
               backgroundColor: "var(--dark-section)",
@@ -477,6 +496,20 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
               <i className="bi bi-file-earmark-plus"></i>
             )}
             Generate Invoice
+          </button>
+
+          <button
+            onClick={handleDownloadAgreementPdf}
+            className="btn btn-sm d-flex align-items-center gap-2 fw-semibold px-3 py-2 bg-white"
+            style={{
+              borderRadius: "var(--radius-md)",
+              border: "1px solid #fca5a5",
+              color: "#dc2626",
+              fontSize: "0.82rem",
+              boxShadow: "var(--shadow-sm)"
+            }}
+          >
+            <i className="bi bi-file-earmark-pdf-fill text-danger"></i> Download Agreement PDF
           </button>
 
           <button
@@ -561,45 +594,93 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Property</span>
                 <strong style={{ color: "var(--text-primary)" }}>
-                  {user.assignedProperties?.map((p: any) => p.propertyName || p.name).filter(Boolean).join(", ") || lease?.property?.propertyName || "—"}
+                  {user.assignedProperties?.map((p: any) => p.propertyName || p.name).filter(Boolean).join(", ") || "—"}
                 </strong>
               </div>
               
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Unit(s)</span>
                 <strong style={{ color: "var(--text-primary)" }}>
-                  {user.assignedUnits?.map((u: any) => typeof u === "object" ? `Office ${u.unitNumber}` : `Office ${u}`).filter(Boolean).join(", ") || (lease?.units?.length > 0 ? lease.units.map((u: any) => u.unitNumber || u).join(", ") : "—")}
+                  {user.assignedUnits?.map((u: any) => typeof u === "object" ? `Office ${u.unitNumber}` : `Office ${u}`).filter(Boolean).join(", ") || "—"}
                 </strong>
               </div>
 
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Total Area</span>
                 <strong style={{ color: "var(--text-primary)" }}>
-                  {(user.assignedUnits?.reduce((sum: number, u: any) => sum + (u.sqft || 0), 0) || lease?.allocatedSft || lease?.assignedSft || 0).toLocaleString("en-IN")} SFT
+                  {(user.assignedUnits?.reduce((sum: number, u: any) => sum + (u.sqft || 0), 0) || 0).toLocaleString("en-IN")} SFT
                 </strong>
               </div>
 
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Floor(s)</span>
                 <strong style={{ color: "var(--text-primary)" }}>
-                  {user.assignedFloors?.map((f: any) => f.floorName || `Floor ${f.floorNumber}`).filter(Boolean).join(", ") || lease?.floor?.floorName || "—"}
+                  {user.assignedFloors?.map((f: any) => f.floorName || `Floor ${f.floorNumber}`).filter(Boolean).join(", ") || "—"}
+                </strong>
+              </div>
+
+              <div>
+                <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Allocated Seats</span>
+                <strong style={{ color: "var(--text-primary)" }}>
+                  <i className="bi bi-person-workspace text-primary me-1"></i>
+                  {user.assignedSeatCount || user.assignedUnits?.length || 1} Seats
                 </strong>
               </div>
 
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Lease Type</span>
                 <strong style={{ color: "var(--text-primary)" }}>
-                  {lease?.leaseType || "Commercial"}
+                  Commercial
                 </strong>
               </div>
 
               <div>
                 <span className="d-block mb-0.5" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>Lease ID</span>
                 <strong className="text-uppercase" style={{ color: "var(--text-primary)" }}>
-                  {lease?._id ? `LSE-${lease._id.slice(-6).toUpperCase()}` : (agreement?._id ? `AGR-${agreement._id.slice(-6).toUpperCase()}` : "—")}
+                  {agreement?._id ? `AGR-${agreement._id.slice(-6).toUpperCase()}` : `LSE-${user._id.slice(-6).toUpperCase()}`}
                 </strong>
               </div>
             </div>
+          </div>
+
+          {/* Lease Agreement Document Card */}
+          <div className="bg-white border rounded-3 p-4 shadow-sm" style={{ borderColor: "var(--border-color)" }}>
+            <div className="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+              <h6 className="fw-bold mb-0" style={{ fontSize: "0.85rem", color: "var(--text-main)" }}>
+                Lease Agreement
+              </h6>
+              <span className="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 rounded-pill px-2 py-0.5" style={{ fontSize: "0.65rem", fontWeight: 600 }}>
+                Official A4 Document
+              </span>
+            </div>
+
+            <div className="p-3 rounded-3 mb-3 d-flex align-items-center gap-3" style={{ backgroundColor: "var(--bg-app)", border: "1px dashed var(--border-color)" }}>
+              <div className="rounded-3 bg-white p-2 text-danger shadow-sm d-flex align-items-center justify-content-center" style={{ width: 42, height: 42 }}>
+                <i className="bi bi-file-earmark-pdf-fill fs-4"></i>
+              </div>
+              <div className="overflow-hidden">
+                <span className="fw-bold text-dark d-block text-truncate" style={{ fontSize: "0.8rem" }}>
+                  {user.name.replace(/\s+/g, '_')}_Lease_Agreement.pdf
+                </span>
+                <span className="text-muted d-block" style={{ fontSize: "0.7rem" }}>
+                  A4 Print Ready &bull; Dynamic Contract Data
+                </span>
+              </div>
+            </div>
+
+            <button
+              onClick={handleDownloadAgreementPdf}
+              className="btn btn-sm w-100 text-white d-flex align-items-center justify-content-center gap-2 fw-semibold py-2"
+              style={{
+                backgroundColor: "#dc2626",
+                borderColor: "#dc2626",
+                borderRadius: "8px",
+                fontSize: "0.8rem",
+                boxShadow: "var(--shadow-sm)"
+              }}
+            >
+              <i className="bi bi-file-earmark-pdf-fill"></i> Download Agreement PDF
+            </button>
           </div>
 
           {/* Payment Allocation Section */}
@@ -760,18 +841,19 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
               </div>
             </div>
 
-            {/* Next Due Date */}
+            {/* Allocated Seats */}
             <div className="col-6 col-md-4">
               <div className="bg-white border rounded-3 shadow-sm h-100 d-flex flex-column justify-content-between" style={{ borderColor: "var(--border-color)", padding: "16px 18px" }}>
                 <span className="d-block mb-2 fw-semibold" style={{ color: "var(--text-muted)", fontSize: "0.72rem" }}>
-                  Next Due Date
+                  Allocated Seats
                 </span>
                 <div className="py-1">
-                  <h4 className="fw-bold mb-1" style={{ color: pendingAmount <= 0 ? "var(--bs-success)" : "var(--text-main)", fontSize: "1.15rem" }}>
-                    {pendingAmount <= 0 ? "Paid" : formatDate(nextDueDateStr)}
+                  <h4 className="fw-bold mb-1 text-primary" style={{ fontSize: "1.15rem" }}>
+                    <i className="bi bi-person-workspace me-1.5" style={{ fontSize: "0.95rem" }}></i>
+                    {user.assignedSeatCount || user.assignedUnits?.length || 1} Seats
                   </h4>
                   <span className="text-muted d-block small" style={{ fontSize: "0.7rem" }}>
-                    {pendingAmount <= 0 ? "Fully Settled" : "Cycle Due Date"}
+                    Assigned Workspace Capacity
                   </span>
                 </div>
               </div>
@@ -955,33 +1037,47 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                             </span>
                           </td>
                           <td className="py-2 px-2 text-center">
-                            {isSettled ? (
+                            <div className="d-flex align-items-center justify-content-center gap-1">
                               <button
-                                onClick={() => handleViewReceiptClick(inv)}
-                                className="btn btn-xs btn-outline-secondary py-1 px-2.5 fw-semibold"
+                                onClick={() => handleDownloadTaxInvoicePdf(inv)}
+                                title="Download A4 Tax Invoice PDF"
+                                className="btn btn-xs btn-outline-danger py-1 px-2 fw-semibold d-inline-flex align-items-center gap-1"
                                 style={{
                                   borderRadius: "6px",
-                                  fontSize: "0.68rem",
-                                  border: "1px solid var(--border-color)",
-                                  color: "var(--text-primary)"
+                                  fontSize: "0.68rem"
                                 }}
                               >
-                                View
+                                <i className="bi bi-file-earmark-pdf-fill"></i> Tax Invoice
                               </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePayNowClick(inv)}
-                                className="btn btn-xs text-white py-1 px-2.5 fw-semibold"
-                                style={{
-                                  backgroundColor: "var(--dark-section)",
-                                  borderRadius: "6px",
-                                  fontSize: "0.68rem",
-                                  border: "none"
-                                }}
-                              >
-                                Pay Now
-                              </button>
-                            )}
+
+                              {isSettled ? (
+                                <button
+                                  onClick={() => handleViewReceiptClick(inv)}
+                                  className="btn btn-xs btn-outline-secondary py-1 px-2.5 fw-semibold"
+                                  style={{
+                                    borderRadius: "6px",
+                                    fontSize: "0.68rem",
+                                    border: "1px solid var(--border-color)",
+                                    color: "var(--text-primary)"
+                                  }}
+                                >
+                                  View
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => handlePayNowClick(inv)}
+                                  className="btn btn-xs text-white py-1 px-2.5 fw-semibold"
+                                  style={{
+                                    backgroundColor: "var(--dark-section)",
+                                    borderRadius: "6px",
+                                    fontSize: "0.68rem",
+                                    border: "none"
+                                  }}
+                                >
+                                  Pay Now
+                                </button>
+                              )}
+                            </div>
                           </td>
                         </tr>
                       );
@@ -1254,6 +1350,120 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
                   </button>
                 </div>
               </div>
+
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Generate Monthly Invoice Modal */}
+      {showInvoiceModal && (
+        <div
+          className="modal show d-block"
+          style={{ backgroundColor: "rgba(4,4,4,0.6)", zIndex: 1200, backdropFilter: "blur(4px)" }}
+        >
+          <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: 480 }}>
+            <div className="modal-content border-0 rounded-3 overflow-hidden bg-white shadow-lg">
+              
+              {/* Modal Header */}
+              <div className="p-4 text-white text-center position-relative" style={{ backgroundColor: "var(--dark-section)" }}>
+                <button
+                  type="button"
+                  className="btn-close btn-close-white position-absolute top-0 end-0 m-3"
+                  onClick={() => setShowInvoiceModal(false)}
+                  aria-label="Close"
+                  style={{ filter: "brightness(0) invert(1)" }}
+                ></button>
+                <div className="rounded-circle bg-white bg-opacity-20 d-inline-flex align-items-center justify-content-center mb-2" style={{ width: 50, height: 50 }}>
+                  <i className="bi bi-file-earmark-plus fs-3 text-white"></i>
+                </div>
+                <h5 className="fw-bold mb-0" style={{ fontSize: "1.1rem" }}>Generate Billing Invoice</h5>
+                <p className="small mb-0 opacity-75" style={{ fontSize: "0.74rem" }}>
+                  Issue recurring monthly tax invoice for {user.name}
+                </p>
+              </div>
+
+              {/* Form Body */}
+              <form onSubmit={handleGenerateInvoiceSubmit}>
+                <div className="p-4" style={{ fontSize: "0.82rem" }}>
+                  
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold text-muted small mb-1">Billing Month</label>
+                    <select
+                      className="form-select form-select-sm py-2"
+                      value={invoiceMonthInput}
+                      onChange={(e) => setInvoiceMonthInput(e.target.value)}
+                      style={{ borderRadius: "6px" }}
+                    >
+                      {[
+                        "January", "February", "March", "April", "May", "June",
+                        "July", "August", "September", "October", "November", "December"
+                      ].map((m) => (
+                        <option key={m} value={m}>{m}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="mb-3">
+                    <label className="form-label fw-semibold text-muted small mb-1">Billing Year</label>
+                    <select
+                      className="form-select form-select-sm py-2"
+                      value={invoiceYearInput}
+                      onChange={(e) => setInvoiceYearInput(Number(e.target.value))}
+                      style={{ borderRadius: "6px" }}
+                    >
+                      {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="p-3 rounded-2 border" style={{ backgroundColor: "var(--bg-app)", borderColor: "var(--border-color)" }}>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Target Tenant:</span>
+                      <strong className="text-dark">{user.name}</strong>
+                    </div>
+                    <div className="d-flex justify-content-between mb-1">
+                      <span className="text-muted">Workspace Unit(s):</span>
+                      <span className="text-primary fw-medium">{user.assignedUnits?.map((u: any) => typeof u === 'object' ? `Unit ${u.unitNumber}` : `Unit ${u}`).join(', ') || 'Office 201'}</span>
+                    </div>
+                    <div className="d-flex justify-content-between">
+                      <span className="text-muted">Est. Billing Amount:</span>
+                      <strong className="text-dark">₹{(agreement?.installmentAmount || user.monthlyManagementAmount || 0).toLocaleString()} + GST</strong>
+                    </div>
+                  </div>
+
+                </div>
+
+                {/* Footer Buttons */}
+                <div className="px-4 py-3 bg-light border-top d-flex justify-content-end gap-2">
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-outline-secondary px-3"
+                    onClick={() => setShowInvoiceModal(false)}
+                    style={{ borderRadius: "6px", fontSize: "0.78rem" }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isGeneratingInvoice}
+                    className="btn btn-sm text-white px-4 fw-semibold d-flex align-items-center gap-1.5"
+                    style={{ backgroundColor: "var(--dark-section)", borderRadius: "6px", fontSize: "0.78rem" }}
+                  >
+                    {isGeneratingInvoice ? (
+                      <>
+                        <span className="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                        Generating...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-check-circle"></i> Generate & Issue Invoice
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
 
             </div>
           </div>

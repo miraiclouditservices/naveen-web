@@ -12,19 +12,19 @@ interface VisitorFormModalProps {
   mode: ModalMode;
 }
 
-const ID_PROOF_TYPES  = ["Aadhar", "PAN", "Driving License", "Passport", "Other"];
+const ID_PROOF_TYPES = ["Aadhar", "PAN", "Driving License", "Passport", "Other"];
 const PURPOSE_OPTIONS = ["Meeting", "Delivery", "Interview", "Maintenance", "Personal", "Other"];
-const STATUS_OPTIONS  = ["Checked-In", "Checked-Out"];
+const STATUS_OPTIONS = ["Checked-In", "Checked-Out"];
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; icon: string; msg: string }> = {
-  "Checked-In":  { bg: "#dbeafe", color: "#1e40af",  icon: "bi-door-open-fill",    msg: "Visitor is currently inside the building." },
-  "Checked-Out": { bg: "var(--border-color)", color: "var(--text-primary)",  icon: "bi-door-closed-fill",  msg: "Visitor has checked out." },
+  "Checked-In": { bg: "#dbeafe", color: "#1e40af", icon: "bi-door-open-fill", msg: "Visitor is currently inside the building." },
+  "Checked-Out": { bg: "var(--border-color)", color: "var(--text-primary)", icon: "bi-door-closed-fill", msg: "Visitor has checked out." },
 };
 
 const APPROVAL_CFG = {
-  "Property Level": { icon: "bi-building",   bg: "#eff6ff", border: "#bfdbfe", color: "#1d4ed8", label: "Property Owner Approval" },
-  "Floor Level":    { icon: "bi-layers",     bg: "#f0fdf4", border: "#bbf7d0", color: "#15803d", label: "Floor Owner / Admin Approval" },
-  "Office Level":   { icon: "bi-door-open",  bg: "#fdf4ff", border: "#e9d5ff", color: "#7e22ce", label: "Office Owner Approval" },
+  "Property Level": { icon: "bi-building", bg: "#eff6ff", border: "#bfdbfe", color: "#1d4ed8", label: "Property Owner Approval" },
+  "Floor Level": { icon: "bi-layers", bg: "#f0fdf4", border: "#bbf7d0", color: "#15803d", label: "Floor Owner / Admin Approval" },
+  "Office Level": { icon: "bi-door-open", bg: "#fdf4ff", border: "#e9d5ff", color: "#7e22ce", label: "Office Owner Approval" },
 } as const;
 type ApprovalLevel = keyof typeof APPROVAL_CFG;
 
@@ -37,15 +37,15 @@ const EMPTY = {
 };
 
 export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mode }: VisitorFormModalProps) {
-  const [formData, setFormData]   = useState<any>({ ...EMPTY });
+  const [formData, setFormData] = useState<any>({ ...EMPTY });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [properties, setProperties] = useState<any[]>([]);
-  const [floors,     setFloors]     = useState<any[]>([]);
-  const [units,      setUnits]      = useState<any[]>([]);
-  const [selProp,    setSelProp]    = useState("");
-  const [selFloor,   setSelFloor]   = useState("");
-  const [selUnit,    setSelUnit]    = useState("");
+  const [floors, setFloors] = useState<any[]>([]);
+  const [units, setUnits] = useState<any[]>([]);
+  const [selProp, setSelProp] = useState("");
+  const [selFloor, setSelFloor] = useState("");
+  const [selUnit, setSelUnit] = useState("");
 
   // Searchable Dropdowns State & Refs
   const [showPropertyDropdown, setShowPropertyDropdown] = useState(false);
@@ -81,7 +81,7 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
     selUnit ? "Office Level" : selFloor ? "Floor Level" : "Property Level";
 
   const apc = APPROVAL_CFG[approvalLevel];
-  const ss  = STATUS_STYLE[formData.status] || STATUS_STYLE["Checked-In"];
+  const ss = STATUS_STYLE[formData.status] || STATUS_STYLE["Checked-In"];
   const isRO = mode === "view";
   const set = (k: string, v: any) => setFormData((p: any) => ({ ...p, [k]: v }));
 
@@ -96,7 +96,7 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
     ]).then(([propRes, meRes]) => {
       if (propRes.success) setProperties(propRes.data);
       if (meRes.success) setCurrentUser(meRes.data);
-    }).catch(() => {});
+    }).catch(() => { });
   }, [isOpen]);
 
   useEffect(() => {
@@ -104,11 +104,11 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
     if (editData && (mode === "edit" || mode === "view")) {
       setFormData({ ...EMPTY, ...editData });
       const pId = editData.property?._id || editData.property || "";
-      const fId = editData.floor?._id    || editData.floor    || "";
-      const uId = editData.unit?._id     || editData.unit     || "";
+      const fId = editData.floor?._id || editData.floor || "";
+      const uId = editData.unit?._id || editData.unit || "";
       setSelProp(pId); setSelFloor(fId); setSelUnit(uId);
-      if (pId) api.get(`/floors?property=${pId}`).then(r => { if (r.success) setFloors(r.data); }).catch(() => {});
-      if (fId) api.get(`/units?floor=${fId}`).then(r => { if (r.success) setUnits(r.data); }).catch(() => {});
+      if (pId) api.get(`/floors?property=${pId}`).then(r => { if (r.success) setFloors(r.data); }).catch(() => { });
+      if (fId) api.get(`/units?floor=${fId}`).then(r => { if (r.success) setUnits(r.data); }).catch(() => { });
     } else {
       const now = new Date();
       setFormData({ ...EMPTY, visitDate: now.toISOString().split("T")[0], inTime: now.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: false }) });
@@ -129,13 +129,19 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
   const handlePropertyChange = async (id: string) => {
     setSelProp(id); setSelFloor(""); setSelUnit(""); setFloors([]); setUnits([]);
     if (!id) return;
-    api.get(`/floors?property=${id}`).then(r => { if (r.success) setFloors(r.data); }).catch(() => {});
+    Promise.all([
+      api.get(`/units?property=${id}`),
+      api.get(`/floors?property=${id}`)
+    ]).then(([unitRes, floorRes]) => {
+      if (unitRes.success) setUnits(unitRes.data);
+      if (floorRes.success) setFloors(floorRes.data);
+    }).catch(() => { });
   };
 
-  const handleFloorChange = async (id: string) => {
-    setSelFloor(id); setSelUnit(""); setUnits([]);
-    if (!id) return;
-    api.get(`/units?floor=${id}`).then(r => { if (r.success) setUnits(r.data); }).catch(() => {});
+  const handleUnitSelect = (unitObj: any) => {
+    setSelUnit(unitObj._id);
+    const fId = unitObj.floor?._id || unitObj.floor || "";
+    if (fId) setSelFloor(fId.toString());
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -158,9 +164,9 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
     try {
       onSave({
         ...formData,
-        property: finalProp  || undefined,
-        floor:    finalFloor || undefined,
-        unit:     finalUnit  || undefined,
+        property: finalProp || undefined,
+        floor: finalFloor || undefined,
+        unit: finalUnit || undefined,
         approvalLevel: isOwner ? "Office Level" : approvalLevel,
         ...(editData?._id ? { _id: editData._id } : {}),
       });
@@ -170,9 +176,9 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
     }
   };
 
-  const selPropObj  = properties.find(p => p._id === selProp);
+  const selPropObj = properties.find(p => p._id === selProp);
   const selFloorObj = floors.find(f => f._id === selFloor);
-  const selUnitObj  = units.find(u => u._id === selUnit);
+  const selUnitObj = units.find(u => u._id === selUnit);
 
   if (!isOpen) return null;
 
@@ -234,8 +240,8 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                     <div style={{ fontSize: "0.88rem", fontWeight: 700, color: apc.color, marginTop: "1px" }}>{apc.label}</div>
                     <div style={{ fontSize: "0.7rem", color: apc.color + "bb", marginTop: "1px" }}>
                       {approvalLevel === "Property Level" && "Visitor request notification → Property Owner"}
-                      {approvalLevel === "Floor Level"    && "Visitor request notification → Floor Owner / Admin"}
-                      {approvalLevel === "Office Level"   && "Visitor request notification → Office Owner"}
+                      {approvalLevel === "Floor Level" && "Visitor request notification → Floor Owner / Admin"}
+                      {approvalLevel === "Office Level" && "Visitor request notification → Office Owner"}
                     </div>
                   </div>
                   <span style={{ background: apc.color, color: "var(--bg-card)", borderRadius: "20px", padding: "3px 12px", fontSize: "0.68rem", fontWeight: 700, whiteSpace: "nowrap" }}>
@@ -332,11 +338,11 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                       </h6>
                     </div>
 
-                    {/* Property Dropdown */}
-                    <div className="col-md-4 position-relative" ref={propertyContainerRef}>
+                    {/* Property / Building Dropdown */}
+                    <div className="col-md-6 position-relative" ref={propertyContainerRef}>
                       <label className="form-label small fw-semibold text-dark">Property / Building *</label>
                       <div
-                        className="form-control d-flex justify-content-between align-items-center bg-white"
+                        className="form-control bg-white d-flex justify-content-between align-items-center"
                         onClick={() => !isRO && setShowPropertyDropdown(prev => !prev)}
                         style={{
                           fontSize: "0.85rem", padding: "8px 12px",
@@ -345,7 +351,7 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                         }}
                       >
                         <span>
-                          {properties.find(p => p._id === selProp)?.propertyName || "Select Property..."}
+                          {selPropObj ? selPropObj.propertyName : "Select Property..."}
                         </span>
                         {!isRO && (
                           <i className={`bi bi-chevron-${showPropertyDropdown ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }} />
@@ -433,14 +439,14 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                       )}
                     </div>
 
-                    {/* Floor Dropdown */}
-                    <div className="col-md-4 position-relative" ref={floorContainerRef}>
-                      <label className="form-label small fw-semibold text-dark">Floor Level</label>
+                    {/* Office / Unit Dropdown */}
+                    <div className="col-md-6 position-relative" ref={unitContainerRef}>
+                      <label className="form-label small fw-semibold text-dark">Office / Unit</label>
                       <div
                         className={`form-control d-flex justify-content-between align-items-center ${!selProp ? "bg-white text-muted" : "bg-white"}`}
                         onClick={() => {
                           if (selProp && !isRO) {
-                            setShowFloorDropdown(prev => !prev);
+                            setShowUnitDropdown(prev => !prev);
                           }
                         }}
                         style={{
@@ -452,130 +458,16 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                         <span>
                           {(() => {
                             if (!selProp) return "Select Property first";
-                            const floorObj = floors.find(f => f._id === selFloor);
-                            return floorObj ? (floorObj.floorName || `Floor ${floorObj.floorNumber}`) : "Select Floor...";
+                            const unitObj = units.find(u => u._id === selUnit);
+                            return unitObj ? `Unit ${unitObj.unitNumber}${unitObj.ownerName ? ` — ${unitObj.ownerName}` : ""} (${unitObj.unitStatus})` : "Select Office / Unit...";
                           })()}
                         </span>
                         {!isRO && selProp && (
-                          <i className={`bi bi-chevron-${showFloorDropdown ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }} />
-                        )}
-                      </div>
-
-                      {showFloorDropdown && selProp && !isRO && (
-                        <div
-                          className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
-                          style={{
-                            top: "100%", left: 12, right: 12, zIndex: 1050,
-                            marginTop: "4px", maxHeight: "280px", display: "flex", flexDirection: "column"
-                          }}
-                        >
-                          <div className="position-relative mb-2">
-                            <input
-                              type="text"
-                              className="form-control form-control-sm ps-3"
-                              placeholder="Search floor..."
-                              value={floorSearch}
-                              onChange={e => setFloorSearch(e.target.value)}
-                              style={{ fontSize: "0.8rem", height: "32px", paddingRight: "28px" }}
-                              autoFocus
-                            />
-                            {floorSearch && (
-                              <button
-                                type="button"
-                                onClick={() => setFloorSearch("")}
-                                className="position-absolute border-0 bg-transparent text-muted"
-                                style={{ right: "8px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}
-                              >
-                                ×
-                              </button>
-                            )}
-                          </div>
-
-                          <div className="overflow-auto flex-grow-1" style={{ maxHeight: "180px" }}>
-                            {(() => {
-                              const filtered = floors.filter(f => {
-                                const label = f.floorName || `Floor ${f.floorNumber}`;
-                                return label.toLowerCase().includes(floorSearch.toLowerCase());
-                              });
-                              if (filtered.length === 0) {
-                                return <div className="text-muted text-center py-2 small">No matches found</div>;
-                              }
-                              return filtered.map(f => {
-                                const label = f.floorName || `Floor ${f.floorNumber}`;
-                                const isSelected = selFloor === f._id;
-                                return (
-                                  <div
-                                    key={f._id}
-                                    onClick={() => {
-                                      handleFloorChange(f._id);
-                                      setShowFloorDropdown(false);
-                                      setFloorSearch("");
-                                    }}
-                                    className="px-3 py-2 rounded-2 small"
-                                    style={{
-                                      cursor: "pointer",
-                                      backgroundColor: isSelected ? "var(--border-color)" : "transparent",
-                                      color: isSelected ? "var(--dark-section)" : "var(--text-primary)",
-                                      fontWeight: isSelected ? 600 : 400,
-                                    }}
-                                    onMouseEnter={e => {
-                                      if (!isSelected) {
-                                        e.currentTarget.style.backgroundColor = "var(--bg-app)";
-                                        e.currentTarget.style.color = "var(--text-main)";
-                                      }
-                                    }}
-                                    onMouseLeave={e => {
-                                      if (!isSelected) {
-                                        e.currentTarget.style.backgroundColor = "transparent";
-                                        e.currentTarget.style.color = "var(--text-primary)";
-                                      }
-                                    }}
-                                  >
-                                    {label}
-                                  </div>
-                                );
-                              });
-                            })()}
-                          </div>
-                        </div>
-                      )}
-                      {selFloorObj && (
-                        <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                          <i className="bi bi-info-circle me-1" />
-                          {selFloorObj.totalUnits} units · {selFloorObj.totalSft} sqft
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Unit Dropdown */}
-                    <div className="col-md-4 position-relative" ref={unitContainerRef}>
-                      <label className="form-label small fw-semibold text-dark">Office / Unit</label>
-                      <div
-                        className={`form-control d-flex justify-content-between align-items-center ${!selFloor ? "bg-white text-muted" : "bg-white"}`}
-                        onClick={() => {
-                          if (selFloor && !isRO) {
-                            setShowUnitDropdown(prev => !prev);
-                          }
-                        }}
-                        style={{
-                          fontSize: "0.85rem", padding: "8px 12px",
-                          cursor: (!selFloor || isRO) ? "not-allowed" : "pointer",
-                          border: "1px solid #ced4da", borderRadius: "0.375rem", userSelect: "none"
-                        }}
-                      >
-                        <span>
-                          {(() => {
-                            if (!selFloor) return "Select Floor first";
-                            const unitObj = units.find(u => u._id === selUnit);
-                            return unitObj ? `Unit ${unitObj.unitNumber}${unitObj.ownerName ? ` — ${unitObj.ownerName}` : ""} (${unitObj.unitStatus})` : "Select Unit...";
-                          })()}
-                        </span>
-                        {!isRO && selFloor && (
                           <i className={`bi bi-chevron-${showUnitDropdown ? "up" : "down"} text-muted`} style={{ fontSize: "0.75rem" }} />
                         )}
                       </div>
 
-                      {showUnitDropdown && selFloor && !isRO && (
+                      {showUnitDropdown && selProp && !isRO && (
                         <div
                           className="bg-white rounded-3 shadow-lg border p-2 position-absolute"
                           style={{
@@ -622,7 +514,7 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                                   <div
                                     key={u._id}
                                     onClick={() => {
-                                      setSelUnit(u._id);
+                                      handleUnitSelect(u);
                                       setShowUnitDropdown(false);
                                       setUnitSearch("");
                                     }}
@@ -656,8 +548,8 @@ export default function VisitorFormModal({ isOpen, onClose, onSave, editData, mo
                       )}
                       {selUnitObj && (
                         <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", marginTop: "4px" }}>
-                          <i className="bi bi-person me-1" />
-                          {selUnitObj.ownerName || "No owner"} · {selUnitObj.unitType} · {selUnitObj.sqft} sqft
+                          <i className="bi bi-door-open me-1" />
+                          {selUnitObj.sqft ? `${selUnitObj.sqft} sqft · ` : ""}{selUnitObj.unitType || "Office"}
                         </div>
                       )}
                     </div>

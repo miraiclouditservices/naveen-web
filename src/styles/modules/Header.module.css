@@ -1,14 +1,15 @@
 .header {
-  background-color: #ffffff;
-  border-bottom: 1px solid var(--border, #e2e8f0);
-  padding: 0 var(--space-6, 24px);
+  background-color: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: none !important;
+  padding: 0 var(--space-4, 16px);
   display: flex;
   align-items: center;
   justify-content: space-between;
   position: sticky;
   top: 0;
   z-index: 999;
-  height: 72px;
+  height: 48px;
 }
 
 .searchContainer {
@@ -71,7 +72,7 @@
   position: absolute;
   top: 2px;
   right: 2px;
-  background-color: #EF4444;
+  background-color: var(--error);
   color: white;
   border-radius: var(--radius-full);
   font-size: 0.65rem;
@@ -119,7 +120,7 @@
 }
 
 .quickAction:hover {
-  background-color: var(--primary-dark);
+  background-color: var(--button-primary);
   box-shadow: var(--shadow-md);
 }
 
@@ -161,10 +162,10 @@
 }
 
 .profileDropdownItemDanger {
-  color: #EF4444 !important;
+  color: var(--error) !important;
 }
 
 .profileDropdownItemDanger:hover {
-  background-color: #FEF2F2 !important;
-  color: #DC2626 !important;
+  background-color: var(--muted) !important;
+  color: var(--error) !important;
 }

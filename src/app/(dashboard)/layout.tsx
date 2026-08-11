@@ -11,7 +11,8 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const isPropertyDetailPage = pathname?.startsWith("/admin/properties/") && pathname !== "/admin/properties/add";
-  const hideSidebar = isPropertyDetailPage || pathname === "/admin/users/create" || pathname === "/admin/properties/add" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/")) || pathname?.includes("/print") || pathname?.startsWith("/me");
+  const isUnitDetailPage = pathname?.startsWith("/admin/units/") && pathname !== "/admin/units";
+  const hideSidebar = isPropertyDetailPage || isUnitDetailPage || pathname === "/admin/users/create" || pathname === "/admin/properties/add" || (pathname !== "/admin/leases" && pathname?.startsWith("/admin/leases/")) || pathname?.includes("/print") || pathname?.startsWith("/me");
 
   return (
     <div className="d-flex" style={{ backgroundColor: 'var(--color-bg-dashboard)', minHeight: '100vh', fontFamily: 'var(--font-geist-sans)' }}>

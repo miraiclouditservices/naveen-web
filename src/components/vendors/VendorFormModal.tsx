@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 import React, { useState, useEffect } from "react";
 
 interface VendorFormModalProps {
@@ -276,12 +276,14 @@ export default function VendorFormModal({
             <button type="button" style={tabStyle("address")} onClick={() => setActiveTab("address")}>
               2. Address
             </button>
+            {/* 
             <button type="button" style={tabStyle("bank")} onClick={() => setActiveTab("bank")}>
               3. Bank Details
             </button>
             <button type="button" style={tabStyle("docs")} onClick={() => setActiveTab("docs")}>
               4. Documents
             </button>
+            */}
           </div>
 
           {/* Form */}
@@ -657,7 +659,8 @@ export default function VendorFormModal({
                 </div>
               )}
 
-              {/* --- TAB 3: BANK DETAILS --- */}
+              {/* --- TAB 3: BANK DETAILS (Commented Out) --- */}
+              {/* 
               {activeTab === "bank" && (
                 <div>
                   <div className="row g-3 mb-3">
@@ -730,8 +733,10 @@ export default function VendorFormModal({
                   </div>
                 </div>
               )}
+              */}
 
-              {/* --- TAB 4: DOCUMENTS --- */}
+              {/* --- TAB 4: DOCUMENTS (Commented Out) --- */}
+              {/* 
               {activeTab === "docs" && (
                 <div>
                   <p className="text-muted mb-4" style={{ fontSize: "0.8rem" }}>
@@ -835,6 +840,7 @@ export default function VendorFormModal({
                   </div>
                 </div>
               )}
+              */}
             </div>
 
             {/* Footer / Buttons */}
@@ -846,29 +852,15 @@ export default function VendorFormModal({
                     ← Back
                   </button>
                 )}
-                {activeTab === "bank" && (
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setActiveTab("address")}>
-                    ← Back
-                  </button>
-                )}
-                {activeTab === "docs" && (
-                  <button type="button" className="btn btn-sm btn-outline-secondary" onClick={() => setActiveTab("bank")}>
-                    ← Back
-                  </button>
-                )}
               </div>
 
               <div className="d-flex gap-2">
-                {activeTab !== "docs" ? (
+                {activeTab === "basic" ? (
                   <button
                     type="button"
                     className="btn btn-sm text-white"
                     style={{ backgroundColor: "var(--dark-heading)" }}
-                    onClick={() => {
-                      if (activeTab === "basic") setActiveTab("address");
-                      else if (activeTab === "address") setActiveTab("bank");
-                      else if (activeTab === "bank") setActiveTab("docs");
-                    }}
+                    onClick={() => setActiveTab("address")}
                   >
                     Next Tab →
                   </button>

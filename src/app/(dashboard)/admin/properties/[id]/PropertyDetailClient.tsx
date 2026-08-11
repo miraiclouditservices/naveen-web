@@ -3,13 +3,11 @@
 import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { api } from "@/utils/api";
-import PropertyModal from "@/components/dashboard/PropertyModal";
 
 export default function PropertyDetailClient({ propertyId }: { propertyId: string }) {
   const [property, setProperty] = useState<any>(null);
   const [floors, setFloors] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeImgIdx, setActiveImgIdx] = useState(0);
   const [previewImageModal, setPreviewImageModal] = useState<string | null>(null);
 
@@ -104,17 +102,6 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
     }
   }, [propertyId]);
 
-  const handleSave = async (data: any) => {
-    try {
-      const r = await api.put(`/properties/${propertyId}`, data);
-      if (r.success) {
-        fetchPropertyAndFloors();
-      }
-    } catch (err) {
-      console.error(err);
-    }
-    setIsModalOpen(false);
-  };
 
   // Metric Computations (strict backend data, no hardcoded defaults)
   const totalArea = property?.totalSft || 0;
@@ -148,7 +135,7 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
   return (
     <div className="container-fluid px-3 px-md-4 py-3" style={{ maxWidth: "1280px", margin: "0 auto", color: "#1e293b" }}>
 
-      {/* 1. Top Bar Navigation & Actions */}
+      {/* 1. Top Bar Navigation */}
       <div className="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <Link
           href="/admin/properties"
@@ -157,20 +144,6 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
         >
           <i className="bi bi-chevron-left" style={{ fontSize: "0.8rem" }}></i> Back to Properties
         </Link>
-
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="btn btn-sm d-inline-flex align-items-center gap-1.5 fw-semibold px-3 py-1.5"
-          style={{
-            borderRadius: "20px",
-            border: "1.5px solid #f97316",
-            color: "#f97316",
-            backgroundColor: "#ffffff",
-            fontSize: "0.85rem"
-          }}
-        >
-          <i className="bi bi-pencil" style={{ fontSize: "0.85rem" }}></i> Edit Property
-        </button>
       </div>
 
       {/* 2. Hero Property Banner Card */}
@@ -646,13 +619,6 @@ export default function PropertyDetailClient({ propertyId }: { propertyId: strin
         })}
       </div>
 
-      {/* Property Edit Modal */}
-      <PropertyModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSave}
-        editData={property}
-      />
     </div>
   );
 }

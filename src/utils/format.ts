@@ -6,7 +6,10 @@ export const formatRole = (role: string): string => {
   
   // Custom mappings for special/legacy roles if any
   const mappings: Record<string, string> = {
+    "ULTRA_SUPER_ADMIN": "Ultra Super Admin",
     "SUPER_ADMIN": "Super Admin",
+    "COWORKING_ADMIN": "Co-Working Admin",
+    "COWORKING_TENANT": "Co-Working Member",
     "FLOOR_ADMIN": "Floor Admin",
     "OFFICE_OWNER": "Office Owner",
     "STAFF_ADMIN": "Staff Admin"

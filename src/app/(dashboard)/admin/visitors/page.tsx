@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -271,11 +271,13 @@ export default function VisitorsPage() {
   const isFloorAdmin = currentUser?.role === "FLOOR_ADMIN" || currentUser?.role === "Floor Admin";
   const isOfficeOwner = currentUser?.role === "OFFICE_OWNER" || currentUser?.role === "Office Owner" || currentUser?.role === "Owner";
   const isSecurity = currentUser?.role === "Watchman" || currentUser?.role === "Security" || currentUser?.role === "WATCHMAN";
+  const isCoWorkingAdmin = currentUser?.role === "COWORKING_ADMIN" || currentUser?.role === "Co-Working Admin";
+  const isCoWorkingTenant = currentUser?.role === "COWORKING_TENANT" || currentUser?.role === "Co-Working Member" || currentUser?.role === "Tenant";
 
   const permissions = currentUser?.permissions || [];
   const hasAccess = (permission: string) => isSuperAdmin || permissions.includes(permission);
 
-  const showAddButton = isSuperAdmin || isStaffAdmin || isFloorAdmin || isOfficeOwner || isSecurity || hasAccess("manage_visitors");
+  const showAddButton = !currentUser || isSuperAdmin || isCoWorkingAdmin || isCoWorkingTenant || isStaffAdmin || isFloorAdmin || isOfficeOwner || isSecurity || hasAccess("manage_visitors");
 
   // ── Table Columns (Matching high fidelity mockup) ────────────────────────
   const columns: TableColumn<any>[] = [
@@ -386,7 +388,7 @@ export default function VisitorsPage() {
           >
             <i className="bi bi-eye" style={{ fontSize: "0.75rem" }} />
           </button>
-          {v.status !== "Checked-Out" && v.status !== "Checked Out" && v.outTime !== "-" && (
+          {!isCoWorkingTenant && v.status !== "Checked-Out" && v.status !== "Checked Out" && v.outTime !== "-" && (
             <button
               title="Check Out"
               disabled={checkingOutId === v._id}

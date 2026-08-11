@@ -1,4 +1,4 @@
-﻿﻿"use client";
+﻿"use client";
 import React from "react";
 
 const PAYMENT_MODES = [
@@ -353,7 +353,6 @@ export default function RecordPaymentModal({
                       type="number"
                       required
                       min={1}
-                      max={pending}
                       value={amountInput}
                       onChange={e => setAmountInput(e.target.value)}
                       placeholder={String(pending || 0)}

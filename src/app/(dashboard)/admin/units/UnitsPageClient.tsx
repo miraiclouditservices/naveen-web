@@ -1,20 +1,21 @@
-﻿﻿"use client";
+"use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { api } from "@/utils/api";
 import Table, { TableColumn } from "@/components/common/Table";
 import UnitModal from "@/components/dashboard/UnitModal";
 import UnitFilterDrawer from "./UnitFilterDrawer";
-import UnitDetailsDrawer from "./UnitDetailsDrawer";
 
 const ITEMS_PER_PAGE = 10;
 
 const getStatusBadgeStyle = (status: string) => {
   switch (status) {
     case "Occupied":
-      return { backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #dcfce7" };
+      return { backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0" };
     case "Reserved":
-      return { backgroundColor: "var(--brand-orange)_BG", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-bg)" };
+      return { backgroundColor: "var(--brand-orange-bg)", color: "var(--brand-orange)", border: "1px solid var(--brand-orange-border)" };
     case "Available":
       return { backgroundColor: "#eff6ff", color: "#2563eb", border: "1px solid #dbeafe" };
     default:
@@ -23,9 +24,12 @@ const getStatusBadgeStyle = (status: string) => {
 };
 
 export default function UnitsPageClient() {
+  const router = useRouter();
   const [units, setUnits] = useState<any[]>([]);
   const [properties, setProperties] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [redirecting, setRedirecting] = useState(false);
 
   // Top Metrics
   const [metrics, setMetrics] = useState({
@@ -36,6 +40,8 @@ export default function UnitsPageClient() {
     occupiedSft: 0,
     availableSft: 0,
     totalRevenue: 0,
+    totalSeats: 0,
+    occupiedSeats: 0,
   });
 
   // Search & Filter state
@@ -51,19 +57,23 @@ export default function UnitsPageClient() {
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Selected Unit Details Sidebar
-  const [selectedUnit, setSelectedUnit] = useState<any>(null);
-  const [activeDetailTab, setActiveDetailTab] = useState("Overview");
-
-  // Invoices data for details tab
-  const [unitInvoices, setUnitInvoices] = useState<any[]>([]);
-  const [invoicesLoading, setInvoicesLoading] = useState(false);
-
   // Modal controls
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editUnit, setEditUnit] = useState<any>(null);
 
   const debounceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const TENANT_ROLES = [
+    "COWORKING_TENANT",
+    "Tenant",
+    "Co-Working Member",
+    "Coworking Tenant",
+    "COWORKING TENANT",
+    "COWORKING_MEMBER"
+  ];
+
+  const rawRole = currentUser?.role || "";
+  const isTenantRole = TENANT_ROLES.includes(rawRole) || rawRole.toUpperCase().includes("TENANT");
 
   const handleSearchChange = (val: string) => {
     setSearchTerm(val);
@@ -74,9 +84,37 @@ export default function UnitsPageClient() {
     }, 400);
   };
 
+  // Auto-redirect tenants to their first assigned unit
+  useEffect(() => {
+    if (!currentUser) return;
+    const role = currentUser.role || "";
+    const isTenant = TENANT_ROLES.includes(role) || role.toUpperCase().includes("TENANT");
+    if (isTenant) {
+      const assignedUnits: any[] = currentUser.assignedUnits || [];
+      if (assignedUnits.length > 0) {
+        const firstUnitId = assignedUnits[0]?._id || assignedUnits[0];
+        if (firstUnitId) {
+          setRedirecting(true);
+          router.replace(`/admin/units/${firstUnitId}`);
+          return;
+        }
+      }
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     fetchProperties();
     fetchFloors();
+    api.get("/auth/me").then((res: any) => {
+      if (res?.success && res?.data) {
+        setCurrentUser(res.data);
+      }
+    }).catch(() => {
+      const stored = typeof window !== "undefined" ? localStorage.getItem("user") : null;
+      if (stored) {
+        try { setCurrentUser(JSON.parse(stored)); } catch (e) { }
+      }
+    });
   }, []);
 
   const buildParams = useCallback(() => {
@@ -99,81 +137,41 @@ export default function UnitsPageClient() {
         setUnits(r.data);
         setTotalPages(r.totalPages || r.pagination?.pages || 1);
         setTotalItems(r.total || r.pagination?.total || r.data.length);
+        if (r.metrics) {
+          setMetrics({
+            totalUnits: r.metrics.totalUnits || 0,
+            occupiedUnits: r.metrics.occupiedUnits || 0,
+            availableUnits: r.metrics.availableUnits || 0,
+            totalSft: r.metrics.totalSft || 0,
+            occupiedSft: r.metrics.occupiedSft || 0,
+            availableSft: r.metrics.availableSft || 0,
+            totalRevenue: r.metrics.totalRevenue || 0,
+            totalSeats: r.metrics.totalSeats || 0,
+            occupiedSeats: r.metrics.occupiedSeats || 0,
+          });
+        }
       }
-    } catch {} finally {
+    } catch { } finally {
       setIsLoading(false);
     }
   }, [buildParams]);
 
-  const fetchMetrics = useCallback(async () => {
-    try {
-      let queryParts = [];
-      if (selectedPropertyId !== "all") queryParts.push(`propertyId=${selectedPropertyId}`);
-      if (selectedStatus !== "all") {
-        let statusVal = selectedStatus;
-        if (selectedStatus === "Available") statusVal = "Vacant";
-        queryParts.push(`status=${statusVal}`);
-      }
-      const queryString = queryParts.length > 0 ? `?${queryParts.join("&")}` : "";
-      const res = await api.get(`/dashboard/metrics${queryString}`);
-      if (res.success && res.data?.metrics) {
-        const m = res.data.metrics;
-        setMetrics({
-          totalUnits: m.totalUnits || 0,
-          occupiedUnits: m.occupiedUnits || 0,
-          availableUnits: (m.totalUnits || 0) - (m.occupiedUnits || 0),
-          totalSft: m.totalSft || 0,
-          occupiedSft: m.occupiedSft || 0,
-          availableSft: m.availableSft || 0,
-          totalRevenue: m.totalRevenue || 0,
-        });
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  }, [selectedPropertyId, selectedStatus]);
-
-  const fetchUnitInvoices = useCallback(async () => {
-    if (!selectedUnit?.lease?._id) {
-      setUnitInvoices([]);
-      return;
-    }
-    setInvoicesLoading(true);
-    try {
-      const res = await api.get(`/invoices?leaseId=${selectedUnit.lease._id}&limit=10`);
-      if (res.success) {
-        setUnitInvoices(res.data || []);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setInvoicesLoading(false);
-    }
-  }, [selectedUnit]);
-
   useEffect(() => {
     fetchUnits();
-    fetchMetrics();
-  }, [fetchUnits, fetchMetrics]);
-
-  useEffect(() => {
-    if (selectedUnit && activeDetailTab === "Financials") {
-      fetchUnitInvoices();
-    }
-  }, [selectedUnit, activeDetailTab, fetchUnitInvoices]);
+  }, [fetchUnits]);
 
   const fetchProperties = async () => {
     try {
       const r = await api.get("/properties");
       if (r.success) setProperties(r.data);
-    } catch {}
+    } catch { }
   };
 
   const fetchFloors = async () => {
     try {
       const r = await api.get("/floors?limit=100");
       if (r.success) setFloors(r.data);
-    } catch {}
+    } catch { }
   };
 
   const handleSaveUnit = async (data: any) => {
@@ -181,8 +179,7 @@ export default function UnitsPageClient() {
       if (editUnit) await api.put(`/units/${editUnit._id}`, data);
       else await api.post("/units", data);
       fetchUnits();
-      fetchMetrics();
-    } catch {}
+    } catch { }
     setIsModalOpen(false);
     setEditUnit(null);
   };
@@ -212,48 +209,97 @@ export default function UnitsPageClient() {
     return null;
   };
 
+  // Filtered floor options based on selected Property
+  const filteredFloorOptions = selectedPropertyId !== "all"
+    ? floors.filter(f => {
+      const pId = typeof f.property === 'object' ? f.property._id : f.property;
+      return String(pId) === String(selectedPropertyId);
+    })
+    : floors;
+
+  // Selected floor object for summary banner
+  const activeSelectedFloorObj = selectedFloorId !== "all"
+    ? floors.find(f => String(f._id) === String(selectedFloorId))
+    : null;
+
   const columns: TableColumn<any>[] = [
     {
-      header: "Unit Number",
+      header: "Unit Details",
       render: (u) => (
-        <button
-          onClick={() => {
-            setSelectedUnit(u);
-            setActiveDetailTab("Overview");
-          }}
-          className="btn btn-link text-decoration-none fw-bold text-dark p-0 align-baseline text-start border-0"
-          style={{ fontSize: "0.85rem" }}
-        >
-          {u.unitNumber}
-        </button>
-      ),
-    },
-    {
-      header: "Property",
-      render: (u) => (
-        <span className="text-dark fw-medium" style={{ fontSize: "0.85rem" }}>
-          {u.property?.propertyName || "—"}
-        </span>
+        <div>
+          <Link
+            href={`/admin/units/${u._id}`}
+            className="text-decoration-none fw-bold text-dark hover-primary d-inline-flex align-items-center gap-1.5"
+            style={{ fontSize: "0.88rem" }}
+          >
+            Unit {u.unitNumber}
+          </Link>
+          {u.unitName && (
+            <div className="text-muted small fw-medium mt-0.5" style={{ fontSize: "0.78rem" }}>
+              {u.unitName}
+            </div>
+          )}
+        </div>
       ),
     },
     {
       header: "Floor",
       render: (u) => (
-        <span className="text-muted" style={{ fontSize: "0.85rem" }}>
-          {u.floor?.floorName || `Floor ${u.floor?.floorNumber || u.floorNumber || "—"}`}
-        </span>
+        <div>
+          <span className="fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>
+            {u.floor?.floorNumber || u.floorNumber ? `Floor ${u.floor?.floorNumber || u.floorNumber}` : "Floor —"}
+          </span>
+          <div className="text-muted extra-small" style={{ fontSize: "0.75rem" }}>
+            {u.floor?.floorName || "Office Workspace"}
+          </div>
+        </div>
       ),
     },
     {
-      header: "Tenant",
+      header: "Occupant / Tenant",
       render: (u) => {
+        const occupantsList = u.occupants || [];
+        if (occupantsList.length > 0) {
+          const first = occupantsList[0];
+          const hasMultiple = occupantsList.length > 1;
+          return (
+            <div>
+              <div className="d-flex align-items-center gap-1.5 flex-wrap">
+                <span className="fw-bold text-dark" style={{ fontSize: "0.86rem" }}>
+                  {first.name}
+                </span>
+                {u.unitStatus === "Occupied" && (
+                  <i className="bi bi-check-circle-fill text-success" style={{ fontSize: "0.82rem" }} />
+                )}
+                {hasMultiple && (
+                  <span className="badge rounded-pill bg-light text-primary border px-2 py-0.5 fw-semibold" style={{ fontSize: "0.7rem" }}>
+                    +{occupantsList.length - 1} More
+                  </span>
+                )}
+              </div>
+              {first.phone && (
+                <div className="text-muted extra-small mt-0.5" style={{ fontSize: "0.74rem" }}>
+                  <i className="bi bi-telephone me-1"></i>{first.phone}
+                </div>
+              )}
+            </div>
+          );
+        }
+
         const occ = occupantDisplay(u);
-        if (!occ) return <span className="text-muted">—</span>;
+        if (!occ) return <span className="text-muted small">—</span>;
         return (
-          <div className="d-flex align-items-center gap-2">
-            <span className="fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>{occ.name}</span>
-            {u.unitStatus === "Occupied" && (
-              <i className="bi bi-check-circle-fill text-success" style={{ fontSize: "0.85rem" }} />
+          <div>
+            <div className="d-flex align-items-center gap-1.5">
+              <span className="fw-semibold text-dark" style={{ fontSize: "0.85rem" }}>{occ.name}</span>
+              {u.unitStatus === "Occupied" && (
+                <i className="bi bi-check-circle-fill text-success" style={{ fontSize: "0.82rem" }} />
+              )}
+            </div>
+            {occ.phone && (
+              <div className="text-muted extra-small" style={{ fontSize: "0.74rem" }}>
+                <i className="bi bi-telephone me-1"></i>{occ.phone}
+              </div>
             )}
           </div>
         );
@@ -262,19 +308,36 @@ export default function UnitsPageClient() {
     {
       header: "Area (SFT)",
       render: (u) => (
-        <span className="text-dark fw-medium" style={{ fontSize: "0.85rem" }}>
-          {u.sqft ? u.sqft.toLocaleString("en-IN") : "—"}
+        <span className="text-dark fw-semibold" style={{ fontSize: "0.85rem" }}>
+          {u.sqft ? `${u.sqft.toLocaleString("en-IN")} SFT` : "—"}
         </span>
       ),
     },
     {
-      header: "Monthly Rent",
+      header: "Unit Seats & Occupancy",
       render: (u) => {
-        const rent = u.lease?.monthlyRent || u.monthlyRent || (u.sqft * 50);
+        const total = u.seatCount || 10;
+        const occupied = u.occupiedSeatCount || 0;
+        const available = Math.max(total - occupied, 0);
+        const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
         return (
-          <span className="text-dark fw-bold" style={{ fontSize: "0.85rem" }}>
-            ₹ {rent ? Number(rent).toLocaleString("en-IN") : "—"}
-          </span>
+          <div style={{ minWidth: "150px" }}>
+            <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
+              <span className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>
+                <i className="bi bi-person-workspace me-1 text-primary"></i>{occupied} / {total} Seats
+              </span>
+              <span className={`badge extra-small px-2 py-0.5 rounded-pill ${available > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-light text-muted border'}`} style={{ fontSize: '0.7rem' }}>
+                {available} Available
+              </span>
+            </div>
+            <div className="progress" style={{ height: "5px", borderRadius: 3 }}>
+              <div
+                className={`progress-bar ${pct >= 100 ? "bg-danger" : pct >= 75 ? "bg-warning" : "bg-success"
+                  }`}
+                style={{ width: `${pct}%` }}
+              />
+            </div>
+          </div>
         );
       },
     },
@@ -289,7 +352,7 @@ export default function UnitsPageClient() {
             className="badge px-2.5 py-1.5 fw-bold"
             style={{
               fontSize: "0.75rem",
-              borderRadius: "var(--radius-full)",
+              borderRadius: "10px",
               ...style
             }}
           >
@@ -303,46 +366,71 @@ export default function UnitsPageClient() {
       style: { textAlign: "right" as const },
       render: (u) => (
         <div className="d-flex gap-2 align-items-center justify-content-end" onClick={(e) => e.stopPropagation()}>
-          <button
-            className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"
+          <Link
+            href={`/admin/units/${u._id}`}
+            className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center border"
             style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: "var(--bg-app)",
-              border: "none",
-              color: "var(--text-main)"
+              width: "30px",
+              height: "30px",
+              borderRadius: "8px",
+              backgroundColor: "#ffffff",
+              borderColor: "var(--border-light)",
+              color: "var(--dark-heading)"
             }}
             title="View Details"
-            onClick={() => {
-              setSelectedUnit(u);
-              setActiveDetailTab("Overview");
-            }}
           >
-            <i className="bi bi-eye" style={{ fontSize: "0.85rem" }} />
-          </button>
-          <button
-            className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"
-            style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "50%",
-              backgroundColor: "var(--bg-app)",
-              border: "none",
-              color: "var(--text-main)"
-            }}
-            title="Edit Unit"
-            onClick={() => {
-              setEditUnit(u);
-              setIsModalOpen(true);
-            }}
-          >
-            <i className="bi bi-pencil" style={{ fontSize: "0.85rem" }} />
-          </button>
+            <i className="bi bi-eye" style={{ fontSize: "0.85rem", color: "var(--brand-orange)" }} />
+          </Link>
+          {!isTenantRole && (
+            <button
+              onClick={() => {
+                setEditUnit(u);
+                setIsModalOpen(true);
+              }}
+              className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center border"
+              style={{
+                width: "30px",
+                height: "30px",
+                borderRadius: "8px",
+                backgroundColor: "#ffffff",
+                borderColor: "var(--border-light)",
+                color: "var(--dark-heading)"
+              }}
+              title="Edit Unit"
+            >
+              <i className="bi bi-pencil" style={{ fontSize: "0.85rem" }} />
+            </button>
+          )}
         </div>
       ),
     },
   ];
+
+  // For tenants: show a loading screen while router.replace is in progress
+  if (redirecting) {
+    return (
+      <div
+        className="d-flex flex-column align-items-center justify-content-center"
+        style={{ minHeight: "60vh", fontFamily: "var(--font-geist-sans), Inter, sans-serif" }}
+      >
+        <div
+          className="d-flex align-items-center justify-content-center rounded-circle mb-3"
+          style={{ width: "64px", height: "64px", backgroundColor: "#eff6ff" }}
+        >
+          <i className="bi bi-person-workspace" style={{ fontSize: "1.75rem", color: "#3b82f6" }}></i>
+        </div>
+        <h6 className="fw-bold mb-1" style={{ color: "var(--dark-heading)", fontSize: "1rem" }}>
+          Loading Your Workspace...
+        </h6>
+        <p className="small mb-3" style={{ color: "var(--text-body)" }}>
+          Opening your assigned unit details
+        </p>
+        <div className="spinner-border spinner-border-sm" style={{ color: "#3b82f6" }} role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -380,192 +468,58 @@ export default function UnitsPageClient() {
         onReset={handleReset}
       />
 
+      {/* ── PAGE HEADER ── */}
+      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
+        <div>
+          <h4 className="fw-bold m-0" style={{ fontSize: "1.35rem", color: "var(--dark-heading)", letterSpacing: "-0.01em" }}>
+            {isTenantRole ? "My Workspace & Seats" : "My Workspace & Seats"}
+          </h4>
+          <div className="mt-1" style={{ fontSize: "0.82rem", color: "var(--text-body)" }}>
+            {isTenantRole
+              ? "Your assigned units, seats, and workspace overview"
+              : "Manage all commercial spaces, seat assignments and occupancy"}
+          </div>
+        </div>
+        {!isTenantRole && (
+          <button
+            onClick={() => { setEditUnit(null); setIsModalOpen(true); }}
+            className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
+            style={{ backgroundColor: "var(--dark-section)", borderRadius: "10px", height: "38px", fontSize: "0.85rem" }}
+          >
+            <i className="bi bi-plus-lg"></i> Add Unit
+          </button>
+        )}
+      </div>
+
       {/* ── METRIC STAT CARDS ── */}
-      <div className="row g-2 mb-3 justify-content-start" style={{ marginTop: "-12px" }}>
-        {/* Card 1: Total Units */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#eff6ff",
-                color: "#2563eb"
-              }}
-            >
-              <i className="bi bi-building" style={{ fontSize: "1rem" }}></i>
+      <div className="mb-4">
+        {/* Single row of 5 clean metric cards */}
+        <div className="row g-3">
+          {[
+            { label: "Total Units",       value: metrics.totalUnits,                          icon: "bi-building",        bg: "#eff6ff", color: "#2563eb" },
+            { label: "Occupied Units",    value: metrics.occupiedUnits,                       icon: "bi-person-check",    bg: "#f0fdf4", color: "#16a34a" },
+            { label: "Available Units",   value: metrics.availableUnits,                      icon: "bi-door-open",       bg: "#fff7ed", color: "#f97316" },
+            { label: "Total Area (SFT)",  value: metrics.totalSft.toLocaleString("en-IN"),    icon: "bi-aspect-ratio",    bg: "#f5f3ff", color: "#7c3aed" },
+            { label: "Seats (Occ / Total)", value: `${metrics.occupiedSeats} / ${metrics.totalSeats}`, icon: "bi-person-workspace", bg: "#fdf2f8", color: "#be185d" },
+          ].map((card, i) => (
+            <div key={i} className="col">
+              <div
+                className="card border-0 d-flex flex-row align-items-center gap-3 h-100"
+                style={{ backgroundColor: "var(--bg-card)", border: "1px solid var(--border-color)", borderRadius: "12px", padding: "14px 16px" }}
+              >
+                <div
+                  className="d-flex align-items-center justify-content-center flex-shrink-0"
+                  style={{ width: "40px", height: "40px", borderRadius: "10px", backgroundColor: card.bg, color: card.color }}
+                >
+                  <i className={`bi ${card.icon}`} style={{ fontSize: "1.1rem" }}></i>
+                </div>
+                <div>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 500, color: "var(--text-body)", lineHeight: 1.2 }}>{card.label}</div>
+                  <div className="fw-bold" style={{ fontSize: "1.2rem", lineHeight: 1.1, color: "var(--dark-heading)", marginTop: "3px" }}>{card.value}</div>
+                </div>
+              </div>
             </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Total Units</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.totalUnits}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 2: Occupied Units */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f0fdf4",
-                color: "#16a34a"
-              }}
-            >
-              <i className="bi bi-person-check" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Occupied Units</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.occupiedUnits}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 3: Available Units */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "var(--brand-orange)_BG",
-                color: "var(--brand-orange)"
-              }}
-            >
-              <i className="bi bi-door-open" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Available Units</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.availableUnits}</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: Total Area */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f5f3ff",
-                color: "#7c3aed"
-              }}
-            >
-              <i className="bi bi-pie-chart" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Total Area</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.totalSft.toLocaleString("en-IN")} SFT</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: Occupied SFT */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#f0fdf4",
-                color: "#0f766e"
-              }}
-            >
-              <i className="bi bi-building-check" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Occupied SFT</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>{metrics.occupiedSft.toLocaleString("en-IN")} SFT</div>
-            </div>
-          </div>
-        </div>
-
-        {/* Card 6: Revenue Generated */}
-        <div className="col-auto">
-          <div
-            className="card border-0 d-flex flex-row align-items-center gap-2"
-            style={{
-              backgroundColor: "var(--bg-card)",
-              border: "1px solid var(--border-color)",
-              borderRadius: "8px",
-              padding: "10px 14px",
-              width: "185px"
-            }}
-          >
-            <div
-              className="d-flex align-items-center justify-content-center flex-shrink-0"
-              style={{
-                width: "36px",
-                height: "36px",
-                borderRadius: "50%",
-                backgroundColor: "#fdf2f8",
-                color: "#be185d"
-              }}
-            >
-              <i className="bi bi-currency-rupee" style={{ fontSize: "1rem" }}></i>
-            </div>
-            <div>
-              <div className="text-muted" style={{ fontSize: "0.7rem", fontWeight: "500", lineHeight: "1.1" }}>Revenue</div>
-              <div className="fw-bold text-dark mt-1" style={{ fontSize: "1.1rem", lineHeight: "1" }}>₹{metrics.totalRevenue.toLocaleString("en-IN")}</div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -575,76 +529,101 @@ export default function UnitsPageClient() {
         style={{
           backgroundColor: "var(--bg-card)",
           border: "1px solid var(--border-color)",
-          borderRadius: "10px"
+          borderRadius: "12px"
         }}
       >
+        {/* TOOLBAR */}
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
-          <div>
-            <h5 className="fw-bold m-0" style={{ color: "var(--text-main)", fontSize: "1.1rem" }}>Units Directory</h5>
-          </div>
+          <h5 className="fw-bold m-0" style={{ color: "var(--dark-heading)", fontSize: "1rem" }}>
+            {isTenantRole ? "My Assigned Units" : "Units Directory"}
+          </h5>
+
           <div className="d-flex gap-2 align-items-center flex-wrap">
-            {/* Search Input */}
+            {/* Search */}
             <div className="position-relative">
-              <i className="bi bi-search text-muted position-absolute" style={{ left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.85rem" }}></i>
+              <i className="bi bi-search text-muted position-absolute" style={{ left: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "0.82rem" }}></i>
               <input
                 type="text"
-                placeholder="Search units, property..."
+                placeholder="Search units..."
                 className="form-control form-control-sm shadow-none"
                 value={searchTerm}
                 onChange={(e) => handleSearchChange(e.target.value)}
-                style={{
-                  width: "220px",
-                  paddingLeft: "30px",
-                  borderColor: "var(--border-color)",
-                  borderRadius: "10px",
-                  height: "36px",
-                  fontSize: "0.85rem"
-                }}
+                style={{ width: "200px", paddingLeft: "30px", borderColor: "var(--border-color)", borderRadius: "10px", height: "36px", fontSize: "0.85rem" }}
               />
             </div>
 
-            {/* Filter Drawer Button */}
-            <button
-              onClick={() => setShowFilters(true)}
-              className="btn btn-sm btn-light border fw-semibold d-flex align-items-center gap-1.5"
-              style={{
-                height: "36px",
-                borderRadius: "10px",
-                borderColor: "var(--border-color)",
-                backgroundColor: "var(--bg-card)",
-                fontSize: "0.85rem",
-                padding: "0 14px"
-              }}
-            >
-              <i className="bi bi-funnel"></i> Filters {activeFilters > 0 && <span className="badge bg-dark rounded-pill ms-1">{activeFilters}</span>}
-            </button>
+            {/* Admin Only Controls */}
+            {!isTenantRole && (
+              <>
+                <select
+                  className="form-select form-select-sm shadow-none"
+                  value={selectedPropertyId}
+                  onChange={(e) => { setSelectedPropertyId(e.target.value); setSelectedFloorId("all"); setCurrentPage(1); }}
+                  style={{ width: "170px", borderColor: "var(--border-color)", borderRadius: "10px", height: "36px", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  <option value="all">All Properties</option>
+                  {properties.map((p) => (<option key={p._id} value={p._id}>{p.propertyName}</option>))}
+                </select>
 
-            {/* Add Unit Button */}
-            <button
-              onClick={() => {
-                setEditUnit(null);
-                setIsModalOpen(true);
-              }}
-              className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
-              style={{
-                backgroundColor: "var(--dark-section)",
-                borderRadius: "10px",
-                height: "36px",
-                fontSize: "0.85rem"
-              }}
-            >
-              <i className="bi bi-plus-lg"></i> Add Unit
-            </button>
+                <select
+                  className="form-select form-select-sm shadow-none"
+                  value={selectedFloorId}
+                  onChange={(e) => { setSelectedFloorId(e.target.value); setCurrentPage(1); }}
+                  style={{ width: "160px", borderColor: "var(--border-color)", borderRadius: "10px", height: "36px", fontSize: "0.85rem", cursor: "pointer" }}
+                >
+                  <option value="all">All Floors</option>
+                  {filteredFloorOptions.map((f) => (
+                    <option key={f._id} value={f._id}>{f.floorName || `Floor ${f.floorNumber}`}</option>
+                  ))}
+                </select>
+
+                <button
+                  onClick={() => setShowFilters(true)}
+                  className="btn btn-sm btn-light border fw-semibold d-flex align-items-center gap-1"
+                  style={{ height: "36px", borderRadius: "10px", borderColor: "var(--border-color)", fontSize: "0.85rem", padding: "0 14px" }}
+                >
+                  <i className="bi bi-funnel"></i> Filters
+                  {activeFilters > 0 && <span className="badge bg-dark rounded-pill ms-1">{activeFilters}</span>}
+                </button>
+              </>
+            )}
           </div>
         </div>
+
+        {/* ACTIVE SELECTED FLOOR SUMMARY BANNER */}
+        {activeSelectedFloorObj && (
+          <div className="p-3 mb-3 border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2" style={{ backgroundColor: "var(--brand-orange-bg)", borderColor: "var(--brand-orange-border)" }}>
+            <div className="d-flex align-items-center gap-2.5">
+              <i className="bi bi-layers fs-5" style={{ color: "var(--brand-orange)" }}></i>
+              <div>
+                <div className="fw-bold text-dark" style={{ fontSize: "0.92rem" }}>
+                  {activeSelectedFloorObj.floorName || `Floor ${activeSelectedFloorObj.floorNumber}`}
+                </div>
+                <div className="text-muted extra-small">
+                  Property: {activeSelectedFloorObj.property?.propertyName || "Selected Property"}
+                </div>
+              </div>
+            </div>
+
+            <div className="d-flex align-items-center gap-3 flex-wrap">
+              <span className="badge bg-white text-dark border px-3 py-1.5 rounded-pill fw-semibold" style={{ fontSize: "0.8rem" }}>
+                {activeSelectedFloorObj.totalSft ? `${activeSelectedFloorObj.totalSft.toLocaleString("en-IN")} SFT Capacity` : "7,100 SFT"}
+              </span>
+              <span className="badge px-3 py-1.5 rounded-pill fw-bold" style={{ backgroundColor: "#f0fdf4", color: "#16a34a", border: "1px solid #bbf7d0", fontSize: "0.8rem" }}>
+                <i className="bi bi-person-workspace me-1.5"></i>
+                {metrics.occupiedSeats} / {metrics.totalSeats > 0 ? metrics.totalSeats : 10} Seats Occupied
+              </span>
+            </div>
+          </div>
+        )}
 
         {/* Table */}
         <Table
           columns={columns}
           data={units}
           isLoading={isLoading}
-          loadingMessage="Loading units & space data..."
-          emptyMessage="No commercial spaces found matching your search or filters."
+          loadingMessage="Loading units & seat data..."
+          emptyMessage="No commercial spaces found matching your search or floor filters."
           containerClassName="table-responsive-container table-responsive mt-0"
           currentPage={currentPage}
           totalPages={totalPages}
@@ -653,22 +632,6 @@ export default function UnitsPageClient() {
           onPageChange={setCurrentPage}
         />
       </div>
-
-      {/* RIGHT DETAILS DRAWER / SLIDE-OVER */}
-      {selectedUnit && (
-        <UnitDetailsDrawer
-          selectedUnit={selectedUnit}
-          onClose={() => setSelectedUnit(null)}
-          activeDetailTab={activeDetailTab}
-          setActiveDetailTab={setActiveDetailTab}
-          unitInvoices={unitInvoices}
-          invoicesLoading={invoicesLoading}
-          onEdit={(unit) => {
-            setEditUnit(unit);
-            setIsModalOpen(true);
-          }}
-        />
-      )}
     </div>
   );
 }

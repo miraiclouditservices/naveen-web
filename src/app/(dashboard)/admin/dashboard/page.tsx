@@ -4,6 +4,7 @@ import Link from "next/link";
 import { api, getStoredUser } from "@/utils/api";
 
 // ── Lazy-loaded role dashboards ───────────────────────────────────────────────
+const UltraSuperAdminDash = lazy(() => import("@/components/dashboard/UltraSuperAdminDashboard"));
 const FloorAdminDash = lazy(() => import("@/components/dashboard/FloorAdminDashboard"));
 const OfficeOwnerDash = lazy(() => import("@/components/dashboard/OfficeOwnerDashboard"));
 const StaffAdminDash = lazy(() => import("@/components/dashboard/StaffAdminDashboard"));
@@ -180,6 +181,8 @@ export default function DashboardPage() {
 
   // ── Role-based routing ──────────────────────────────────────────────────────
   if (!loading && user?.role) {
+    if (user.role === "ULTRA_SUPER_ADMIN" || user.role === "Ultra Super Admin")
+      return <Suspense fallback={SPINNER}><UltraSuperAdminDash user={user} /></Suspense>;
     if (user.role === "FLOOR_ADMIN")
       return <Suspense fallback={SPINNER}><FloorAdminDash user={user} /></Suspense>;
     if (user.role === "OFFICE_OWNER" || user.role === "Owner")

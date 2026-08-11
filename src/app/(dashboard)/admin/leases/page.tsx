@@ -255,11 +255,7 @@ function BarChart({ data }: { data: { label: string; val: number }[] }) {
 
 // ── LeasesContent Component ──────────────────────────────────────────────────
 function LeasesContent() {
-  const [users, setUsers] = useState<any[]>([]);
-  const [properties, setProperties] = useState<any[]>([]);
-  const [floors, setFloors] = useState<any[]>([]);
-  const [units, setUnits] = useState<any[]>([]);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [leases, setLeases] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const [leaseStats, setLeaseStats] = useState({
@@ -305,24 +301,34 @@ function LeasesContent() {
 
   const buildQuery = useCallback(() => {
     const q: Record<string, string> = {
-      role: roleFilter,
       page: String(currentPage),
       limit: String(ITEMS_PER_PAGE),
     };
     if (debouncedSearch.trim()) q.search = debouncedSearch.trim();
-    if (statusFilter !== "All") q.agreementStatus = statusFilter;
-    if (paymentStatusFilter !== "All") q.paymentStatus = paymentStatusFilter;
+    if (statusFilter !== "All") q.status = statusFilter;
     return new URLSearchParams(q).toString();
-  }, [roleFilter, currentPage, debouncedSearch, statusFilter, paymentStatusFilter]);
+  }, [currentPage, debouncedSearch, statusFilter]);
 
-  const fetchUsersList = useCallback(async () => {
+  const fetchLeasesList = useCallback(async () => {
     setIsLoading(true);
     try {
-      const res = await api.get(`/users?${buildQuery()}`);
+      const res = await api.get(`/leases?${buildQuery()}`);
       if (res.success) {
-        setUsers(res.data);
-        setTotalPages(res.pagination?.pages || 1);
-        setTotalItems(res.pagination?.total || res.data.length);
+        setLeases(res.data || []);
+        setTotalPages(res.pagination?.totalPages || 1);
+        setTotalItems(res.total || res.data?.length || 0);
+
+        if (res.summary) {
+          setLeaseStats({
+            totalLeases: res.summary.totalLeases || 0,
+            activeLeases: res.summary.activeLeases || 0,
+            expiringSoon: res.summary.expiringSoon || 0,
+            expiredLeases: res.summary.expiredLeases || 0,
+            terminated: res.summary.terminated || 0,
+            trends: { totalLeases: 0, activeLeases: 0, expiringSoon: 0, expiredLeases: 0 },
+            timeline: []
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -332,157 +338,8 @@ function LeasesContent() {
   }, [buildQuery]);
 
   useEffect(() => {
-    fetchUsersList();
-  }, [fetchUsersList]);
-
-  // Load static configurations once
-  useEffect(() => {
-    const fetchConfigs = async () => {
-      try {
-        const [resProps, resFloors, resUnits, resStats, resNotifs] = await Promise.all([
-          api.get("/properties"),
-          api.get("/floors?limit=100"),
-          api.get("/units?limit=100"),
-          api.get("/users?role=FLOOR_ADMIN,OFFICE_OWNER&limit=1&leaseSummary=true"),
-          api.get("/notifications"),
-        ]);
-        if (resProps.success) setProperties(resProps.data);
-        if (resFloors.success) setFloors(resFloors.data);
-        if (resUnits.success) setUnits(resUnits.data);
-
-        if (resStats.success && resStats.leaseSummary) {
-          setLeaseStats({
-            totalLeases: resStats.leaseSummary.totalLeases || 0,
-            activeLeases: resStats.leaseSummary.activeLeases || 0,
-            expiringSoon: resStats.leaseSummary.expiringSoon || 0,
-            expiredLeases: resStats.leaseSummary.expiredLeases || 0,
-            terminated: resStats.leaseSummary.terminated || 0,
-            trends: resStats.leaseSummary.trends || { totalLeases: 0, activeLeases: 0, expiringSoon: 0, expiredLeases: 0 },
-            timeline: resStats.leaseSummary.timeline || []
-          });
-        }
-
-        if (resNotifs.success) setNotifications(resNotifs.data || []);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchConfigs();
-  }, []);
-
-  const handleMarkAsRead = async (id: string) => {
-    try {
-      const res = await api.put(`/notifications/${id}/read`, {});
-      if (res.success) {
-        setNotifications((prev) => prev.map((n) => (n._id === id ? { ...n, readStatus: true } : n)));
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  const leaseNotifications = notifications.filter((notif: any) => {
-    const keywords = ["lease", "rent", "due", "expir", "agreement", "occupant", "tenant", "payment"];
-    const titleLower = (notif.title || "").toLowerCase();
-    const msgLower = (notif.message || "").toLowerCase();
-    return keywords.some((k) => titleLower.includes(k) || msgLower.includes(k));
-  });
-
-  const getExpiryAlertBadge = (endDateStr: string) => {
-    if (!endDateStr) return null;
-    const endDate = new Date(endDateStr);
-    if (isNaN(endDate.getTime())) return null;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const target = new Date(endDate);
-    target.setHours(0, 0, 0, 0);
-    const diffTime = target.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays >= 0 && diffDays <= 5) {
-      return (
-        <span className="badge bg-danger bg-opacity-10 text-danger border border-danger-subtle rounded-pill px-2 py-0.5" style={{ fontSize: "0.65rem" }}>
-          ⚠️ Expiry in {diffDays}d
-        </span>
-      );
-    }
-    return null;
-  };
-
-  const getDueAlertBadge = (dueDayVal: any) => {
-    if (!dueDayVal) return null;
-    const dueDay = Number(dueDayVal);
-    const today = new Date();
-    const currentDay = today.getDate();
-    const daysUntilDue = dueDay - currentDay;
-
-    if (daysUntilDue >= 0 && daysUntilDue <= 5) {
-      return (
-        <span className="badge bg-warning bg-opacity-20 text-warning border border-warning rounded-pill px-2 py-0.5" style={{ fontSize: "0.65rem" }}>
-          ⚠️ Due in {daysUntilDue}d
-        </span>
-      );
-    }
-    return null;
-  };
-
-  // Spatial asset mapping helpers
-  const getUserProperties = (u: any) => {
-    if (!u || !u.assignedProperties || u.assignedProperties.length === 0) return "N/A";
-    return u.assignedProperties
-      .map((prop: any) => {
-        if (typeof prop === "object" && prop !== null) {
-          return prop.propertyName || prop.name || "";
-        }
-        const found = properties.find((p) => p._id === prop || p.id === prop);
-        return found ? found.propertyName : "";
-      })
-      .filter(Boolean)
-      .join(", ") || "N/A";
-  };
-
-  const getUserFloors = (u: any) => {
-    if (!u || !u.assignedFloors || u.assignedFloors.length === 0) return "N/A";
-    return u.assignedFloors
-      .map((floor: any) => {
-        if (typeof floor === "object" && floor !== null) {
-          return floor.floorName || `Floor ${floor.floorNumber}`;
-        }
-        const found = floors.find((f) => f._id === floor || f.id === floor);
-        return found ? found.floorName || `Floor ${found.floorNumber}` : "";
-      })
-      .filter(Boolean)
-      .join(", ") || "N/A";
-  };
-
-  const getUserUnits = (u: any) => {
-    if (!u || !u.assignedUnits || u.assignedUnits.length === 0) return "N/A";
-    return u.assignedUnits
-      .map((unit: any) => {
-        if (typeof unit === "object" && unit !== null) {
-          return `Unit ${unit.unitNumber}`;
-        }
-        const found = units.find((un) => un._id === unit || un.id === unit);
-        return found ? `Unit ${found.unitNumber}` : "";
-      })
-      .filter(Boolean)
-      .join(", ") || "N/A";
-  };
-
-  const handleUserPaymentStatusToggle = async (userId: string, currentStatus: string) => {
-    const nextStatus = currentStatus === "Paid" ? "Unpaid" : "Paid";
-    if (confirm(`Mark this agreement payment status as ${nextStatus}?`)) {
-      try {
-        const res = await api.put(`/users/${userId}`, { paymentStatus: nextStatus });
-        if (res.success) {
-          fetchUsersList();
-        }
-      } catch (err: any) {
-        alert(err.message || "Failed to toggle status");
-      }
-    }
-  };
-
+    fetchLeasesList();
+  }, [fetchLeasesList]);
 
   const formatDate = (dateStr: any) => {
     if (!dateStr) return "N/A";
@@ -625,28 +482,30 @@ function LeasesContent() {
   const columns: TableColumn<any>[] = [
     {
       header: "Tenant / Company",
-      render: (u) => (
+      render: (item) => (
         <div>
-          <Link href={`/admin/leases/${u._id}`} className="fw-bold text-dark text-decoration-none small d-block mb-0.5">
-            {u.name}
+          <Link href={`/admin/leases/${item._id}`} className="fw-bold text-dark text-decoration-none small d-block mb-0.5">
+            {item.tenantName || item.name || item.companyName || "N/A"}
           </Link>
           <span className="text-muted small" style={{ fontSize: "0.75rem" }}>
-            {u.email}
+            {item.tenantEmail || item.email || item.tenantContact || "N/A"}
           </span>
         </div>
       ),
     },
     {
       header: "Property / Unit",
-      render: (u) => {
-        const propName = getUserProperties(u);
-        const unitVal = u.assignedUnits?.[0]?.unitNumber || u.assignedUnits?.[0] || "204";
-        const unitStr = typeof unitVal === "object" ? `Unit ${unitVal.unitNumber}` : `Office ${unitVal}`;
-        const floorName = getUserFloors(u);
+      render: (item) => {
+        let propName = item.property?.propertyName || item.property?.building || "N/A";
+        let floorName = item.floor?.floorName || (item.floor?.floorNumber ? `Floor ${item.floor.floorNumber}` : "N/A");
+        let unitName = Array.isArray(item.units) && item.units.length > 0
+          ? item.units.map((u: any) => typeof u === "object" ? `Office ${u.unitNumber}` : `Office ${u}`).join(", ")
+          : "N/A";
+
         return (
           <div>
             <div className="fw-bold text-dark small">
-              {propName}, {unitStr}
+              {propName}, {unitName}
             </div>
             <div className="text-muted small" style={{ fontSize: "0.75rem" }}>
               {floorName}
@@ -657,7 +516,7 @@ function LeasesContent() {
     },
     {
       header: "Lease Type",
-      render: () => (
+      render: (item) => (
         <span
           className="badge rounded-pill"
           style={{
@@ -669,20 +528,22 @@ function LeasesContent() {
             border: "1px solid #dbeafe"
           }}
         >
-          Commercial
+          {item.leaseType || "Commercial"}
         </span>
       ),
     },
     {
       header: "Agreement Period",
-      render: (u) => {
-        const duration = getDurationInMonths(u.floorAssignmentStartDate, u.floorAssignmentEndDate);
-        const totalDays = getTotalDays(u.floorAssignmentStartDate, u.floorAssignmentEndDate);
-        const daysInfo = getDaysRemainingText(u.floorAssignmentEndDate);
+      render: (item) => {
+        const start = item.startDate || item.agreementStartDate || item.floorAssignmentStartDate;
+        const end = item.endDate || item.agreementEndDate || item.floorAssignmentEndDate;
+        const duration = item.durationMonths ? `${item.durationMonths} Month${item.durationMonths > 1 ? 's' : ''}` : getDurationInMonths(start, end);
+        const totalDays = item.durationDays || getTotalDays(start, end);
+        const daysInfo = getDaysRemainingText(end);
         return (
           <div>
             <div className="fw-bold text-dark small">
-              {formatDate(u.floorAssignmentStartDate)} - {formatDate(u.floorAssignmentEndDate)}
+              {formatDate(start)} - {formatDate(end)}
             </div>
             <div className="text-muted small d-flex flex-column gap-0.5" style={{ fontSize: "0.75rem" }}>
               <span>({duration} / {totalDays} Days)</span>
@@ -698,16 +559,16 @@ function LeasesContent() {
     },
     {
       header: "Monthly Rent",
-      render: (u) => (
+      render: (item) => (
         <span className="fw-bold text-dark small">
-          ₹{Number(u.monthlyManagementAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          ₹{Number(item.monthlyRent || item.monthlyManagementAmount || item.totalMonthlyAmount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </span>
       ),
     },
     {
       header: "Due/Expire Count",
-      render: (u) => {
-        const count = u.dueExpireCount || 0;
+      render: (item) => {
+        const count = item.dueExpireCount || (item.status === 'Expiring Soon' || item.status === 'Expired' ? 1 : 0);
         return (
           <span
             className="badge rounded-pill fw-bold"
@@ -726,15 +587,15 @@ function LeasesContent() {
     },
     {
       header: "Status",
-      render: (u) => getAgreementStatusBadge(u),
+      render: (item) => getAgreementStatusBadge(item),
     },
     {
       header: "Action",
       style: { textAlign: "right" as const },
-      render: (u) => (
+      render: (item) => (
         <div className="d-flex align-items-center justify-content-end gap-2" onClick={(e) => e.stopPropagation()}>
           <Link
-            href={`/admin/leases/${u._id}`}
+            href={`/admin/leases/${item._id}`}
             title="View Details"
             className="btn btn-light btn-sm rounded-circle d-flex align-items-center justify-content-center p-0 shadow-sm border border-light-subtle bg-white"
             style={{ width: "32px", height: "32px" }}
@@ -833,7 +694,7 @@ function LeasesContent() {
           >
             <div className="d-flex align-items-center gap-3 mb-2">
               <div className="rounded p-2 d-flex align-items-center justify-content-center" style={{ backgroundColor: "#fffbeb" }}>
-                <i className="bi bi-clock-history text-warning" style={{ fontSize: "1.1rem" }}></i>
+                <i className="bi bi-clock text-warning" style={{ fontSize: "1.1rem" }}></i>
               </div>
               <div>
                 <span className="text-muted fw-semibold d-block" style={{ fontSize: "0.75rem" }}>Expiring Soon</span>
@@ -871,29 +732,36 @@ function LeasesContent() {
         </div>
       </div>
 
-      {/* Charts Row */}
+      {/* Charts Section */}
       <div className="row g-3 mb-4">
-        <div className="col-md-5">
-          <div className="card border p-4 h-100 bg-white" style={{ borderRadius: "10px", borderColor: "var(--border-color)", boxShadow: "none" }}>
-            <h6 className="fw-bold text-dark mb-4" style={{ fontSize: "0.9rem" }}>Lease Status Overview</h6>
-            <DonutChart active={leaseStats.activeLeases} expiringSoon={leaseStats.expiringSoon} expired={leaseStats.expiredLeases} terminated={leaseStats.terminated} />
+        <div className="col-md-6">
+          <div className="card border p-3 h-100 bg-white" style={{ borderRadius: "10px" }}>
+            <h6 className="fw-bold text-dark mb-3" style={{ fontSize: "0.85rem" }}>Lease Status Overview</h6>
+            <DonutChart 
+              active={leaseStats.activeLeases} 
+              expiringSoon={leaseStats.expiringSoon} 
+              expired={leaseStats.expiredLeases} 
+              terminated={leaseStats.terminated} 
+            />
           </div>
         </div>
-        <div className="col-md-7">
-          <div className="card border p-4 h-100 bg-white" style={{ borderRadius: "10px", borderColor: "var(--border-color)", boxShadow: "none" }}>
-            <div className="d-flex justify-content-between align-items-center mb-4">
-              <h6 className="fw-bold text-dark mb-0" style={{ fontSize: "0.9rem" }}>Lease Expiry Timeline</h6>
+
+        <div className="col-md-6">
+          <div className="card border p-3 h-100 bg-white" style={{ borderRadius: "10px" }}>
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h6 className="fw-bold text-dark mb-0" style={{ fontSize: "0.85rem" }}>Lease Expiry Timeline</h6>
               <select 
-                className="form-select form-select-sm shadow-none" 
+                className="form-select form-select-sm border-0 bg-light fw-semibold" 
+                style={{ width: "auto", fontSize: "0.75rem" }}
                 value={timelineRange}
                 onChange={(e) => setTimelineRange(Number(e.target.value))}
-                style={{ width: "130px", fontSize: "0.75rem", borderRadius: "6px" }}
               >
+                <option value={3}>Next 3 Months</option>
                 <option value={6}>Next 6 Months</option>
                 <option value={12}>Next 12 Months</option>
               </select>
             </div>
-            <BarChart data={(leaseStats.timeline || []).slice(0, timelineRange)} />
+            <BarChart data={leaseStats.timeline.slice(0, timelineRange)} />
           </div>
         </div>
       </div>
@@ -1006,53 +874,11 @@ function LeasesContent() {
           </div>
         </div>
 
-        {/* Proactive Alerts Panel */}
-        {leaseNotifications.some((n) => !n.readStatus) && (
-          <div className="mx-4 p-3 mb-3 rounded border border-warning" style={{ backgroundColor: "#fffbeb" }}>
-            <div className="d-flex align-items-center justify-content-between mb-2">
-              <div className="d-flex align-items-center gap-2">
-                <i className="bi bi-bell-fill text-warning"></i>
-                <strong className="text-dark small">Proactive 5-Day Alerts & Reminders</strong>
-              </div>
-              <button
-                className="btn btn-sm btn-link text-muted small text-decoration-none p-0 fw-bold"
-                style={{ fontSize: "0.75rem" }}
-                onClick={async () => {
-                  try {
-                    await api.get("/notifications?markAsRead=true");
-                    setNotifications((prev) => prev.map((n) => ({ ...n, readStatus: true })));
-                  } catch (e) {
-                    console.error(e);
-                  }
-                }}
-              >
-                Clear All Alerts
-              </button>
-            </div>
-            <div className="row g-2" style={{ maxHeight: "110px", overflowY: "auto" }}>
-              {leaseNotifications
-                .filter((n) => !n.readStatus)
-                .map((notif) => (
-                  <div key={notif._id} className="col-12 col-md-6">
-                    <div className="p-2 bg-white border rounded d-flex justify-content-between align-items-center gap-2">
-                      <span className="text-muted small text-truncate" style={{ fontSize: "0.75rem" }}>
-                        <strong>{notif.title}</strong>: {notif.message}
-                      </span>
-                      <button className="btn btn-link p-0 border-0" title="Mark as Read" onClick={() => handleMarkAsRead(notif._id)}>
-                        <i className="bi bi-check2-circle text-primary" style={{ fontSize: "1rem" }}></i>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
         {/* Table */}
         <div className="flex-grow-1 overflow-hidden d-flex flex-column">
           <Table
             columns={columns}
-            data={users}
+            data={leases}
             isLoading={isLoading}
             loadingMessage="Loading lease agreements..."
             emptyMessage="No active agreements matching the filters."
@@ -1073,7 +899,7 @@ function LeasesContent() {
             onClose={() => setPaymentUpdateUser(null)}
             onSuccess={() => {
               setPaymentUpdateUser(null);
-              fetchUsersList();
+              fetchLeasesList();
             }}
           />
         )}

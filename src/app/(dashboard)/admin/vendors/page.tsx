@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { api } from "@/utils/api";
@@ -457,6 +457,7 @@ export default function VendorsPage() {
       style: { textAlign: "center" as const },
       render: (v: any) => (
         <div className="d-flex justify-content-center gap-1">
+          {/*
           <button
             title="View Details"
             onClick={(e) => { e.stopPropagation(); setSelectedVendorId(v._id); }}
@@ -465,6 +466,7 @@ export default function VendorsPage() {
           >
             <i className="bi bi-eye" style={{ fontSize: "0.75rem" }} />
           </button>
+          */}
           <button
             title="Edit"
             onClick={(e) => { e.stopPropagation(); setSelectedVendorForEdit(v); setModalMode("edit"); setShowModal(true); }}

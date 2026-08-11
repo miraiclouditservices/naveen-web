@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { fetchApi } from "@/utils/api";
 
 interface BookingFormModalProps {
   isOpen: boolean;
@@ -89,16 +90,32 @@ export default function BookingFormModal({
     return `${String(h).padStart(2, '0')}:${mStr} ${ampm}`;
   };
 
+  const [allRoomBookings, setAllRoomBookings] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (isOpen && formData.meetingRoom) {
+      fetchApi(`/bookings?limit=100&forSlots=true&meetingRoom=${formData.meetingRoom}`)
+        .then((data) => {
+          if (data && data.success && Array.isArray(data.data)) {
+            setAllRoomBookings(data.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [isOpen, formData.meetingRoom]);
+
   const isSlotBooked = (start: string, end: string) => {
     if (!formData.meetingRoom || !formData.bookingDate) return false;
     const slotStart = toMinutes(start);
     const slotEnd = toMinutes(end);
 
-    return bookings.some((b: any) => {
+    const combined = [...bookings, ...allRoomBookings];
+
+    return combined.some((b: any) => {
       if (editData && b._id === editData._id) return false;
       const bRoomId = b.meetingRoom?._id || b.meetingRoom || "";
       if (bRoomId !== formData.meetingRoom) return false;
-      if (b.bookingStatus !== 'Approved') return false;
+      if (b.bookingStatus !== 'Approved' && b.bookingStatus !== 'Pending') return false;
       if (!b.bookingDate) return false;
 
       const bDate = new Date(b.bookingDate).toISOString().split('T')[0];

@@ -1,5 +1,3 @@
-import "@/styles/marketing.css";
-
 import Navbar from "@/components/marketing/Navbar";
 import Hero from "@/components/marketing/Hero";
 import WhoUses from "@/components/marketing/WhoUses";

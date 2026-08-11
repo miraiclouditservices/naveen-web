@@ -4,8 +4,8 @@
   position: fixed;
   left: 0;
   top: 0;
-  background-color: var(--text-primary);
-  border-right: none;
+  background-color: var(--primary, #040404);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
   z-index: 1000;
@@ -16,16 +16,16 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin-bottom: var(--space-4);
+  margin-bottom: 8px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  padding-bottom: var(--space-4) !important;
+  padding-bottom: 14px !important;
 }
 
 .brandIcon {
   width: 36px;
   height: 36px;
   background: transparent;
-  color: #c49a02;
+  color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -34,18 +34,18 @@
 .brandName {
   font-weight: 800;
   font-size: 1.15rem;
-  color: var(--bg-card);
+  color: #ffffff;
   letter-spacing: 0.02em;
 }
 
 .navSection {
   flex-grow: 1;
-  padding: 0 var(--space-4);
+  padding: 0 12px;
   overflow-y: auto;
 }
 
 .navGroup {
-  margin-bottom: var(--space-4);
+  margin-bottom: 2px;
 }
 
 .navLabel {
@@ -55,30 +55,31 @@
 .navLink {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-custom, 10px);
   text-decoration: none;
-  color: #ffffff;
+  color: rgba(255, 255, 255, 0.75);
   font-size: 0.85rem;
   font-weight: 500;
   transition: all 0.2s ease;
 }
 
 .navLink:hover {
-  background-color: rgba(255, 255, 255, 0.05);
+  background-color: rgba(255, 255, 255, 0.08);
   color: #ffffff;
 }
 
 .navLinkActive {
-  background-color: var(--bg-app);
-  color: var(--text-main);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  background-color: rgba(255, 255, 255, 0.16);
+  color: #ffffff !important;
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .navLinkActive i {
-  color: #8b6914;
-  /* A dark gold/brownish tint to match image for active icon */
+  color: #ffffff !important;
 }
 
 .navIcon {

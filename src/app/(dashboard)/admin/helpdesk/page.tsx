@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import { api } from "@/utils/api";
@@ -31,7 +31,7 @@ export default function HelpdeskPage() {
 
   const [tickets, setTickets] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -171,11 +171,10 @@ export default function HelpdeskPage() {
     {
       header: "Priority",
       render: (item) => (
-        <span className={`badge rounded-pill px-2 py-1 border fw-bold ${
-          item.priority === "Critical" ? "bg-danger text-white border-danger" :
+        <span className={`badge rounded-pill px-2 py-1 border fw-bold ${item.priority === "Critical" ? "bg-danger text-white border-danger" :
           item.priority === "High" ? "bg-warning text-dark border-warning" :
-          "bg-light text-dark border-secondary"
-        }`}>
+            "bg-light text-dark border-secondary"
+          }`}>
           {item.priority}
         </span>
       )
@@ -194,13 +193,12 @@ export default function HelpdeskPage() {
     {
       header: "Status",
       render: (item) => (
-        <span className={`badge rounded-pill px-2 py-1 fw-bold border ${
-          item.status === "OPEN" ? "bg-danger bg-opacity-10 text-danger border-danger" :
+        <span className={`badge rounded-pill px-2 py-1 fw-bold border ${item.status === "OPEN" ? "bg-danger bg-opacity-10 text-danger border-danger" :
           item.status === "ASSIGNED" ? "bg-info bg-opacity-10 text-info border-info" :
-          item.status === "IN_PROGRESS" ? "bg-warning bg-opacity-10 text-warning border-warning" :
-          item.status === "RESOLVED" ? "bg-success bg-opacity-10 text-success border-success" :
-          "bg-secondary bg-opacity-10 text-secondary border-secondary"
-        }`}>
+            item.status === "IN_PROGRESS" ? "bg-warning bg-opacity-10 text-warning border-warning" :
+              item.status === "RESOLVED" ? "bg-success bg-opacity-10 text-success border-success" :
+                "bg-secondary bg-opacity-10 text-secondary border-secondary"
+          }`}>
           {item.status}
         </span>
       )
@@ -260,17 +258,17 @@ export default function HelpdeskPage() {
             Manage occupant issues, maintenance requests & support tickets
           </p>
         </div>
-        
+
         <div className="d-flex gap-2 align-items-center">
-          {canCreateTicket && (
-            <button
-              onClick={() => handleOpenModal("create")}
-              className="btn btn-dark btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
-              style={{ backgroundColor: "#040404", borderColor: "#040404", borderRadius: "8px", fontSize: "0.8rem", height: "38px" }}
-            >
-              <i className="bi bi-plus-lg"></i> Raise Ticket
-            </button>
-          )}
+          {/* {canCreateTicket && ( */}
+          <button
+            onClick={() => handleOpenModal("create")}
+            className="btn btn-dark btn-sm fw-bold px-3 py-2 d-flex align-items-center gap-2"
+            style={{ backgroundColor: "#040404", borderColor: "#040404", borderRadius: "8px", fontSize: "0.8rem", height: "38px" }}
+          >
+            <i className="bi bi-plus-lg"></i> Raise Ticket
+          </button>
+          {/* // )} */}
           <button
             className="btn btn-sm btn-white border fw-bold px-3 py-2"
             style={{ borderRadius: "8px", fontSize: "0.8rem", backgroundColor: "#ffffff", height: "38px" }}
@@ -281,213 +279,217 @@ export default function HelpdeskPage() {
         </div>
       </div>
 
-      {/* ── 2. BENTO STATS ROW (6 cards) ──────────────────────────────────── */}
-      <div className="row g-3 mb-4">
-        {/* Card 1: Total Tickets */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-ticket-perforated text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Total Tickets
-              </span>
+      {/* ── 2. BENTO STATS ROW & FILTER TABS (Admin Only) ─────────────────── */}
+      {!["COWORKING_TENANT", "COWORKING_MEMBER", "Tenant"].includes(currentUser?.role) && (
+        <>
+          <div className="row g-3 mb-4">
+            {/* Card 1: Total Tickets */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-ticket-perforated text-muted" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Total Tickets
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.total || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Support Ledger Total
+                </div>
+              </div>
             </div>
-            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
-              {(metrics.total || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Support Ledger Total
+
+            {/* Card 2: Open Tickets */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-folder-symlink text-danger" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Open Tickets
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-danger" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.open || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Immediate Attention
+                </div>
+              </div>
+            </div>
+
+            {/* Card 3: Assigned */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-person-workspace text-info" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Assigned
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-info" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.assigned || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Awaiting Action
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: In Progress */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    In Progress
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-warning" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.inProgress || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Active Resolution
+                </div>
+              </div>
+            </div>
+
+            {/* Card 5: Resolved */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-check2-circle text-success" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Resolved
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-success" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.resolved || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Ready for Close
+                </div>
+              </div>
+            </div>
+
+            {/* Card 6: Closed */}
+            <div className="col-md-2 col-sm-4 col-6">
+              <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
+                <div className="d-flex align-items-center gap-2 mb-2">
+                  <i className="bi bi-archive text-muted" style={{ fontSize: "1.1rem" }} />
+                  <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
+                    Closed
+                  </span>
+                </div>
+                <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
+                  {(metrics.closed || 0).toLocaleString("en-IN")}
+                </h5>
+                <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                  Completed & Archived
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Card 2: Open Tickets */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-folder-symlink text-danger" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Open Tickets
-              </span>
+          {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
+          <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+            {/* Left tabs */}
+            <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
+              {[
+                { label: "All Tickets", value: "All" },
+                { label: "Open", value: "OPEN" },
+                { label: "Assigned", value: "ASSIGNED" },
+                { label: "In Progress", value: "IN_PROGRESS" },
+                { label: "Resolved", value: "RESOLVED" },
+                { label: "Closed", value: "CLOSED" }
+              ].map((tab) => {
+                const isAct = statusFilter === tab.value;
+                return (
+                  <button
+                    key={tab.label}
+                    onClick={() => {
+                      setStatusFilter(tab.value);
+                      setCurrentPage(1);
+                    }}
+                    className="btn btn-sm"
+                    style={{
+                      fontSize: "0.75rem",
+                      fontWeight: "600",
+                      padding: "6px 12px",
+                      borderRadius: "6px",
+                      backgroundColor: isAct ? "#040404" : "transparent",
+                      color: isAct ? "#FFFFFF" : "var(--text-muted)",
+                      border: "none",
+                      transition: "all 0.2s",
+                    }}
+                  >
+                    {tab.label}
+                  </button>
+                );
+              })}
             </div>
-            <h5 className="fw-bold mb-1 text-danger" style={{ fontSize: "1.1rem" }}>
-              {(metrics.open || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Immediate Attention
-            </div>
-          </div>
-        </div>
 
-        {/* Card 3: Assigned */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-person-workspace text-info" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Assigned
-              </span>
-            </div>
-            <h5 className="fw-bold mb-1 text-info" style={{ fontSize: "1.1rem" }}>
-              {(metrics.assigned || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Awaiting Action
-            </div>
-          </div>
-        </div>
-
-        {/* Card 4: In Progress */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-hourglass-split text-warning" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                In Progress
-              </span>
-            </div>
-            <h5 className="fw-bold mb-1 text-warning" style={{ fontSize: "1.1rem" }}>
-              {(metrics.inProgress || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Active Resolution
-            </div>
-          </div>
-        </div>
-
-        {/* Card 5: Resolved */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-check2-circle text-success" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Resolved
-              </span>
-            </div>
-            <h5 className="fw-bold mb-1 text-success" style={{ fontSize: "1.1rem" }}>
-              {(metrics.resolved || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Ready for Close
-            </div>
-          </div>
-        </div>
-
-        {/* Card 6: Closed */}
-        <div className="col-md-2 col-sm-4 col-6">
-          <div style={{ backgroundColor: "#FFFFFF", borderRadius: "12px", border: "1px solid var(--border-color)", padding: "16px", height: "100%" }}>
-            <div className="d-flex align-items-center gap-2 mb-2">
-              <i className="bi bi-archive text-muted" style={{ fontSize: "1.1rem" }} />
-              <span className="text-muted fw-semibold" style={{ fontSize: "0.72rem", color: "var(--text-muted)" }}>
-                Closed
-              </span>
-            </div>
-            <h5 className="fw-bold mb-1 text-dark" style={{ fontSize: "1.1rem" }}>
-              {(metrics.closed || 0).toLocaleString("en-IN")}
-            </h5>
-            <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-              Completed & Archived
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 3. FILTER TABS & SELECTORS ────────────────────────────────────── */}
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        {/* Left tabs */}
-        <div className="d-flex gap-1 bg-white p-1 rounded-3" style={{ border: "1px solid var(--border-color)" }}>
-          {[
-            { label: "All Tickets", value: "All" },
-            { label: "Open", value: "OPEN" },
-            { label: "Assigned", value: "ASSIGNED" },
-            { label: "In Progress", value: "IN_PROGRESS" },
-            { label: "Resolved", value: "RESOLVED" },
-            { label: "Closed", value: "CLOSED" }
-          ].map((tab) => {
-            const isAct = statusFilter === tab.value;
-            return (
-              <button
-                key={tab.label}
-                onClick={() => {
-                  setStatusFilter(tab.value);
+            {/* Right selectors */}
+            <div className="d-flex gap-2 flex-wrap">
+              {/* Property Filter */}
+              <select
+                className="form-select bg-white py-1 rounded-3"
+                style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+                value={propertyFilter}
+                onChange={(e) => {
+                  setPropertyFilter(e.target.value);
                   setCurrentPage(1);
                 }}
-                className="btn btn-sm"
-                style={{
-                  fontSize: "0.75rem",
-                  fontWeight: "600",
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  backgroundColor: isAct ? "#040404" : "transparent",
-                  color: isAct ? "#FFFFFF" : "var(--text-muted)",
-                  border: "none",
-                  transition: "all 0.2s",
+              >
+                <option value="All">All Properties</option>
+                {properties.map((p) => (
+                  <option key={p._id} value={p._id}>{p.propertyName}</option>
+                ))}
+              </select>
+
+              {/* Category Filter */}
+              <select
+                className="form-select bg-white py-1 rounded-3"
+                style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+                value={categoryFilter}
+                onChange={(e) => {
+                  setCategoryFilter(e.target.value);
+                  setCurrentPage(1);
                 }}
               >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
+                <option value="All">All Categories</option>
+                <option value="Maintenance">Maintenance</option>
+                <option value="Electricity">Electricity</option>
+                <option value="Water">Water</option>
+                <option value="Payment">Payment</option>
+                <option value="Agreement">Agreement</option>
+                <option value="Security">Security</option>
+                <option value="Technical Issue">Technical Issue</option>
+                <option value="Complaint">Complaint</option>
+                <option value="Other">Other</option>
+              </select>
 
-        {/* Right selectors */}
-        <div className="d-flex gap-2 flex-wrap">
-          {/* Property Filter */}
-          <select
-            className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
-            value={propertyFilter}
-            onChange={(e) => {
-              setPropertyFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="All">All Properties</option>
-            {properties.map((p) => (
-              <option key={p._id} value={p._id}>{p.propertyName}</option>
-            ))}
-          </select>
-
-          {/* Category Filter */}
-          <select
-            className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
-            value={categoryFilter}
-            onChange={(e) => {
-              setCategoryFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="All">All Categories</option>
-            <option value="Maintenance">Maintenance</option>
-            <option value="Electricity">Electricity</option>
-            <option value="Water">Water</option>
-            <option value="Payment">Payment</option>
-            <option value="Agreement">Agreement</option>
-            <option value="Security">Security</option>
-            <option value="Technical Issue">Technical Issue</option>
-            <option value="Complaint">Complaint</option>
-            <option value="Other">Other</option>
-          </select>
-
-          {/* Priority Filter */}
-          <select
-            className="form-select bg-white py-1 rounded-3"
-            style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
-            value={priorityFilter}
-            onChange={(e) => {
-              setPriorityFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="All">All Priorities</option>
-            <option value="Low">Low</option>
-            <option value="Medium">Medium</option>
-            <option value="High">High</option>
-            <option value="Critical">Critical</option>
-          </select>
-        </div>
-      </div>
+              {/* Priority Filter */}
+              <select
+                className="form-select bg-white py-1 rounded-3"
+                style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+                value={priorityFilter}
+                onChange={(e) => {
+                  setPriorityFilter(e.target.value);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="All">All Priorities</option>
+                <option value="Low">Low</option>
+                <option value="Medium">Medium</option>
+                <option value="High">High</option>
+                <option value="Critical">Critical</option>
+              </select>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* ── 4. BOTTOM DIRECTORY: Helpdesk Table ───────────────────────────── */}
       <div className="row g-4 mb-4">
@@ -555,7 +557,7 @@ export default function HelpdeskPage() {
       </div>
 
       {/* ── 5. HELPDESK FORM MODAL ────────────────────────────────────────── */}
-      <HelpdeskFormModal 
+      <HelpdeskFormModal
         isOpen={isCreateOpen}
         onClose={() => setIsCreateOpen(false)}
         onSave={handleSaveTicket}

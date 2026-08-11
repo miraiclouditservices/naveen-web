@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { api } from "@/utils/api";
+import { api, getStoredUser } from "@/utils/api";
 
 const FIELD_STYLE: React.CSSProperties = {
   borderRadius: "6px",
@@ -23,6 +23,9 @@ const LABEL_STYLE: React.CSSProperties = {
 };
 
 export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
+  const user = getStoredUser();
+  const isCoWorking = ['COWORKING_ADMIN', 'COWORKING ADMIN', 'Coworking Admin', 'COWORKING_TENANT'].includes(user?.role) || user?.workspaceType === 'COWORKING';
+
   const [properties, setProperties] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
   
@@ -34,7 +37,9 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
     unitName: "",
     sqft: "",
     unitType: "Standard",
-    unitStatus: "Available"
+    unitStatus: "Available",
+    seatCount: "",
+    occupiedSeatCount: ""
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,7 +63,9 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
           unitName: editData.unitName || "",
           sqft: editData.sqft || "",
           unitType: editData.unitType || "Standard",
-          unitStatus: editData.unitStatus || "Available"
+          unitStatus: editData.unitStatus || "Available",
+          seatCount: editData.seatCount != null ? String(editData.seatCount) : "",
+          occupiedSeatCount: editData.occupiedSeatCount != null ? String(editData.occupiedSeatCount) : ""
         });
         setOriginalUnitSqft(editData.sqft || 0);
         setOriginalFloorId(editData.floor?._id || editData.floor || "");
@@ -68,7 +75,8 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
       } else {
         setFormData({
           property: "", floor: "", floorNumber: "", unitNumber: "", unitName: "",
-          sqft: "", unitType: "Standard", unitStatus: "Available"
+          sqft: "", unitType: "Standard", unitStatus: "Available",
+          seatCount: "", occupiedSeatCount: ""
         });
         setFloors([]);
         setOriginalUnitSqft(0);
@@ -80,14 +88,31 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
   const fetchProperties = async () => {
     try {
       const response = await api.get('/properties');
-      if (response.success) setProperties(response.data);
+      if (response.success && Array.isArray(response.data)) {
+        setProperties(response.data);
+        if (response.data.length === 1 && !formData.property) {
+          const autoPropId = response.data[0]._id;
+          setFormData(prev => ({ ...prev, property: autoPropId }));
+          fetchFloors(autoPropId);
+        }
+      }
     } catch (err) { console.error(err); }
   };
 
   const fetchFloors = async (propertyId: string) => {
     try {
       const response = await api.get(`/floors?property=${propertyId}&limit=100`);
-      if (response.success) setFloors(response.data);
+      if (response.success && Array.isArray(response.data)) {
+        setFloors(response.data);
+        if (response.data.length === 1 && !formData.floor) {
+          const autoFloor = response.data[0];
+          setFormData(prev => ({
+            ...prev,
+            floor: autoFloor._id,
+            floorNumber: autoFloor.floorNumber
+          }));
+        }
+      }
     } catch (err) { console.error(err); }
   };
 
@@ -153,26 +178,51 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
             {/* Property and Floor Information Section */}
             <div className="mb-4">
               <span className="fw-bold text-dark d-block mb-3" style={{ fontSize: '0.88rem' }}>
-                <i className="bi bi-building text-primary me-2"></i>Property & Floor Information
+                <i className="bi bi-building text-primary me-2"></i>
+                {isCoWorking ? "Property Information" : (properties.length > 1 ? "Property & Floor Information" : "Floor Information")}
               </span>
               <div className="row g-3">
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}>Select Property *</label>
-                  <select name="property" value={formData.property} onChange={handleChange} required disabled={!!editData} style={FIELD_STYLE}>
-                    <option value="">Select Property...</option>
-                    {properties.map(p => <option key={p._id} value={p._id}>{p.propertyName}</option>)}
-                  </select>
-                </div>
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}>Select Floor *</label>
-                  <select name="floor" value={formData.floor} onChange={handleChange} required disabled={!formData.property || !!editData} style={FIELD_STYLE}>
-                    <option value="">Select Floor...</option>
-                    {floors.map(f => <option key={f._id} value={f._id}>{f.floorName || `Floor ${f.floorNumber}`}</option>)}
-                  </select>
-                </div>
+                {properties.length > 1 && (
+                  <div className={isCoWorking ? "col-12" : "col-md-6"}>
+                    <label style={LABEL_STYLE}>Select Property *</label>
+                    <select
+                      name="property"
+                      value={formData.property}
+                      onChange={handleChange}
+                      required
+                      disabled={!!editData}
+                      style={FIELD_STYLE}
+                    >
+                      <option value="">Select Property...</option>
+                      {properties.map(p => <option key={p._id} value={p._id}>{p.propertyName}</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {!isCoWorking && (
+                  <div className={properties.length > 1 ? "col-md-6" : "col-12"}>
+                    <label style={LABEL_STYLE}>
+                      Select Floor (Optional)
+                      {floors.length === 1 && <span className="text-muted ms-1 small fw-normal">(Auto-selected)</span>}
+                    </label>
+                    <select
+                      name="floor"
+                      value={formData.floor}
+                      onChange={handleChange}
+                      disabled={!formData.property || !!editData}
+                      style={{
+                        ...FIELD_STYLE,
+                        backgroundColor: (!formData.property || !!editData) ? "#f3f4f6" : FIELD_STYLE.backgroundColor
+                      }}
+                    >
+                      <option value="">No Floor / Direct Property &amp; Co-working Workspace</option>
+                      {floors.map(f => <option key={f._id} value={f._id}>{f.floorName || `Floor ${f.floorNumber}`}</option>)}
+                    </select>
+                  </div>
+                )}
               </div>
 
-              {selectedFloor && (
+              {!isCoWorking && selectedFloor && (
                 <div className="d-flex flex-wrap gap-3 mt-3 p-3 bg-light rounded border">
                   <div className="flex-fill">
                     <div className="text-muted small fw-bold" style={{ fontSize: '0.7rem' }}>Floor Total SFT</div>
@@ -241,7 +291,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                     />
                     <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
                   </div>
-                  {unitSqft > trueAvailableFloorSft && (
+                  {selectedFloor && unitSqft > trueAvailableFloorSft && (
                     <div className="text-danger small mt-1 fw-bold">
                       <i className="bi bi-exclamation-triangle-fill me-1"></i>
                       Exceeds available floor space!
@@ -249,20 +299,58 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                   )}
                 </div>
                 
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}>Remaining Floor SFT</label>
-                  <div className="position-relative">
-                    <input 
-                      type="text" 
-                      value={remainingFloorSft.toLocaleString()} 
-                      readOnly 
-                      style={{ ...FIELD_STYLE, backgroundColor: "var(--bg-app)", color: remainingFloorSft < 0 ? "#ef4444" : "#4b5563", fontWeight: 700 }} 
-                    />
-                    <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
+                {!isCoWorking && selectedFloor && (
+                  <div className="col-md-6">
+                    <label style={LABEL_STYLE}>Remaining Floor SFT</label>
+                    <div className="position-relative">
+                      <input 
+                        type="text" 
+                        value={remainingFloorSft.toLocaleString()} 
+                        readOnly 
+                        style={{ ...FIELD_STYLE, backgroundColor: "var(--bg-app)", color: remainingFloorSft < 0 ? "#ef4444" : "#4b5563", fontWeight: 700 }} 
+                      />
+                      <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
+                    </div>
                   </div>
+                )}
+
+                {/* Seat Count */}
+                <div className="col-md-6">
+                  <label style={LABEL_STYLE}>Total Seats</label>
+                  <input
+                    type="number"
+                    name="seatCount"
+                    value={formData.seatCount}
+                    onChange={handleChange}
+                    placeholder="e.g., 10"
+                    min="0"
+                    style={FIELD_STYLE}
+                  />
                 </div>
 
-                {selectedFloor && (
+                {/* Occupied Seat Count */}
+                <div className="col-md-6">
+                  <label style={LABEL_STYLE}>Occupied Seats</label>
+                  <input
+                    type="number"
+                    name="occupiedSeatCount"
+                    value={formData.occupiedSeatCount}
+                    onChange={handleChange}
+                    placeholder="e.g., 4"
+                    min="0"
+                    max={formData.seatCount ? Number(formData.seatCount) : undefined}
+                    style={FIELD_STYLE}
+                  />
+                  {formData.seatCount && formData.occupiedSeatCount &&
+                    Number(formData.occupiedSeatCount) > Number(formData.seatCount) && (
+                    <div className="text-danger small mt-1 fw-bold">
+                      <i className="bi bi-exclamation-triangle-fill me-1"></i>
+                      Cannot exceed total seats ({formData.seatCount})
+                    </div>
+                  )}
+                </div>
+
+                {!isCoWorking && selectedFloor && (
                   <div className="col-12 mt-2">
                     <label className="d-flex justify-content-between w-100 mb-1" style={LABEL_STYLE}>
                       <span>Floor Occupancy Projection</span>
@@ -287,7 +375,12 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
             <button 
               type="submit" 
               className="btn btn-sm fw-bold text-white px-4 py-2" 
-              disabled={isSubmitting || unitSqft > trueAvailableFloorSft || !formData.floor}
+              disabled={
+                isSubmitting ||
+                (selectedFloor ? unitSqft > trueAvailableFloorSft : false) ||
+                (!!formData.seatCount && !!formData.occupiedSeatCount &&
+                  Number(formData.occupiedSeatCount) > Number(formData.seatCount))
+              }
               style={{ fontSize: '0.85rem', borderRadius: '4px', backgroundColor: 'var(--dark-section)' }}
             >
               {isSubmitting ? "Saving..." : (editData ? 'Update Unit' : 'Create Unit')}
