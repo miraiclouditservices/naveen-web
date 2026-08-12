@@ -152,7 +152,7 @@ export default function Sidebar() {
           ...(isSuperAdmin || isStaffAdmin || permissions.length > 0 ? [{ name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" }] : []),
           ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "Properties", path: "/admin/properties", icon: "hgi-building-01" }] : []),
           ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "Floors", path: "/admin/floors", icon: "hgi-layers-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" }] : []),
+          // ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" }] : []),
           ...(isSuperAdmin || hasAccess('view_tenants') || isStaffAdmin ? [{ name: "Lease", path: "/admin/leases", icon: "hgi-agreement-01" }] : []),
           ...(user ? [{ name: "Payments", path: "/admin/payments", icon: "hgi-credit-card" }] : []),
         ]
@@ -212,21 +212,39 @@ export default function Sidebar() {
     }
   ];
 
+  const floorAdminGroups = [
+    {
+      label: "Main",
+      items: [
+        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
+        { name: "My Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" },
+      ]
+    },
+    {
+      label: "Operations",
+      items: [
+        { name: "Helpdesk", path: "/admin/helpdesk", icon: "hgi-headset" },
+        { name: "Visitors Log", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" }
+      ]
+    },
+    {
+      label: "Account",
+      items: [
+        { name: "Setting & Profile", path: "/admin/settings", icon: "hgi-settings-01" }
+      ]
+    }
+  ];
+
   const menuGroups = isUltraSuperAdmin
     ? ultraGroups
     : isCoWorkingTenant
       ? coworkingTenantGroups
-      : standardMenuGroups.map(group => {
+      : isFloorAdmin
+        ? floorAdminGroups
+        : standardMenuGroups.map(group => {
         if (isOfficeOwner) {
           const itemsToRemove = ["Properties", "Floors", "Units and sft", "Leases", "Assets", "Vendors", "Reports"];
-          return {
-            ...group,
-            items: group.items.filter(item => !itemsToRemove.includes(item.name))
-          };
-        }
-
-        if (isFloorAdmin) {
-          const itemsToRemove = ["Properties"];
           return {
             ...group,
             items: group.items.filter(item => !itemsToRemove.includes(item.name))

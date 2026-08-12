@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef, Suspense } from "react";
 import Link from "next/link";
-import { api } from "@/utils/api";
+import { api, getStoredUser } from "@/utils/api";
 import Table, { TableColumn } from "@/components/common/Table";
 import RecordPaymentModal from "./RecordPaymentModal";
 
@@ -312,13 +312,59 @@ function LeasesContent() {
   const fetchLeasesList = useCallback(async () => {
     setIsLoading(true);
     try {
+      const currentUser = getStoredUser();
+      const rawRole = currentUser?.role || "";
+      const isSuperAdmin = rawRole === "Admin" || rawRole === "Super Admin" || rawRole === "SUPER_ADMIN" || rawRole === "ULTRA_SUPER_ADMIN" || rawRole === "COWORKING_ADMIN";
+
       const res = await api.get(`/leases?${buildQuery()}`);
       if (res.success) {
-        setLeases(res.data || []);
-        setTotalPages(res.pagination?.totalPages || 1);
-        setTotalItems(res.total || res.data?.length || 0);
+        let rawList: any[] = res.data || [];
 
-        if (res.summary) {
+        // If user is a Floor Admin or non-super-admin occupant, strictly display ONLY their own lease details
+        if (currentUser && !isSuperAdmin) {
+          rawList = rawList.filter((item: any) => {
+            const itemEmail = (item.tenantEmail || item.email || "").toLowerCase();
+            const userEmail = (currentUser.email || "").toLowerCase();
+            const itemId = item._id ? String(item._id) : "";
+            const userId = currentUser._id ? String(currentUser._id) : currentUser.id ? String(currentUser.id) : "";
+            const tenantId = item.tenantId ? String(item.tenantId) : "";
+            const createdBy = item.createdBy ? String(item.createdBy) : "";
+
+            return (
+              (userEmail && itemEmail === userEmail) ||
+              (userId && (itemId === userId || tenantId === userId || createdBy === userId))
+            );
+          });
+        }
+
+        setLeases(rawList);
+        setTotalPages(res.pagination?.totalPages || 1);
+        setTotalItems(rawList.length);
+
+        if (!isSuperAdmin && currentUser) {
+          let activeCount = 0;
+          let expiringCount = 0;
+          let expiredCount = 0;
+          let terminatedCount = 0;
+
+          rawList.forEach((l: any) => {
+            const s = l.status || l.agreementStatus || "Active";
+            if (s === "Active") activeCount++;
+            else if (s === "Expiring Soon") expiringCount++;
+            else if (s === "Expired") expiredCount++;
+            else terminatedCount++;
+          });
+
+          setLeaseStats({
+            totalLeases: rawList.length,
+            activeLeases: activeCount,
+            expiringSoon: expiringCount,
+            expiredLeases: expiredCount,
+            terminated: terminatedCount,
+            trends: { totalLeases: 0, activeLeases: 0, expiringSoon: 0, expiredLeases: 0 },
+            timeline: []
+          });
+        } else if (res.summary) {
           setLeaseStats({
             totalLeases: res.summary.totalLeases || 0,
             activeLeases: res.summary.activeLeases || 0,
