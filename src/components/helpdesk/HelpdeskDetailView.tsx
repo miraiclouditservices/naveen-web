@@ -200,12 +200,12 @@ export default function HelpdeskDetailView({
     viewItem.raisedBy === currentUser?.name
   );
 
-  const isAdminRole = ["SUPER_ADMIN", "COWORKING_ADMIN", "FLOOR_ADMIN", "STAFF_ADMIN"].includes(currentUser?.role);
+  const isSuperAdminRole = ["SUPER_ADMIN", "COWORKING_ADMIN", "ULTRA_SUPER_ADMIN", "ORGANIZATION_ADMIN"].includes(currentUser?.role);
 
-  const canAssign = isAdminRole && (viewItem.status === "OPEN" || viewItem.status === "ASSIGNED");
-  const canUpdateStatus = isAdminRole && viewItem.status !== "CLOSED";
-  const canResolve = isAdminRole && viewItem.status !== "RESOLVED" && viewItem.status !== "CLOSED";
-  const canClose = isAdminRole && viewItem.status !== "CLOSED";
+  const canAssign = isSuperAdminRole && (viewItem.status === "OPEN" || viewItem.status === "ASSIGNED");
+  const canUpdateStatus = isSuperAdminRole && viewItem.status !== "CLOSED";
+  const canResolve = isSuperAdminRole && viewItem.status !== "RESOLVED" && viewItem.status !== "CLOSED";
+  const canClose = isSuperAdminRole && viewItem.status !== "CLOSED";
 
   return (
     <div

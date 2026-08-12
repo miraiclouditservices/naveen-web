@@ -86,10 +86,10 @@ function CreateUserContent() {
             const rawRole = String(u.role || 'COWORKING_TENANT');
             const normalizedRole = rawRole === 'Co-Working Member' || rawRole === 'Coworking Tenant' || rawRole === 'Tenant' ? 'COWORKING_TENANT'
               : rawRole === 'Co-Working Admin' || rawRole === 'Coworking Admin' ? 'COWORKING_ADMIN'
-              : rawRole === 'Floor Admin' || rawRole === 'Floor Manager' ? 'FLOOR_ADMIN'
-              : rawRole === 'Office Owner' || rawRole === 'Owner' ? 'OFFICE_OWNER'
-              : rawRole === 'Staff Admin' ? 'STAFF_ADMIN'
-              : rawRole.toUpperCase().replace(/[-\s]+/g, '_');
+                : rawRole === 'Floor Admin' || rawRole === 'Floor Manager' ? 'FLOOR_ADMIN'
+                  : rawRole === 'Office Owner' || rawRole === 'Owner' ? 'OFFICE_OWNER'
+                    : rawRole === 'Staff Admin' ? 'STAFF_ADMIN'
+                      : rawRole.toUpperCase().replace(/[-\s]+/g, '_');
 
             setFormData({
               name: u.name || '',
@@ -222,10 +222,11 @@ function CreateUserContent() {
     } catch (err) { console.error(err); }
   };
 
-  const fetchFloors = async () => {
+  const fetchFloors = async (propertyIds?: string[]) => {
     try {
-      const res = await api.get('/floors');
-      if (res.success) {
+      const endpoint = propertyIds && propertyIds.length > 0 ? `/floors?property=${propertyIds.join(',')}&limit=200` : '/floors?limit=200';
+      const res = await api.get(endpoint);
+      if (res.success && Array.isArray(res.data)) {
         setFloors(res.data.map((f: any) => ({
           ...f,
           name: `${f.property?.propertyName || ''} - ${f.floorName || `Floor ${f.floorNumber}`} (${f.totalSft || 0} SFT)`
@@ -234,10 +235,18 @@ function CreateUserContent() {
     } catch (err) { console.error(err); }
   };
 
-  const fetchUnits = async () => {
+  const fetchUnits = async (propertyIds?: string[], floorIds?: string[]) => {
     try {
-      const res = await api.get('/units');
-      if (res.success) {
+      const params = new URLSearchParams();
+      params.append('limit', '200');
+      if (propertyIds && propertyIds.length > 0) {
+        params.append('property', propertyIds.join(','));
+      }
+      if (floorIds && floorIds.length > 0) {
+        params.append('floor', floorIds.join(','));
+      }
+      const res = await api.get(`/units?${params.toString()}`);
+      if (res.success && Array.isArray(res.data)) {
         setUnits(res.data.map((u: any) => ({
           ...u,
           name: `Unit ${u.unitNumber}${u.unitName ? ` (${u.unitName})` : ''} - ${u.property?.propertyName || 'Property'} ${u.floor?.floorNumber ? `- Floor ${u.floor.floorNumber}` : ''} (${u.seatCount > 0 ? `${u.seatCount} Seats` : `${u.sqft || 0} SFT`})`
@@ -245,6 +254,19 @@ function CreateUserContent() {
       }
     } catch (err) { console.error(err); }
   };
+
+  useEffect(() => {
+    if (formData.assignedProperties.length > 0) {
+      fetchFloors(formData.assignedProperties);
+      fetchUnits(formData.assignedProperties, formData.assignedFloors);
+    }
+  }, [formData.assignedProperties]);
+
+  useEffect(() => {
+    if (formData.assignedFloors.length > 0) {
+      fetchUnits(formData.assignedProperties, formData.assignedFloors);
+    }
+  }, [formData.assignedFloors]);
 
   const toggleSeatSelection = (unitId: string, seatNum: number) => {
     setFormData(prev => {
@@ -829,733 +851,737 @@ function CreateUserContent() {
                       </div>
                     </div>
 
-                    {formData.role === 'SUPER_ADMIN' ? (
-                      <div className="text-center p-5 border rounded-3 bg-light">
-                        <div className="mb-3">
-                          <i className="hgi-stroke hgi-information-circle text-primary" style={{ fontSize: '3rem' }}></i>
+                    {(() => {
+                      const normCurrentUserRole = String(currentUser?.role || '').toUpperCase().replace(/[-\s]+/g, '_');
+                      const isSuperAdminLoggedIn = normCurrentUserRole.includes('SUPER_ADMIN') || normCurrentUserRole.includes('ULTRA');
+                      const isCoWorkingAdminLoggedIn = normCurrentUserRole.includes('COWORKING_ADMIN') || normCurrentUserRole.includes('COWORKING');
+
+                      return (
+                        <div className="row g-3">
+                          {/* Property Selection: Display for SUPER_ADMIN, COWORKING_ADMIN, or whenever properties exist */}
+                          {(isSuperAdminLoggedIn || isCoWorkingAdminLoggedIn || properties.length > 0) && (
+                            <div className="col-12">
+                              <label className="form-label small fw-bold text-dark mb-1">Select Property *</label>
+                              <MultiSelect
+                                options={properties}
+                                selectedIds={formData.assignedProperties}
+                                onChange={(ids: any) => setFormData({ ...formData, assignedProperties: ids, assignedFloors: [], assignedUnits: [] })}
+                                placeholder="Select Property"
+                              />
+                              {validationErrors.properties && <div className="text-danger small mt-1">{validationErrors.properties}</div>}
+                            </div>
+                          )}
+
+                          {/* Floors Selection: Display for SUPER_ADMIN logged in user */}
+                          {(isSuperAdminLoggedIn || (!isCoWorkingAdminLoggedIn && filteredFloors.length > 0)) && (
+                            <div className="col-12">
+                              <label className="form-label small fw-bold text-dark mb-1">Select Floors *</label>
+                              <MultiSelect
+                                options={filteredFloors.length > 0 ? filteredFloors : floors}
+                                selectedIds={formData.assignedFloors}
+                                onChange={(ids: any) => setFormData({ ...formData, assignedFloors: ids, assignedUnits: [] })}
+                                placeholder="Select Floor"
+                              />
+                              {validationErrors.floors && <div className="text-danger small mt-1">{validationErrors.floors}</div>}
+                            </div>
+                          )}
+
+                          {/* Units & Workspaces (Offices / Desks): Display for COWORKING_ADMIN logged in user */}
+                          {(isCoWorkingAdminLoggedIn || (!isSuperAdminLoggedIn && (formData.assignedProperties.length > 0 || filteredUnits.length > 0))) && (
+                            <div className="col-12">
+                              <label className="form-label small fw-bold text-dark mb-1">Units &amp; Workspaces (Offices / Desks) *</label>
+                              <MultiSelect
+                                options={filteredUnits.length > 0 ? filteredUnits : units}
+                                selectedIds={formData.assignedUnits}
+                                onChange={handleUnitSelectionChange}
+                                placeholder="Select Offices / Desks"
+                              />
+                              {validationErrors.units && <div className="text-danger small mt-1">{validationErrors.units}</div>}
+                            </div>
+                          )}
                         </div>
-                        <h5 className="fw-bold text-dark">Step Not Required</h5>
-                        <p className="text-muted small max-w-md mx-auto mb-0">Spatial assignment is not required for the SUPER_ADMIN role. Click "Next" to continue.</p>
-                      </div>
-                    ) : (
-                      <div className="row g-3">
-                        {properties.length > 1 && currentUser?.role !== 'FLOOR_ADMIN' && (
-                          <div className="col-12">
-                            <label className="form-label small fw-bold text-dark mb-1">Select Property *</label>
-                            <MultiSelect
-                              options={properties}
-                              selectedIds={formData.assignedProperties}
-                              onChange={(ids: any) => setFormData({ ...formData, assignedProperties: ids, assignedFloors: [], assignedUnits: [] })}
-                              placeholder="Select Property"
-                            />
-                            {validationErrors.properties && <div className="text-danger small mt-1">{validationErrors.properties}</div>}
-                          </div>
-                        )}
+                      );
+                    })()}
 
-                        {(!isCoWorkingUser && filteredFloors.length > 0) && (
-                          <div className="col-12">
-                            <label className="form-label small fw-bold text-dark mb-1">Select Floors *</label>
-                            <MultiSelect
-                              options={filteredFloors}
-                              selectedIds={formData.assignedFloors}
-                              onChange={(ids: any) => setFormData({ ...formData, assignedFloors: ids, assignedUnits: [] })}
-                              placeholder="Select Floor"
-                            />
-                            {validationErrors.floors && <div className="text-danger small mt-1">{validationErrors.floors}</div>}
-                          </div>
-                        )}
-
-                        {(formData.assignedProperties.length > 0 || filteredUnits.length > 0) && (
-                          <div className="col-12">
-                            <label className="form-label small fw-bold text-dark mb-1">Units &amp; Workspaces (Offices / Desks) *</label>
-                            <MultiSelect
-                              options={filteredUnits}
-                              selectedIds={formData.assignedUnits}
-                              onChange={handleUnitSelectionChange}
-                              placeholder="Select Offices / Desks"
-                            />
-                            {validationErrors.units && <div className="text-danger small mt-1">{validationErrors.units}</div>}
-                          </div>
-                        )}
-
-                        {/* PRO BOOKMYSHOW-STYLE SEAT MAP SELECTION UI */}
-                        {formData.assignedUnits.length > 0 && (
-                          <div className="col-12 mt-3">
-                            <div className="p-4 border rounded-4 bg-white" style={{ borderColor: 'var(--border-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                              <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-2">
-                                <div className="d-flex align-items-center gap-2.5">
-                                  <div className="rounded-circle d-flex align-items-center justify-content-center text-white" style={{ width: '38px', height: '38px', backgroundColor: 'var(--brand-orange)' }}>
-                                    <i className="bi bi-person-workspace fs-5"></i>
-                                  </div>
-                                  <div>
-                                    <h6 className="fw-bold text-dark m-0" style={{ fontSize: '1.05rem', letterSpacing: '-0.01em' }}>Interactive Seat Map & Workspace Allocation</h6>
-                                    <span className="text-muted extra-small">Click individual seats to select/deselect or use quick row controls.</span>
-                                  </div>
-                                </div>
-                                <div className="d-flex align-items-center gap-2">
-                                  <span className="badge rounded-pill fw-bold" style={{ backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)', border: '1px solid var(--brand-orange-border)', fontSize: '0.8rem', padding: '6px 14px' }}>
-                                    {formData.assignedUnits.length} Office Unit{formData.assignedUnits.length > 1 ? 's' : ''} Selected
-                                  </span>
-                                </div>
+                    {/* PRO BOOKMYSHOW-STYLE SEAT MAP SELECTION UI */}
+                    {formData.assignedUnits.length > 0 && (
+                      <div className="col-12 mt-3">
+                        <div className="p-4 border rounded-4 bg-white" style={{ borderColor: 'var(--border-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+                          <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-2">
+                            <div className="d-flex align-items-center gap-2.5">
+                              <div className="rounded-circle d-flex align-items-center justify-content-center text-white" style={{ width: '38px', height: '38px', backgroundColor: 'var(--brand-orange)' }}>
+                                <i className="bi bi-person-workspace fs-5"></i>
                               </div>
+                              <div>
+                                <h6 className="fw-bold text-dark m-0" style={{ fontSize: '1.05rem', letterSpacing: '-0.01em' }}>Interactive Seat Map & Workspace Allocation</h6>
+                                <span className="text-muted extra-small">Click individual seats to select/deselect or use quick row controls.</span>
+                              </div>
+                            </div>
+                            <div className="d-flex align-items-center gap-2">
+                              <span className="badge rounded-pill fw-bold" style={{ backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)', border: '1px solid var(--brand-orange-border)', fontSize: '0.8rem', padding: '6px 14px' }}>
+                                {formData.assignedUnits.length} Office Unit{formData.assignedUnits.length > 1 ? 's' : ''} Selected
+                              </span>
+                            </div>
+                          </div>
 
-                              <div className="d-flex flex-column gap-4">
-                                {formData.assignedUnits.map((unitId) => {
-                                  const unit = units.find(u => u._id === unitId);
-                                  if (!unit) return null;
-                                  const maxSeats = unit.seatCount || 10;
-                                  const occupiedSeats = unit.occupiedSeatCount || 0;
-                                  const selectedSeatsList = formData.unitSelectedSeatsMap?.[unitId] || [];
-                                  const currentSeatsCount = selectedSeatsList.length;
+                          <div className="d-flex flex-column gap-4">
+                            {formData.assignedUnits.map((unitId) => {
+                              const unit = units.find(u => u._id === unitId);
+                              if (!unit) return null;
+                              const maxSeats = unit.seatCount || 10;
+                              const occupiedSeats = unit.occupiedSeatCount || 0;
+                              const selectedSeatsList = formData.unitSelectedSeatsMap?.[unitId] || [];
+                              const currentSeatsCount = selectedSeatsList.length;
 
-                                  return (
-                                    <div key={unitId} className="card border bg-white p-4 shadow-sm" style={{ borderRadius: '16px', borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
+                              return (
+                                <div key={unitId} className="card border bg-white p-4 shadow-sm" style={{ borderRadius: '16px', borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
 
-                                      {/* Unit Header */}
-                                      <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom" style={{ borderColor: '#f1f5f9' }}>
-                                        <div className="d-flex align-items-center gap-3">
-                                          <div className="d-flex align-items-center justify-content-center rounded-3 text-white fw-bold shadow-sm" style={{ width: '44px', height: '44px', minWidth: '44px', backgroundColor: '#0f172a', fontSize: '1.15rem' }}>
-                                            <i className="bi bi-building"></i>
-                                          </div>
-                                          <div>
-                                            <div className="fw-bold text-dark" style={{ fontSize: '0.98rem', letterSpacing: '-0.01em' }}>
-                                              Unit {unit.unitNumber} {unit.unitName ? `– ${unit.unitName}` : ''}
-                                            </div>
-                                            <div className="text-muted small" style={{ fontSize: '0.8rem' }}>
-                                              {unit.property?.propertyName || 'Property'} · Floor {unit.floor?.floorNumber || unit.floorNumber || '3'}
-                                            </div>
-                                          </div>
+                                  {/* Unit Header */}
+                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom" style={{ borderColor: '#f1f5f9' }}>
+                                    <div className="d-flex align-items-center gap-3">
+                                      <div className="d-flex align-items-center justify-content-center rounded-3 text-white fw-bold shadow-sm" style={{ width: '44px', height: '44px', minWidth: '44px', backgroundColor: '#0f172a', fontSize: '1.15rem' }}>
+                                        <i className="bi bi-building"></i>
+                                      </div>
+                                      <div>
+                                        <div className="fw-bold text-dark" style={{ fontSize: '0.98rem', letterSpacing: '-0.01em' }}>
+                                          Unit {unit.unitNumber} {unit.unitName ? `– ${unit.unitName}` : ''}
                                         </div>
-
-                                        <div className="d-flex align-items-center gap-3 flex-wrap">
-                                          <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
-                                            <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>AREA</span>
-                                            <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{unit.sqft ? `${unit.sqft.toLocaleString('en-IN')} SFT` : '1,000 SFT'}</span>
-                                          </div>
-
-                                          <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
-                                            <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TOTAL SEATS</span>
-                                            <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{maxSeats} Seats</span>
-                                          </div>
-
-                                          {/* Quick Action Buttons: Select All / Clear */}
-                                          <div className="d-flex align-items-center gap-2">
-                                            <button
-                                              type="button"
-                                              className="btn btn-sm btn-light border fw-semibold text-dark shadow-2xs"
-                                              style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
-                                              onClick={() => selectAllUnitSeats(unitId, maxSeats, occupiedSeats)}
-                                            >
-                                              Select All
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="btn btn-sm btn-light border fw-semibold text-muted shadow-2xs"
-                                              style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
-                                              onClick={() => clearAllUnitSeats(unitId)}
-                                            >
-                                              Clear
-                                            </button>
-                                          </div>
+                                        <div className="text-muted small" style={{ fontSize: '0.8rem' }}>
+                                          {unit.property?.propertyName || 'Property'} · Floor {unit.floor?.floorNumber || unit.floorNumber || '3'}
                                         </div>
                                       </div>
-
-                                      {/* SEAT MAP PODIUM / BAY HEADER */}
-                                      <div className="my-4 text-center">
-                                        <div className="d-inline-flex align-items-center justify-content-center rounded-pill border text-muted small fw-bold mb-2" style={{ backgroundColor: '#f8fafc', padding: '6px 20px', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                                          <i className="bi bi-display me-2 text-primary"></i> MAIN EXECUTIVE DESK BAY & PODIUM
-                                        </div>
-                                        <div className="mx-auto rounded-pill" style={{ width: '60%', height: '4px', background: 'linear-gradient(90deg, transparent 0%, var(--brand-orange) 50%, transparent 100%)', opacity: 0.85 }}></div>
-                                      </div>
-
-                                      {/* INTERACTIVE SEAT GRID */}
-                                      <div className="p-4 bg-white border rounded-3 text-center mb-3" style={{ borderColor: '#e2e8f0', backgroundColor: '#fafafa' }}>
-                                        <div className="row g-2 justify-content-center">
-                                          {Array.from({ length: maxSeats }, (_, idx) => {
-                                            const seatNum = idx + 1;
-                                            const isOccupiedByOther = idx < occupiedSeats;
-                                            const isSelectedForUser = !isOccupiedByOther && selectedSeatsList.includes(seatNum);
-
-                                            return (
-                                              <div key={idx} className="col-auto">
-                                                <button
-                                                  type="button"
-                                                  disabled={isOccupiedByOther}
-                                                  onClick={() => {
-                                                    if (!isOccupiedByOther) {
-                                                      toggleSeatSelection(unitId, seatNum);
-                                                    }
-                                                  }}
-                                                  className="btn p-2 d-flex flex-column align-items-center justify-content-center position-relative"
-                                                  style={{
-                                                    width: "56px",
-                                                    height: "56px",
-                                                    borderRadius: "12px",
-                                                    backgroundColor: isOccupiedByOther ? "#f1f5f9" : isSelectedForUser ? "#f0fdf4" : "#ffffff",
-                                                    border: isOccupiedByOther ? "1px solid #cbd5e1" : isSelectedForUser ? "2px solid #16a34a" : "1px solid #e2e8f0",
-                                                    color: isOccupiedByOther ? "#94a3b8" : isSelectedForUser ? "#16a34a" : "var(--dark-heading)",
-                                                    transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                                    cursor: isOccupiedByOther ? "not-allowed" : "pointer",
-                                                    boxShadow: isSelectedForUser ? "0 4px 12px rgba(22, 163, 74, 0.18)" : "0 1px 2px rgba(0,0,0,0.03)"
-                                                  }}
-                                                  title={isOccupiedByOther ? `Seat ${seatNum} (Occupied)` : `Click to ${isSelectedForUser ? 'Deselect' : 'Select'} Seat ${seatNum}`}
-                                                >
-                                                  <i className={`bi ${isOccupiedByOther ? 'bi-lock-fill' : 'bi-person-workspace'}`} style={{ fontSize: "1.1rem" }}></i>
-                                                  <span className="fw-bold mt-1" style={{ fontSize: "0.72rem", lineHeight: "1" }}>
-                                                    {seatNum}
-                                                  </span>
-                                                  {isSelectedForUser && (
-                                                    <span className="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle" style={{ width: '10px', height: '10px' }}></span>
-                                                  )}
-                                                </button>
-                                              </div>
-                                            );
-                                          })}
-                                        </div>
-
-                                        {/* SEAT LEGEND */}
-                                        <div className="d-flex align-items-center justify-content-center gap-4 mt-4 pt-3 border-top flex-wrap" style={{ fontSize: '0.8rem', borderColor: '#e2e8f0' }}>
-                                          <div className="d-flex align-items-center gap-2">
-                                            <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f0fdf4', borderColor: '#16a34a' }}></span>
-                                            <span className="fw-bold text-dark">Selected ({currentSeatsCount})</span>
-                                          </div>
-                                          <div className="d-flex align-items-center gap-2">
-                                            <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}></span>
-                                            <span className="fw-medium text-muted">Available ({Math.max(maxSeats - occupiedSeats - currentSeatsCount, 0)})</span>
-                                          </div>
-                                          <div className="d-flex align-items-center gap-2">
-                                            <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }}></span>
-                                            <span className="fw-medium text-muted">Occupied ({occupiedSeats})</span>
-                                          </div>
-                                        </div>
-                                      </div>
-
-                                      {/* Selected Seats Numbers List Display */}
-                                      {selectedSeatsList.length > 0 && (
-                                        <div className="small text-muted fw-semibold px-1">
-                                          Selected Seat Numbers: <span className="text-dark fw-bold">{selectedSeatsList.map(s => `Seat ${s}`).join(', ')}</span>
-                                        </div>
-                                      )}
-
                                     </div>
-                                  );
-                                })}
 
-                                {/* Total Summary */}
-                                <div className="bg-white border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-1 shadow-sm" style={{ padding: '14px 20px', borderRadius: '12px', borderColor: '#e2e8f0' }}>
-                                  <div className="d-flex align-items-center gap-2">
-                                    <i className="bi bi-calculator text-primary fs-5"></i>
-                                    <span className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>Total Workspace Allocation:</span>
+                                    <div className="d-flex align-items-center gap-3 flex-wrap">
+                                      <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
+                                        <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>AREA</span>
+                                        <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{unit.sqft ? `${unit.sqft.toLocaleString('en-IN')} SFT` : '1,000 SFT'}</span>
+                                      </div>
+
+                                      <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
+                                        <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TOTAL SEATS</span>
+                                        <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{maxSeats} Seats</span>
+                                      </div>
+
+                                      {/* Quick Action Buttons: Select All / Clear */}
+                                      <div className="d-flex align-items-center gap-2">
+                                        <button
+                                          type="button"
+                                          className="btn btn-sm btn-light border fw-semibold text-dark shadow-2xs"
+                                          style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
+                                          onClick={() => selectAllUnitSeats(unitId, maxSeats, occupiedSeats)}
+                                        >
+                                          Select All
+                                        </button>
+                                        <button
+                                          type="button"
+                                          className="btn btn-sm btn-light border fw-semibold text-muted shadow-2xs"
+                                          style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
+                                          onClick={() => clearAllUnitSeats(unitId)}
+                                        >
+                                          Clear
+                                        </button>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="d-flex align-items-center gap-3 flex-wrap">
-                                    <span className="badge bg-light text-dark border rounded-pill fw-semibold" style={{ fontSize: '0.82rem', padding: '8px 16px' }}>
-                                      {totalManagedSft.toLocaleString('en-IN')} Total SFT
-                                    </span>
-                                    <span className="badge rounded-pill fw-bold" style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', fontSize: '0.82rem', padding: '8px 16px' }}>
-                                      <i className="bi bi-check-circle-fill me-2"></i> {totalAssignedSeatCount} Total Seats Assigned
-                                    </span>
+
+                                  {/* SEAT MAP PODIUM / BAY HEADER */}
+                                  <div className="my-4 text-center">
+                                    <div className="d-inline-flex align-items-center justify-content-center rounded-pill border text-muted small fw-bold mb-2" style={{ backgroundColor: '#f8fafc', padding: '6px 20px', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
+                                      <i className="bi bi-display me-2 text-primary"></i> MAIN EXECUTIVE DESK BAY & PODIUM
+                                    </div>
+                                    <div className="mx-auto rounded-pill" style={{ width: '60%', height: '4px', background: 'linear-gradient(90deg, transparent 0%, var(--brand-orange) 50%, transparent 100%)', opacity: 0.85 }}></div>
                                   </div>
+
+                                  {/* INTERACTIVE SEAT GRID */}
+                                  <div className="p-4 bg-white border rounded-3 text-center mb-3" style={{ borderColor: '#e2e8f0', backgroundColor: '#fafafa' }}>
+                                    <div className="row g-2 justify-content-center">
+                                      {Array.from({ length: maxSeats }, (_, idx) => {
+                                        const seatNum = idx + 1;
+                                        const isOccupiedByOther = idx < occupiedSeats;
+                                        const isSelectedForUser = !isOccupiedByOther && selectedSeatsList.includes(seatNum);
+
+                                        return (
+                                          <div key={idx} className="col-auto">
+                                            <button
+                                              type="button"
+                                              disabled={isOccupiedByOther}
+                                              onClick={() => {
+                                                if (!isOccupiedByOther) {
+                                                  toggleSeatSelection(unitId, seatNum);
+                                                }
+                                              }}
+                                              className="btn p-2 d-flex flex-column align-items-center justify-content-center position-relative"
+                                              style={{
+                                                width: "56px",
+                                                height: "56px",
+                                                borderRadius: "12px",
+                                                backgroundColor: isOccupiedByOther ? "#f1f5f9" : isSelectedForUser ? "#f0fdf4" : "#ffffff",
+                                                border: isOccupiedByOther ? "1px solid #cbd5e1" : isSelectedForUser ? "2px solid #16a34a" : "1px solid #e2e8f0",
+                                                color: isOccupiedByOther ? "#94a3b8" : isSelectedForUser ? "#16a34a" : "var(--dark-heading)",
+                                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
+                                                cursor: isOccupiedByOther ? "not-allowed" : "pointer",
+                                                boxShadow: isSelectedForUser ? "0 4px 12px rgba(22, 163, 74, 0.18)" : "0 1px 2px rgba(0,0,0,0.03)"
+                                              }}
+                                              title={isOccupiedByOther ? `Seat ${seatNum} (Occupied)` : `Click to ${isSelectedForUser ? 'Deselect' : 'Select'} Seat ${seatNum}`}
+                                            >
+                                              <i className={`bi ${isOccupiedByOther ? 'bi-lock-fill' : 'bi-person-workspace'}`} style={{ fontSize: "1.1rem" }}></i>
+                                              <span className="fw-bold mt-1" style={{ fontSize: "0.72rem", lineHeight: "1" }}>
+                                                {seatNum}
+                                              </span>
+                                              {isSelectedForUser && (
+                                                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle" style={{ width: '10px', height: '10px' }}></span>
+                                              )}
+                                            </button>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+
+                                    {/* SEAT LEGEND */}
+                                    <div className="d-flex align-items-center justify-content-center gap-4 mt-4 pt-3 border-top flex-wrap" style={{ fontSize: '0.8rem', borderColor: '#e2e8f0' }}>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f0fdf4', borderColor: '#16a34a' }}></span>
+                                        <span className="fw-bold text-dark">Selected ({currentSeatsCount})</span>
+                                      </div>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}></span>
+                                        <span className="fw-medium text-muted">Available ({Math.max(maxSeats - occupiedSeats - currentSeatsCount, 0)})</span>
+                                      </div>
+                                      <div className="d-flex align-items-center gap-2">
+                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }}></span>
+                                        <span className="fw-medium text-muted">Occupied ({occupiedSeats})</span>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Selected Seats Numbers List Display */}
+                                  {selectedSeatsList.length > 0 && (
+                                    <div className="small text-muted fw-semibold px-1">
+                                      Selected Seat Numbers: <span className="text-dark fw-bold">{selectedSeatsList.map(s => `Seat ${s}`).join(', ')}</span>
+                                    </div>
+                                  )}
+
                                 </div>
+                              );
+                            })}
+
+                            {/* Total Summary */}
+                            <div className="bg-white border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-1 shadow-sm" style={{ padding: '14px 20px', borderRadius: '12px', borderColor: '#e2e8f0' }}>
+                              <div className="d-flex align-items-center gap-2">
+                                <i className="bi bi-calculator text-primary fs-5"></i>
+                                <span className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>Total Workspace Allocation:</span>
+                              </div>
+                              <div className="d-flex align-items-center gap-3 flex-wrap">
+                                <span className="badge bg-light text-dark border rounded-pill fw-semibold" style={{ fontSize: '0.82rem', padding: '8px 16px' }}>
+                                  {totalManagedSft.toLocaleString('en-IN')} Total SFT
+                                </span>
+                                <span className="badge rounded-pill fw-bold" style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', fontSize: '0.82rem', padding: '8px 16px' }}>
+                                  <i className="bi bi-check-circle-fill me-2"></i> {totalAssignedSeatCount} Total Seats Assigned
+                                </span>
                               </div>
                             </div>
                           </div>
-                        )}
+                        </div>
                       </div>
                     )}
-
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: BILLING & AGREEMENT */}
-              {currentStep === 3 && (
-                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
-                  <div className="card-body p-4">
-                    <div className="d-flex align-items-center gap-3 mb-4">
-                      <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)' }}>
-                        <i className="hgi-stroke hgi-invoice-01" style={{ fontSize: '1.25rem' }}></i>
-                      </div>
-                      <div>
-                        <h5 className="fw-bold mb-0 text-dark">Billing & Agreement</h5>
-                        <p className="text-muted small mb-0">Fill in lease agreement terms, billing cycle, and financials.</p>
-                      </div>
+            {/* STEP 3: BILLING & AGREEMENT */}
+            {currentStep === 3 && (
+              <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
+                <div className="card-body p-4">
+                  <div className="d-flex align-items-center gap-3 mb-4">
+                    <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '42px', height: '42px', backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)' }}>
+                      <i className="hgi-stroke hgi-invoice-01" style={{ fontSize: '1.25rem' }}></i>
                     </div>
+                    <div>
+                      <h5 className="fw-bold mb-0 text-dark">Billing & Agreement</h5>
+                      <p className="text-muted small mb-0">Fill in lease agreement terms, billing cycle, and financials.</p>
+                    </div>
+                  </div>
 
-                    {formData.role === 'SUPER_ADMIN' || formData.role === 'STAFF_ADMIN' ? (
-                      <div className="text-center p-5 border rounded-3 bg-light">
-                        <div className="mb-3">
-                          <i className="hgi-stroke hgi-information-circle text-primary" style={{ fontSize: '3rem' }}></i>
-                        </div>
-                        <h5 className="fw-bold text-dark">Step Not Required</h5>
-                        <p className="text-muted small max-w-md mx-auto mb-0">Billing & agreement setup is not required for the {formData.role} role. Click "Next" to continue.</p>
+                  {formData.role === 'SUPER_ADMIN' || formData.role === 'STAFF_ADMIN' ? (
+                    <div className="text-center p-5 border rounded-3 bg-light">
+                      <div className="mb-3">
+                        <i className="hgi-stroke hgi-information-circle text-primary" style={{ fontSize: '3rem' }}></i>
                       </div>
-                    ) : (
-                      <div className="row g-3">
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Company / Organization Name</label>
-                          <input type="text" className="form-control py-2 shadow-none" placeholder="example Solutions" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Tenant Type</label>
-                          <select className="form-select py-2 shadow-none" value={formData.tenantType} onChange={(e) => setFormData({ ...formData, tenantType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                            <option value="Individual">Individual</option>
-                            <option value="Company">Company</option>
-                            <option value="Corporate">Corporate</option>
-                          </select>
-                        </div>
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">GST / PAN Number</label>
-                          <input type="text" className={`form-control py-2 shadow-none ${validationErrors.gstPan ? 'is-invalid' : ''}`} placeholder="e.g. 22AAAAA0000A1Z5" value={formData.gstPan} onChange={(e) => setFormData({ ...formData, gstPan: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                          {validationErrors.gstPan && <div className="invalid-feedback small">{validationErrors.gstPan}</div>}
-                        </div>
+                      <h5 className="fw-bold text-dark">Step Not Required</h5>
+                      <p className="text-muted small max-w-md mx-auto mb-0">Billing & agreement setup is not required for the {formData.role} role. Click "Next" to continue.</p>
+                    </div>
+                  ) : (
+                    <div className="row g-3">
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Company / Organization Name</label>
+                        <input type="text" className="form-control py-2 shadow-none" placeholder="example Solutions" value={formData.companyName} onChange={(e) => setFormData({ ...formData, companyName: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Tenant Type</label>
+                        <select className="form-select py-2 shadow-none" value={formData.tenantType} onChange={(e) => setFormData({ ...formData, tenantType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                          <option value="Individual">Individual</option>
+                          <option value="Company">Company</option>
+                          <option value="Corporate">Corporate</option>
+                        </select>
+                      </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">GST / PAN Number</label>
+                        <input type="text" className={`form-control py-2 shadow-none ${validationErrors.gstPan ? 'is-invalid' : ''}`} placeholder="e.g. 22AAAAA0000A1Z5" value={formData.gstPan} onChange={(e) => setFormData({ ...formData, gstPan: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                        {validationErrors.gstPan && <div className="invalid-feedback small">{validationErrors.gstPan}</div>}
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Agreement Status *</label>
-                          <select className="form-select py-2 shadow-none" value={formData.agreementStatus} onChange={(e) => setFormData({ ...formData, agreementStatus: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                            <option value="Active">Active</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Expired">Expired</option>
-                            <option value="Suspended">Suspended</option>
-                          </select>
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Agreement Status *</label>
+                        <select className="form-select py-2 shadow-none" value={formData.agreementStatus} onChange={(e) => setFormData({ ...formData, agreementStatus: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                          <option value="Active">Active</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Expired">Expired</option>
+                          <option value="Suspended">Suspended</option>
+                        </select>
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">ID Proof Upload</label>
-                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
-                            <input type="file" className="d-none" id="id-proof" onChange={(e) => setIdProof(e.target.files ? e.target.files[0] : null)} />
-                            <label htmlFor="id-proof" className="w-100 m-0" style={{ cursor: 'pointer' }}>
-                              <i className="hgi-stroke hgi-invoice-01 text-primary me-2"></i>
-                              <span className="small fw-semibold">{idProof ? idProof.name : 'Choose ID Proof File'}</span>
-                            </label>
-                          </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">ID Proof Upload</label>
+                        <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
+                          <input type="file" className="d-none" id="id-proof" onChange={(e) => setIdProof(e.target.files ? e.target.files[0] : null)} />
+                          <label htmlFor="id-proof" className="w-100 m-0" style={{ cursor: 'pointer' }}>
+                            <i className="hgi-stroke hgi-invoice-01 text-primary me-2"></i>
+                            <span className="small fw-semibold">{idProof ? idProof.name : 'Choose ID Proof File'}</span>
+                          </label>
                         </div>
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Profile Photo Upload</label>
-                          <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
-                            <input type="file" className="d-none" id="profile-photo" onChange={(e) => setProfilePhoto(e.target.files ? e.target.files[0] : null)} />
-                            <label htmlFor="profile-photo" className="w-100 m-0" style={{ cursor: 'pointer' }}>
-                              <i className="hgi-stroke hgi-user text-primary me-2"></i>
-                              <span className="small fw-semibold">{profilePhoto ? profilePhoto.name : 'Choose Image File'}</span>
-                            </label>
-                          </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Profile Photo Upload</label>
+                        <div className="border rounded-3 p-2 bg-light text-center cursor-pointer" style={{ borderStyle: 'dashed', borderColor: 'var(--border-color)' }}>
+                          <input type="file" className="d-none" id="profile-photo" onChange={(e) => setProfilePhoto(e.target.files ? e.target.files[0] : null)} />
+                          <label htmlFor="profile-photo" className="w-100 m-0" style={{ cursor: 'pointer' }}>
+                            <i className="hgi-stroke hgi-user text-primary me-2"></i>
+                            <span className="small fw-semibold">{profilePhoto ? profilePhoto.name : 'Choose Image File'}</span>
+                          </label>
                         </div>
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Agreement Start Date *</label>
-                          <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentStartDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentStartDate} onChange={(e) => handleStartDateChange(e.target.value)} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                          {validationErrors.floorAssignmentStartDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentStartDate}</div>}
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Agreement Start Date *</label>
+                        <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentStartDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentStartDate} onChange={(e) => handleStartDateChange(e.target.value)} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                        {validationErrors.floorAssignmentStartDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentStartDate}</div>}
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Agreement End Date *</label>
-                          <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentEndDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentEndDate} onChange={(e) => setFormData({ ...formData, floorAssignmentEndDate: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                          {validationErrors.floorAssignmentEndDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentEndDate}</div>}
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Agreement End Date *</label>
+                        <input type="date" className={`form-control py-2 shadow-none ${validationErrors.floorAssignmentEndDate ? 'is-invalid' : ''}`} required value={formData.floorAssignmentEndDate} onChange={(e) => setFormData({ ...formData, floorAssignmentEndDate: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                        {validationErrors.floorAssignmentEndDate && <div className="invalid-feedback small">{validationErrors.floorAssignmentEndDate}</div>}
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Monthly Rent Amount (₹) *</label>
-                          <input type="number" className={`form-control py-2 shadow-none ${validationErrors.monthlyManagementAmount ? 'is-invalid' : ''}`} required min="0" value={formData.monthlyManagementAmount || ''} onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setFormData(prev => ({
-                              ...prev,
-                              monthlyManagementAmount: val,
-                              totalAgreementAmount: val * termMonths
-                            }));
-                          }} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                          {validationErrors.monthlyManagementAmount && <div className="invalid-feedback small">{validationErrors.monthlyManagementAmount}</div>}
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Monthly Rent Amount (₹) *</label>
+                        <input type="number" className={`form-control py-2 shadow-none ${validationErrors.monthlyManagementAmount ? 'is-invalid' : ''}`} required min="0" value={formData.monthlyManagementAmount || ''} onChange={(e) => {
+                          const val = Number(e.target.value);
+                          setFormData(prev => ({
+                            ...prev,
+                            monthlyManagementAmount: val,
+                            totalAgreementAmount: val * termMonths
+                          }));
+                        }} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                        {validationErrors.monthlyManagementAmount && <div className="invalid-feedback small">{validationErrors.monthlyManagementAmount}</div>}
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Total Agreement Amount (₹)</label>
-                          <input type="number" className="form-control py-2 shadow-none" min="0" value={formData.totalAgreementAmount || ''} onChange={(e) => setFormData({ ...formData, totalAgreementAmount: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Total Agreement Amount (₹)</label>
+                        <input type="number" className="form-control py-2 shadow-none" min="0" value={formData.totalAgreementAmount || ''} onChange={(e) => setFormData({ ...formData, totalAgreementAmount: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Payment Frequency *</label>
-                          <select className="form-select py-2 shadow-none" value={formData.paymentType} onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
-                            <option value="Monthly Installment">Monthly Installment</option>
-                            <option value="Quarterly">Quarterly</option>
-                            <option value="Half-Yearly">Half-Yearly</option>
-                            <option value="Yearly">Yearly</option>
-                            <option value="Daily Wise">Daily Wise</option>
-                            <option value="One Time">One Time</option>
-                          </select>
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Payment Frequency *</label>
+                        <select className="form-select py-2 shadow-none" value={formData.paymentType} onChange={(e) => setFormData({ ...formData, paymentType: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}>
+                          <option value="Monthly Installment">Monthly Installment</option>
+                          <option value="Quarterly">Quarterly</option>
+                          <option value="Half-Yearly">Half-Yearly</option>
+                          <option value="Yearly">Yearly</option>
+                          <option value="Daily Wise">Daily Wise</option>
+                          <option value="One Time">One Time</option>
+                        </select>
+                      </div>
 
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Payment Due Day of Month *</label>
-                          <input type="number" className="form-control py-2 shadow-none" required min="1" max="31" value={formData.paymentDueDay} onChange={(e) => setFormData({ ...formData, paymentDueDay: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
-                        </div>
+                      <div className="col-md-6">
+                        <label className="form-label small fw-bold text-dark mb-1">Payment Due Day of Month *</label>
+                        <input type="number" className="form-control py-2 shadow-none" required min="1" max="31" value={formData.paymentDueDay} onChange={(e) => setFormData({ ...formData, paymentDueDay: Number(e.target.value) })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }} />
+                      </div>
 
-                        {/* Payment Calculation Details Panel */}
-                        <div className="col-12 mt-2">
-                          <div className="p-3 bg-light rounded-3 border">
-                            <span className="small text-muted d-block mb-1">Calculated Agreement Details (Live Preview)</span>
-                            <div className="d-flex flex-wrap gap-4 text-dark small">
-                              <div>
-                                Duration: <strong>{termDays} Days / {termMonths} Months</strong>
-                              </div>
-                              <div>
-                                Installment Amount: <strong>₹{getInstallmentAmt().toLocaleString()}</strong>
-                              </div>
-                              <div>
-                                Next Due Date: <strong>{getCalculatedNextDueDate()}</strong>
-                              </div>
+                      {/* Payment Calculation Details Panel */}
+                      <div className="col-12 mt-2">
+                        <div className="p-3 bg-light rounded-3 border">
+                          <span className="small text-muted d-block mb-1">Calculated Agreement Details (Live Preview)</span>
+                          <div className="d-flex flex-wrap gap-4 text-dark small">
+                            <div>
+                              Duration: <strong>{termDays} Days / {termMonths} Months</strong>
+                            </div>
+                            <div>
+                              Installment Amount: <strong>₹{getInstallmentAmt().toLocaleString()}</strong>
+                            </div>
+                            <div>
+                              Next Due Date: <strong>{getCalculatedNextDueDate()}</strong>
                             </div>
                           </div>
                         </div>
+                      </div>
 
+                      <div className="col-12">
+                        <label className="form-label small fw-bold text-dark mb-1">Remarks / Special Notes</label>
+                        <textarea rows={2} className="form-control py-2 shadow-none" placeholder="Any internal assignment remarks..." value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}></textarea>
+                      </div>
+                    </div>
+                  )}
+
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: REVIEW & CONFIRM */}
+            {currentStep === 4 && (
+              <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
+                <div className="card-body p-4">
+                  <div className="d-flex align-items-center gap-3 mb-4">
+                    <div className="rounded-circle d-flex align-items-center justify-content-center text-dark" style={{ width: '38px', height: '38px', backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)' }}>
+                      <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '1.1rem' }}></i>
+                    </div>
+                    <div>
+                      <h6 className="fw-bold mb-0 text-dark">Review User Profile</h6>
+                      <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>Check all information carefully before creating the user account.</p>
+                    </div>
+                  </div>
+
+                  <div className="d-flex flex-column gap-4">
+
+                    {/* Section 1: Personal Details */}
+                    <div>
+                      <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
+                        <i className="hgi-stroke hgi-user text-muted me-2"></i>Personal Information Summary
+                      </h6>
+                      <div className="row g-2">
+                        <div className="col-sm-6">
+                          <span className="text-muted small d-block">Full Name</span>
+                          <strong className="text-dark small">{formData.name || 'Not specified'}</strong>
+                        </div>
+                        <div className="col-sm-6">
+                          <span className="text-muted small d-block">Official Email</span>
+                          <strong className="text-dark small">{formData.email || 'Not specified'}</strong>
+                        </div>
+                        <div className="col-sm-6">
+                          <span className="text-muted small d-block">System Role</span>
+                          <strong className="text-dark small">{formData.role || 'Not specified'}</strong>
+                        </div>
+                        <div className="col-sm-6">
+                          <span className="text-muted small d-block">Contact Phone</span>
+                          <strong className="text-dark small">+91 {formData.phoneNumber || 'Not specified'}</strong>
+                        </div>
                         <div className="col-12">
-                          <label className="form-label small fw-bold text-dark mb-1">Remarks / Special Notes</label>
-                          <textarea rows={2} className="form-control py-2 shadow-none" placeholder="Any internal assignment remarks..." value={formData.remarks} onChange={(e) => setFormData({ ...formData, remarks: e.target.value })} style={{ borderRadius: '8px', border: '1px solid var(--border-color)', fontSize: '0.9rem' }}></textarea>
+                          <span className="text-muted small d-block">Address</span>
+                          <strong className="text-dark small">{formData.address || 'Not specified'}</strong>
                         </div>
-                      </div>
-                    )}
-
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 4: REVIEW & CONFIRM */}
-              {currentStep === 4 && (
-                <div className="card border-0 bg-white mb-4" style={{ borderRadius: '10px' }}>
-                  <div className="card-body p-4">
-                    <div className="d-flex align-items-center gap-3 mb-4">
-                      <div className="rounded-circle d-flex align-items-center justify-content-center text-dark" style={{ width: '38px', height: '38px', backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)' }}>
-                        <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '1.1rem' }}></i>
-                      </div>
-                      <div>
-                        <h6 className="fw-bold mb-0 text-dark">Review User Profile</h6>
-                        <p className="text-muted mb-0" style={{ fontSize: '0.8rem' }}>Check all information carefully before creating the user account.</p>
                       </div>
                     </div>
 
-                    <div className="d-flex flex-column gap-4">
-
-                      {/* Section 1: Personal Details */}
+                    {/* Section 2: Spatial Assignment */}
+                    {formData.role !== 'SUPER_ADMIN' && (
                       <div>
                         <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
-                          <i className="hgi-stroke hgi-user text-muted me-2"></i>Personal Information Summary
+                          <i className="hgi-stroke hgi-building-03 text-muted me-2"></i>Spatial & Seats Assignment Summary
+                        </h6>
+                        <div className="row g-2">
+                          <div className="col-12">
+                            <span className="text-muted small d-block">Assigned Properties</span>
+                            <strong className="text-dark small">
+                              {formData.assignedProperties.length > 0
+                                ? properties.filter(p => formData.assignedProperties.includes(p._id)).map(p => p.name).join(', ')
+                                : 'None selected'}
+                            </strong>
+                          </div>
+                          <div className="col-12">
+                            <span className="text-muted small d-block">Assigned Floors</span>
+                            <strong className="text-dark small">
+                              {formData.assignedFloors.length > 0
+                                ? floors.filter(f => formData.assignedFloors.includes(f._id)).map(f => f.floorName || `Floor ${f.floorNumber}`).join(', ')
+                                : 'None selected'}
+                            </strong>
+                          </div>
+                          {formData.role === 'OFFICE_OWNER' && (
+                            <>
+                              <div className="col-sm-6">
+                                <span className="text-muted small d-block">Assigned Offices (Units)</span>
+                                <strong className="text-dark small">
+                                  {formData.assignedUnits.length > 0
+                                    ? units.filter(u => formData.assignedUnits.includes(u._id)).map(u => `Unit ${u.unitNumber}`).join(', ')
+                                    : 'None selected'}
+                                </strong>
+                              </div>
+                              <div className="col-sm-6">
+                                <span className="text-muted small d-block">Total Assigned Seats</span>
+                                <strong className="text-success small">{totalAssignedSeatCount} Seats ({totalManagedSft.toLocaleString('en-IN')} SFT)</strong>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Section 3: Invoicing Terms */}
+                    {formData.role !== 'SUPER_ADMIN' && formData.role !== 'STAFF_ADMIN' && (
+                      <div>
+                        <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
+                          <i className="hgi-stroke hgi-invoice-01 text-muted me-2"></i>Agreement & Financials Summary
                         </h6>
                         <div className="row g-2">
                           <div className="col-sm-6">
-                            <span className="text-muted small d-block">Full Name</span>
-                            <strong className="text-dark small">{formData.name || 'Not specified'}</strong>
+                            <span className="text-muted small d-block">Company Name</span>
+                            <strong className="text-dark small">{formData.companyName || 'Not specified'}</strong>
                           </div>
                           <div className="col-sm-6">
-                            <span className="text-muted small d-block">Official Email</span>
-                            <strong className="text-dark small">{formData.email || 'Not specified'}</strong>
+                            <span className="text-muted small d-block">GSTIN / PAN</span>
+                            <strong className="text-dark small">{formData.gstPan || 'Not specified'}</strong>
                           </div>
                           <div className="col-sm-6">
-                            <span className="text-muted small d-block">System Role</span>
-                            <strong className="text-dark small">{formData.role || 'Not specified'}</strong>
+                            <span className="text-muted small d-block">Lease Term</span>
+                            <strong className="text-dark small">
+                              {formData.floorAssignmentStartDate || 'N/A'} to {formData.floorAssignmentEndDate || 'N/A'} ({termDays} days / {termMonths} mos)
+                            </strong>
                           </div>
                           <div className="col-sm-6">
-                            <span className="text-muted small d-block">Contact Phone</span>
-                            <strong className="text-dark small">+91 {formData.phoneNumber || 'Not specified'}</strong>
+                            <span className="text-muted small d-block">Agreement Status</span>
+                            <strong className="text-dark small">{formData.agreementStatus}</strong>
                           </div>
-                          <div className="col-12">
-                            <span className="text-muted small d-block">Address</span>
-                            <strong className="text-dark small">{formData.address || 'Not specified'}</strong>
+                          <div className="col-sm-4">
+                            <span className="text-muted small d-block">Total Agreement Amount</span>
+                            <strong className="text-dark small">₹{totalAgreementAmt.toLocaleString()}</strong>
+                          </div>
+                          <div className="col-sm-4">
+                            <span className="text-muted small d-block">Payment Frequency</span>
+                            <strong className="text-dark small">{formData.paymentType}</strong>
+                          </div>
+                          <div className="col-sm-4">
+                            <span className="text-muted small d-block">Payment Due Day</span>
+                            <strong className="text-dark small">{formData.paymentDueDay}th of month</strong>
+                          </div>
+                          <div className="col-sm-4">
+                            <span className="text-muted small d-block">Installment Amount</span>
+                            <strong className="text-dark small">₹{getInstallmentAmt().toLocaleString()}</strong>
+                          </div>
+                          <div className="col-sm-4">
+                            <span className="text-muted small d-block">Next Payment Due Date</span>
+                            <strong className="text-dark small">{getCalculatedNextDueDate()}</strong>
                           </div>
                         </div>
                       </div>
-
-                      {/* Section 2: Spatial Assignment */}
-                      {formData.role !== 'SUPER_ADMIN' && (
-                        <div>
-                          <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
-                            <i className="hgi-stroke hgi-building-03 text-muted me-2"></i>Spatial & Seats Assignment Summary
-                          </h6>
-                          <div className="row g-2">
-                            <div className="col-12">
-                              <span className="text-muted small d-block">Assigned Properties</span>
-                              <strong className="text-dark small">
-                                {formData.assignedProperties.length > 0
-                                  ? properties.filter(p => formData.assignedProperties.includes(p._id)).map(p => p.name).join(', ')
-                                  : 'None selected'}
-                              </strong>
-                            </div>
-                            <div className="col-12">
-                              <span className="text-muted small d-block">Assigned Floors</span>
-                              <strong className="text-dark small">
-                                {formData.assignedFloors.length > 0
-                                  ? floors.filter(f => formData.assignedFloors.includes(f._id)).map(f => f.floorName || `Floor ${f.floorNumber}`).join(', ')
-                                  : 'None selected'}
-                              </strong>
-                            </div>
-                            {formData.role === 'OFFICE_OWNER' && (
-                              <>
-                                <div className="col-sm-6">
-                                  <span className="text-muted small d-block">Assigned Offices (Units)</span>
-                                  <strong className="text-dark small">
-                                    {formData.assignedUnits.length > 0
-                                      ? units.filter(u => formData.assignedUnits.includes(u._id)).map(u => `Unit ${u.unitNumber}`).join(', ')
-                                      : 'None selected'}
-                                  </strong>
-                                </div>
-                                <div className="col-sm-6">
-                                  <span className="text-muted small d-block">Total Assigned Seats</span>
-                                  <strong className="text-success small">{totalAssignedSeatCount} Seats ({totalManagedSft.toLocaleString('en-IN')} SFT)</strong>
-                                </div>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Section 3: Invoicing Terms */}
-                      {formData.role !== 'SUPER_ADMIN' && formData.role !== 'STAFF_ADMIN' && (
-                        <div>
-                          <h6 className="fw-bold text-dark mb-3 border-bottom pb-2" style={{ fontSize: '0.9rem' }}>
-                            <i className="hgi-stroke hgi-invoice-01 text-muted me-2"></i>Agreement & Financials Summary
-                          </h6>
-                          <div className="row g-2">
-                            <div className="col-sm-6">
-                              <span className="text-muted small d-block">Company Name</span>
-                              <strong className="text-dark small">{formData.companyName || 'Not specified'}</strong>
-                            </div>
-                            <div className="col-sm-6">
-                              <span className="text-muted small d-block">GSTIN / PAN</span>
-                              <strong className="text-dark small">{formData.gstPan || 'Not specified'}</strong>
-                            </div>
-                            <div className="col-sm-6">
-                              <span className="text-muted small d-block">Lease Term</span>
-                              <strong className="text-dark small">
-                                {formData.floorAssignmentStartDate || 'N/A'} to {formData.floorAssignmentEndDate || 'N/A'} ({termDays} days / {termMonths} mos)
-                              </strong>
-                            </div>
-                            <div className="col-sm-6">
-                              <span className="text-muted small d-block">Agreement Status</span>
-                              <strong className="text-dark small">{formData.agreementStatus}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Total Agreement Amount</span>
-                              <strong className="text-dark small">₹{totalAgreementAmt.toLocaleString()}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Payment Frequency</span>
-                              <strong className="text-dark small">{formData.paymentType}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Payment Due Day</span>
-                              <strong className="text-dark small">{formData.paymentDueDay}th of month</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Installment Amount</span>
-                              <strong className="text-dark small">₹{getInstallmentAmt().toLocaleString()}</strong>
-                            </div>
-                            <div className="col-sm-4">
-                              <span className="text-muted small d-block">Next Payment Due Date</span>
-                              <strong className="text-dark small">{getCalculatedNextDueDate()}</strong>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                    </div>
+                    )}
 
                   </div>
-                </div>
-              )}
 
-              {/* Spacer to ensure scroll doesn't get cut off by fixed footer */}
-              <div style={{ height: '100px', width: '100%' }}></div>
-
-              {/* Actions Footer */}
-              <div className="position-fixed bottom-0 start-0 w-100 bg-white border-top px-4 py-3 shadow-sm" style={{ zIndex: 1020 }}>
-                <div className="d-flex justify-content-end gap-3 mx-auto" style={{ maxWidth: '1400px' }}>
-                  <button
-                    type="button"
-                    onClick={handlePrevStep}
-                    className="btn btn-white border rounded-3 px-3 py-1 fw-bold text-dark bg-white shadow-sm"
-                    style={{ fontSize: '0.85rem' }}
-                  >
-                    {currentStep === 1 ? 'Cancel' : 'Back'}
-                  </button>
-
-                  {currentStep < 4 ? (
-                    <button
-                      type="button"
-                      onClick={handleNextStep}
-                      className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white d-flex align-items-center gap-1 shadow-sm"
-                      style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
-                    >
-                      <span>Next</span>
-                      <i className="hgi-stroke hgi-arrow-right-01" style={{ fontSize: '0.95rem' }}></i>
-                    </button>
-                  ) : (
-                    <button
-                      type="submit"
-                      className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white shadow-sm"
-                      disabled={isLoading || !isSubmitReady}
-                      style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
-                    >
-                      {isLoading ? (
-                        <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                      ) : null}
-                      {isEditMode ? "Update User Account" : "Create User Account"}
-                    </button>
-                  )}
                 </div>
               </div>
+            )}
 
-            </div>
+            {/* Spacer to ensure scroll doesn't get cut off by fixed footer */}
+            <div style={{ height: '100px', width: '100%' }}></div>
 
-          </div>
-        </form>
+            {/* Actions Footer */}
+            <div className="position-fixed bottom-0 start-0 w-100 bg-white border-top px-4 py-3 shadow-sm" style={{ zIndex: 1020 }}>
+              <div className="d-flex justify-content-end gap-3 mx-auto" style={{ maxWidth: '1400px' }}>
+                <button
+                  type="button"
+                  onClick={handlePrevStep}
+                  className="btn btn-white border rounded-3 px-3 py-1 fw-bold text-dark bg-white shadow-sm"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  {currentStep === 1 ? 'Cancel' : 'Back'}
+                </button>
 
-      </div>
-
-      {/* CUSTOM PREMIUM DIALOG BOX OVERLAY */}
-      {dialog && (
-        <div className="dialog-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.65)',
-          zIndex: 9999,
-          backdropFilter: 'blur(8px)'
-        }}>
-          <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
-            maxWidth: '420px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid rgba(255, 255, 255, 0.8)'
-          }}>
-            <div className="mb-3">
-              {dialog.type === 'success' && <i className="hgi-stroke hgi-checkmark-circle-01 text-success" style={{ fontSize: '3.5rem' }}></i>}
-              {dialog.type === 'warning' && <i className="hgi-stroke hgi-information-circle text-warning" style={{ fontSize: '3.5rem' }}></i>}
-              {dialog.type === 'error' && <i className="hgi-stroke hgi-cancel-01 text-danger" style={{ fontSize: '3.5rem' }}></i>}
-            </div>
-
-            <h4 className="fw-bold text-dark mb-2">{dialog.title}</h4>
-            <p className="text-secondary small mb-4 px-2" style={{ lineHeight: '1.5' }}>{dialog.message}</p>
-
-            <button
-              type="button"
-              className="btn w-100 py-2 rounded-pill fw-bold text-white shadow-sm"
-              onClick={() => setDialog(null)}
-              style={{
-                backgroundColor: dialog.type === 'success' ? '#10b981' :
-                  dialog.type === 'warning' ? '#f59e0b' : '#ef4444',
-                borderColor: dialog.type === 'success' ? '#10b981' :
-                  dialog.type === 'warning' ? '#f59e0b' : '#ef4444'
-              }}
-            >
-              Okay, Continue
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* VERIFY OTP DIALOG OVERLAY */}
-      {showOtpDialog && (
-        <div className="dialog-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{
-          backgroundColor: 'rgba(15, 23, 42, 0.65)',
-          zIndex: 9999,
-          backdropFilter: 'blur(8px)'
-        }}>
-          <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
-            maxWidth: '420px',
-            backgroundColor: 'var(--bg-card)',
-            border: '1px solid rgba(255, 255, 255, 0.8)'
-          }}>
-            <div className="d-flex justify-content-center mb-4">
-              <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '72px', height: '72px', backgroundColor: otpSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(15, 23, 42, 0.04)' }}>
-                {otpSuccess ? (
-                  <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '2.2rem', color: '#10b981' }}></i>
+                {currentStep < 4 ? (
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white d-flex align-items-center gap-1 shadow-sm"
+                    style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
+                  >
+                    <span>Next</span>
+                    <i className="hgi-stroke hgi-arrow-right-01" style={{ fontSize: '0.95rem' }}></i>
+                  </button>
                 ) : (
-                  <i className="hgi-stroke hgi-mail-01 text-dark" style={{ fontSize: '2.2rem' }}></i>
+                  <button
+                    type="submit"
+                    className="btn btn-primary rounded-3 px-3 py-1 fw-bold text-white shadow-sm"
+                    disabled={isLoading || !isSubmitReady}
+                    style={{ backgroundColor: 'var(--dark-section)', borderColor: 'var(--dark-section)', fontSize: '0.85rem' }}
+                  >
+                    {isLoading ? (
+                      <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                    ) : null}
+                    {isEditMode ? "Update User Account" : "Create User Account"}
+                  </button>
                 )}
               </div>
             </div>
 
-            <h4 className="fw-bold text-dark mb-2">
-              {otpSuccess ? "Email Verified & User Created!" : "Verify OTP"}
-            </h4>
-            <p className="text-secondary small mb-4 px-2" style={{ lineHeight: '1.5' }}>
-              {otpSuccess
-                ? `${formData.name}'s email was successfully verified and the user account has been provisioned.`
-                : `A 6-digit OTP verification code has been dispatched to ${formData.email}. Please verify below to complete registration:`}
-            </p>
-
-            {!otpSuccess ? (
-              <form onSubmit={async (e) => {
-                e.preventDefault();
-                setOtpError("");
-                setIsLoading(true);
-                try {
-                  const payload = {
-                    ...formData,
-                    assignedSeatCount: totalAssignedSeatCount,
-                    idProofUrl: idProof ? idProof.name : '',
-                    profilePhotoUrl: profilePhoto ? profilePhoto.name : '',
-                    otp: otpCode.trim(),
-                    createdBy: currentUser?._id,
-                    assignedBy: currentUser?.name || 'System Administrator'
-                  };
-                  const res = await api.post('/users', payload);
-                  if (res.success) {
-                    setOtpSuccess(true);
-                    setTimeout(() => {
-                      setShowOtpDialog(false);
-                      router.push('/admin/users');
-                    }, 2000);
-                  }
-                } catch (err: any) {
-                  setOtpError(err.message || "Invalid OTP. Please try again.");
-                } finally {
-                  setIsLoading(false);
-                }
-              }}>
-                <div className="mb-3">
-                  <div className="d-flex justify-content-center gap-2">
-                    {[0, 1, 2, 3, 4, 5].map((index) => (
-                      <input
-                        key={index}
-                        id={`otp-${index}`}
-                        type="text"
-                        maxLength={1}
-                        className="form-control text-center fw-bold bg-light shadow-none text-dark"
-                        value={otpCode[index] || ''}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '');
-                          let newOtp = otpCode.split('');
-                          newOtp[index] = val;
-                          setOtpCode(newOtp.join(''));
-                          if (val && index < 5) {
-                            document.getElementById(`otp-${index + 1}`)?.focus();
-                          }
-                        }}
-                        style={{ width: '45px', height: '50px', fontSize: '1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}
-                      />
-                    ))}
-                  </div>
-                  {otpError && <div className="text-danger small mt-2">{otpError}</div>}
-                </div>
-
-                <div className="d-flex justify-content-between gap-2 mt-4">
-                  <button
-                    type="button"
-                    className="btn btn-light border py-2 w-50 rounded-pill fw-semibold text-dark"
-                    onClick={() => setShowOtpDialog(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn btn-dark py-2 w-50 rounded-pill fw-semibold text-white shadow-sm"
-                    disabled={isLoading || otpCode.length < 6}
-                    style={{ backgroundColor: 'var(--dark-section)' }}
-                  >
-                    {isLoading ? <span className="spinner-border spinner-border-sm me-1"></span> : null} Verify & Create
-                  </button>
-                </div>
-              </form>
-            ) : null}
           </div>
-        </div>
-      )}
 
-    </div>
+      </div>
+    </form>
+
+      </div >
+
+    {/* CUSTOM PREMIUM DIALOG BOX OVERLAY */ }
+  {
+    dialog && (
+      <div className="dialog-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{
+        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+        zIndex: 9999,
+        backdropFilter: 'blur(8px)'
+      }}>
+        <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
+          maxWidth: '420px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid rgba(255, 255, 255, 0.8)'
+        }}>
+          <div className="mb-3">
+            {dialog.type === 'success' && <i className="hgi-stroke hgi-checkmark-circle-01 text-success" style={{ fontSize: '3.5rem' }}></i>}
+            {dialog.type === 'warning' && <i className="hgi-stroke hgi-information-circle text-warning" style={{ fontSize: '3.5rem' }}></i>}
+            {dialog.type === 'error' && <i className="hgi-stroke hgi-cancel-01 text-danger" style={{ fontSize: '3.5rem' }}></i>}
+          </div>
+
+          <h4 className="fw-bold text-dark mb-2">{dialog.title}</h4>
+          <p className="text-secondary small mb-4 px-2" style={{ lineHeight: '1.5' }}>{dialog.message}</p>
+
+          <button
+            type="button"
+            className="btn w-100 py-2 rounded-pill fw-bold text-white shadow-sm"
+            onClick={() => setDialog(null)}
+            style={{
+              backgroundColor: dialog.type === 'success' ? '#10b981' :
+                dialog.type === 'warning' ? '#f59e0b' : '#ef4444',
+              borderColor: dialog.type === 'success' ? '#10b981' :
+                dialog.type === 'warning' ? '#f59e0b' : '#ef4444'
+            }}
+          >
+            Okay, Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  {/* VERIFY OTP DIALOG OVERLAY */ }
+  {
+    showOtpDialog && (
+      <div className="dialog-overlay position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{
+        backgroundColor: 'rgba(15, 23, 42, 0.65)',
+        zIndex: 9999,
+        backdropFilter: 'blur(8px)'
+      }}>
+        <div className="dialog-card card border-0 shadow-lg p-4 text-center mx-3 rounded-4" style={{
+          maxWidth: '420px',
+          backgroundColor: 'var(--bg-card)',
+          border: '1px solid rgba(255, 255, 255, 0.8)'
+        }}>
+          <div className="d-flex justify-content-center mb-4">
+            <div className="rounded-circle d-flex align-items-center justify-content-center" style={{ width: '72px', height: '72px', backgroundColor: otpSuccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(15, 23, 42, 0.04)' }}>
+              {otpSuccess ? (
+                <i className="hgi-stroke hgi-checkmark-circle-01" style={{ fontSize: '2.2rem', color: '#10b981' }}></i>
+              ) : (
+                <i className="hgi-stroke hgi-mail-01 text-dark" style={{ fontSize: '2.2rem' }}></i>
+              )}
+            </div>
+          </div>
+
+          <h4 className="fw-bold text-dark mb-2">
+            {otpSuccess ? "Email Verified & User Created!" : "Verify OTP"}
+          </h4>
+          <p className="text-secondary small mb-4 px-2" style={{ lineHeight: '1.5' }}>
+            {otpSuccess
+              ? `${formData.name}'s email was successfully verified and the user account has been provisioned.`
+              : `A 6-digit OTP verification code has been dispatched to ${formData.email}. Please verify below to complete registration:`}
+          </p>
+
+          {!otpSuccess ? (
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              setOtpError("");
+              setIsLoading(true);
+              try {
+                const payload = {
+                  ...formData,
+                  assignedSeatCount: totalAssignedSeatCount,
+                  idProofUrl: idProof ? idProof.name : '',
+                  profilePhotoUrl: profilePhoto ? profilePhoto.name : '',
+                  otp: otpCode.trim(),
+                  createdBy: currentUser?._id,
+                  assignedBy: currentUser?.name || 'System Administrator'
+                };
+                const res = await api.post('/users', payload);
+                if (res.success) {
+                  setOtpSuccess(true);
+                  setTimeout(() => {
+                    setShowOtpDialog(false);
+                    router.push('/admin/users');
+                  }, 2000);
+                }
+              } catch (err: any) {
+                setOtpError(err.message || "Invalid OTP. Please try again.");
+              } finally {
+                setIsLoading(false);
+              }
+            }}>
+              <div className="mb-3">
+                <div className="d-flex justify-content-center gap-2">
+                  {[0, 1, 2, 3, 4, 5].map((index) => (
+                    <input
+                      key={index}
+                      id={`otp-${index}`}
+                      type="text"
+                      maxLength={1}
+                      className="form-control text-center fw-bold bg-light shadow-none text-dark"
+                      value={otpCode[index] || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        let newOtp = otpCode.split('');
+                        newOtp[index] = val;
+                        setOtpCode(newOtp.join(''));
+                        if (val && index < 5) {
+                          document.getElementById(`otp-${index + 1}`)?.focus();
+                        }
+                      }}
+                      style={{ width: '45px', height: '50px', fontSize: '1.25rem', borderRadius: '8px', border: '1px solid var(--border-color)' }}
+                    />
+                  ))}
+                </div>
+                {otpError && <div className="text-danger small mt-2">{otpError}</div>}
+              </div>
+
+              <div className="d-flex justify-content-between gap-2 mt-4">
+                <button
+                  type="button"
+                  className="btn btn-light border py-2 w-50 rounded-pill fw-semibold text-dark"
+                  onClick={() => setShowOtpDialog(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-dark py-2 w-50 rounded-pill fw-semibold text-white shadow-sm"
+                  disabled={isLoading || otpCode.length < 6}
+                  style={{ backgroundColor: 'var(--dark-section)' }}
+                >
+                  {isLoading ? <span className="spinner-border spinner-border-sm me-1"></span> : null} Verify & Create
+                </button>
+              </div>
+            </form>
+          ) : null}
+        </div>
+      </div>
+    )
+  }
+
+    </div >
   );
 }
 

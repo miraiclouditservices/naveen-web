@@ -244,7 +244,7 @@ export default function OrganizationDetailsModal({
                                 <div className="col-6"><strong>Total Area:</strong> {prop.totalSft?.toLocaleString() || "10,000"} Sq.Ft</div>
                                 <div className="col-6"><strong>Total Floors:</strong> {prop.totalFloors || 1}</div>
                                 <div className="col-6"><strong>Location:</strong> {prop.city || "Hyderabad"}</div>
-                                <div className="col-12 mt-1 pt-1 border-top"><strong className="text-secondary"><i className="bi bi-diagram-3 me-1" />Org ID:</strong> <span className="font-monospace text-dark">{prop.orgId?.code || prop.orgId?._id || account.org_id || account.account_code || "ORG-ACTIVE"}</span> ({account.company_name})</div>
+                                <div className="col-12 mt-1 pt-1 border-top"><strong className="text-secondary"><i className="bi bi-diagram-3 me-1" />Org ID:</strong> <span className="font-monospace text-dark">{prop.orgId?.code || prop.orgId?._id || (typeof prop.orgId === "string" ? prop.orgId : "") || (typeof account.org_id === "object" ? (account.org_id?._id || account.org_id?.name) : account.org_id) || account.account_code || "ORG-ACTIVE"}</span> ({account.company_name})</div>
                               </div>
                             </div>
 

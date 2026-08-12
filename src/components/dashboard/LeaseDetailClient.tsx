@@ -62,13 +62,54 @@ export default function LeaseDetailClient({ userId }: { userId: string }) {
   const fetchDetails = async () => {
     setIsLoading(true);
     try {
-      // Fetch user profile
+      // 1. Try fetching directly from /leases/:id
+      const resLease = await api.get(`/leases/${userId}`).catch(() => null);
+      if (resLease && resLease.success && resLease.data) {
+        const lease = resLease.data;
+        const tenantUser = {
+          _id: lease._id,
+          name: lease.tenantName || lease.companyName || 'Tenant',
+          companyName: lease.companyName || lease.tenantName || 'N/A',
+          email: lease.tenantEmail || 'N/A',
+          phoneNumber: lease.tenantContact || 'N/A',
+          address: lease.address || 'N/A',
+          assignedProperties: lease.property ? [lease.property] : [],
+          assignedFloors: lease.floor ? [lease.floor] : [],
+          assignedUnits: lease.units || [],
+          role: lease.leaseType === 'Commercial Office' ? 'OFFICE_OWNER' : 'FLOOR_ADMIN',
+          paymentStatus: lease.paymentStatus || 'Unpaid',
+          agreementStatus: lease.status || 'Active',
+          monthlyRent: lease.monthlyRent || 0,
+        };
+        setUser(tenantUser);
+
+        setAgreement({
+          _id: lease._id,
+          leaseType: lease.leaseType || 'Floor Agreement',
+          startDate: lease.startDate,
+          endDate: lease.endDate,
+          monthlyRent: lease.monthlyRent,
+          totalAmount: lease.monthlyRent ? lease.monthlyRent * 12 : 0,
+          status: lease.status || 'Active',
+          paymentStatus: lease.paymentStatus || 'Unpaid',
+          propertyName: lease.property?.propertyName || 'The Bodhivriksha',
+          floorName: lease.floor?.floorName || (lease.floor?.floorNumber ? `Floor ${lease.floor?.floorNumber}` : ''),
+        });
+
+        // Also attempt to load billing invoices if available
+        const resBilling = await api.get(`/users/${userId}/billing`).catch(() => null);
+        if (resBilling && resBilling.success) {
+          setBillingData(resBilling.data);
+        }
+        return;
+      }
+
+      // 2. Fallback: Fetch user profile directly
       const resUser = await api.get(`/users/${userId}`);
       if (resUser.success && resUser.data) {
         const userData = resUser.data;
         setUser(userData);
 
-        // Fetch agreement & billing details concurrently (parallel requests)
         const [resAgreement, resBilling] = await Promise.all([
           api.get(`/agreements/user/${userId}`).catch((err: any) => {
             if (err?.status !== 404 && err?.message !== 'No agreement active for this user.') {

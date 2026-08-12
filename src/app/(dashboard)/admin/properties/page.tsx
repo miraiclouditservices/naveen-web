@@ -12,11 +12,13 @@ interface PropertyItem {
   propertyName: string;
   propertyCode?: string;
   propertyType?: string;
+  propertyCategory?: string;
   propertyAddress?: string;
   location?: string;
   city?: string;
   state?: string;
   country?: string;
+  pincode?: string;
   totalFloors?: number;
   towers?: number;
   totalUnits?: number;
@@ -474,78 +476,138 @@ function PropertiesContent() {
         <div className="row g-4">
           {filteredProperties.map((p) => {
             const occPercent = p.totalSft ? Math.round(((p.occupiedSft || 0) / p.totalSft) * 100) : 0;
+            const imgCount = Array.isArray(p.images) && p.images.length > 0 ? p.images.length : 1;
+            const locationStr = [
+              p.propertyAddress,
+              p.city,
+              p.state,
+              p.pincode,
+              p.country || "India"
+            ].filter(Boolean).join(", ");
 
             return (
               <div key={p._id} className="col-12 col-md-6 col-lg-4">
                 <div
-                  className="card border bg-white rounded-3 h-100 mkt-card-clean overflow-hidden d-flex flex-column transition-all cursor-pointer"
-                  style={{ borderColor: "var(--border, #e2e8f0)", borderRadius: "var(--radius, 10px)" }}
+                  className="card border bg-white rounded-4 h-100 shadow-sm overflow-hidden d-flex flex-column transition-all cursor-pointer hover-shadow"
+                  style={{ borderColor: "#e2e8f0", borderRadius: "16px" }}
                   onClick={() => router.push(`/admin/properties/${p._id}`)}
                 >
-                  {/* Property Image & Badges Overlay */}
+                  {/* Property Banner Image & Badges Overlay */}
                   <div
                     className="position-relative overflow-hidden"
-                    style={{ height: 180, backgroundColor: "#f1f5f9" }}
+                    style={{ height: 180, backgroundColor: "#0f172a" }}
                   >
                     <img
                       src={getPropertyImage(p)}
                       alt={p.propertyName}
-                      className="w-100 h-100 object-fit-cover transition-all"
-                      style={{ transition: "transform 0.5s ease" }}
+                      className="w-100 h-100 object-fit-cover"
                     />
 
-                    {/* Top Badges */}
-                    <div className="position-absolute top-0 start-0 p-3 d-flex gap-2 align-items-center">
-                      <StatusBadge status={p.status} />
-                      <span className="badge bg-dark bg-opacity-75 text-white extra-small fw-semibold">
-                        {p.propertyType || "Commercial"}
+                    {/* Top Left Status Badge */}
+                    <div className="position-absolute top-0 start-0 p-3">
+                      <span className="badge rounded-pill bg-success bg-opacity-90 text-white px-3 py-1.5 extra-small fw-bold">
+                        {p.status || "Active"}
                       </span>
                     </div>
 
-                    {/* Bottom Image Overlay Info */}
-                    <div
-                      className="position-absolute bottom-0 start-0 end-0 p-2 px-3 d-flex justify-content-between align-items-center text-white"
-                      style={{ background: "linear-gradient(to top, rgba(15,23,42,0.85), transparent)" }}
-                    >
-                      <span className="extra-small fw-bold">
-                        <i className="bi bi-geo-alt me-1 text-warning"></i>{p.city || "Location"}, {p.country || "USA"}
+                    {/* Bottom Right Image Counter */}
+                    <div className="position-absolute bottom-0 end-0 p-2.5">
+                      <span className="badge bg-dark bg-opacity-75 text-white extra-small fw-semibold d-inline-flex align-items-center gap-1 px-2.5 py-1 rounded-pill">
+                        <i className="bi bi-bounding-box-circles" style={{ fontSize: "0.75rem" }} /> 1/{imgCount}
                       </span>
-                      <span className="extra-small fw-bold opacity-75">{p.propertyCode || "PROP-001"}</span>
                     </div>
                   </div>
 
                   {/* Card Content Body */}
-                  <div className="p-3 d-flex flex-column flex-grow-1">
-                    <h6
-                      className="fw-extrabold text-dark mb-1 text-truncate hover-orange"
-                      style={{ fontSize: "1rem" }}
-                    >
-                      {p.propertyName}
-                    </h6>
-                    <p className="text-muted extra-small text-truncate mb-3">
-                      {p.propertyAddress || "Financial District, Main Avenue"}
-                    </p>
+                  <div className="p-4 d-flex flex-column flex-grow-1">
+                    {/* Header Title & Dropdown Options */}
+                    <div className="d-flex align-items-center justify-content-between mb-1">
+                      <h6 className="fw-bold text-dark mb-0 text-truncate" style={{ fontSize: "1.05rem" }}>
+                        {p.propertyName}
+                      </h6>
 
-                    {/* Quick Specs Grid */}
-                    <div className="p-2 bg-light rounded-2 mb-3 extra-small">
-                      <span className="text-muted d-block">Total Area</span>
-                      <strong className="text-dark">{p.totalSft ? (p.totalSft / 1000).toFixed(0) + "K" : "0"} SFT</strong>
                     </div>
 
-                    {/* Occupancy Progress Bar */}
-                    <div>
-                      <div className="d-flex justify-content-between align-items-center mb-1 extra-small">
-                        <span className="fw-semibold text-muted">Occupancy</span>
-                        <span className="fw-bold text-dark">{occPercent}%</span>
+                    {/* Property Code Badge */}
+                    {p.propertyCode && (
+                      <div className="mb-2">
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-2.5 py-1 extra-small font-monospace fw-bold">
+                          {p.propertyCode}
+                        </span>
                       </div>
-                      <div className="progress" style={{ height: 6, borderRadius: 4, backgroundColor: "#e2e8f0" }}>
-                        <div
-                          className="progress-bar rounded-pill"
-                          role="progressbar"
-                          style={{ width: `${occPercent}%`, backgroundColor: "var(--brand-orange, #ea580c)" }}
-                        />
+                    )}
+
+                    {/* Location Row */}
+                    <div className="d-flex align-items-start gap-1.5 text-muted extra-small mb-3">
+                      <i className="bi bi-geo-alt-fill text-dark flex-shrink-0 mt-0.5" />
+                      <span className="text-truncate">{locationStr || "Location Address"}</span>
+                    </div>
+
+                    {/* Property Category & Type Pills */}
+                    <div className="d-flex align-items-center gap-3 extra-small text-secondary mb-3">
+                      <span><i className="bi bi-briefcase me-1 text-muted" />{p.propertyType || "Office"}</span>
+                      <span><i className="bi bi-house me-1 text-muted" />{p.propertyCategory || "Residential"}</span>
+                    </div>
+
+                    {/* 2-Column Specs Grid */}
+                    <div className="row g-2 mb-3 extra-small">
+                      <div className="col-4">
+                        <div className="bg-light p-2 rounded-3 text-start">
+                          <span className="text-muted d-block" style={{ fontSize: "0.68rem" }}>Total Sft</span>
+                          <strong className="text-dark font-monospace" style={{ fontSize: "0.85rem" }}>
+                            {p.totalSft ? p.totalSft.toLocaleString() : "0"}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="bg-light p-2 rounded-3 text-start">
+                          <span className="text-muted d-block" style={{ fontSize: "0.68rem" }}>Occupied Sft</span>
+                          <strong className="text-dark font-monospace" style={{ fontSize: "0.85rem" }}>
+                            {p.occupiedSft ? p.occupiedSft.toLocaleString() : "0"}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="bg-light p-2 rounded-3 text-start">
+                          <span className="text-muted d-block" style={{ fontSize: "0.68rem" }}>Available Sft</span>
+                          <strong className="text-dark font-monospace" style={{ fontSize: "0.85rem" }}>
+                            {p.availableSft ? p.availableSft.toLocaleString() : "0"}
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="bg-light p-2 rounded-3 text-start">
+                          <span className="text-muted d-block" style={{ fontSize: "0.68rem" }}>Occupancy</span>
+                          <strong className="text-success font-monospace" style={{ fontSize: "0.85rem" }}>
+                            {occPercent}%
+                          </strong>
+                        </div>
+                      </div>
+                      <div className="col-6">
+                        <div className="bg-light p-2 rounded-3 text-start">
+                          <span className="text-muted d-block" style={{ fontSize: "0.68rem" }}>Monthly Revenue</span>
+                          <strong className="text-success font-monospace" style={{ fontSize: "0.85rem" }}>
+                            ₹{p.monthlyRevenue ? p.monthlyRevenue.toLocaleString() : "0"}
+                          </strong>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Amenities Section */}
+                    <div className="mt-auto">
+                      <span className="extra-small fw-bold text-dark d-block mb-1.5">Amenities</span>
+                      <div className="d-flex align-items-center gap-2 overflow-hidden">
+                        {["bi-person-badge", "bi-shield-check", "bi-camera-video", "bi-ev-station", "bi-wifi", "bi-car-front"].map((icon, idx) => (
+                          <div key={idx} className="rounded-circle bg-light border d-flex align-items-center justify-content-center text-secondary" style={{ width: 32, height: 32 }}>
+                            <i className={`bi ${icon}`} style={{ fontSize: "0.85rem" }} />
+                          </div>
+                        ))}
+                        <span className="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 rounded-pill px-2.5 py-1.5 extra-small fw-bold">
+                          +17
+                        </span>
+                      </div>
+                    </div>
+
                   </div>
                 </div>
               </div>

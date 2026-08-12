@@ -175,33 +175,82 @@ export default function FloorDetailClient({ floorId }: { floorId: string }) {
 
             <hr className="opacity-10" />
 
-            {/* Attributes list */}
-            <div className="d-flex flex-column">
-              {[
-                { label: "Total Capacity", value: `${(floor.totalSft || 0).toLocaleString()} SFT`, icon: "bi-aspect-ratio" },
-                { label: "Occupied Space", value: `${(floor.occupiedSft || 0).toLocaleString()} SFT`, icon: "bi-building-fill" },
-                { label: "Available Space", value: `${Math.max(0, (floor.totalSft || 0) - (floor.occupiedSft || 0)).toLocaleString()} SFT`, icon: "bi-check-circle-fill", cls: "text-success" },
-                { label: "Property Owner", value: floor.assignedOwner?.ownerName || "Unassigned", icon: "bi-person-fill" },
-                { label: "Floor Admin", value: floor.assignedAdmin?.name || "Unassigned", icon: "bi-person-badge-fill" },
-                { label: "Floor Revenue", value: `₹${(floor.floorRevenue || 0).toLocaleString()}`, icon: "bi-currency-rupee" }
-              ].map((row, idx, arr) => (
-                <div
-                  key={row.label}
-                  className="d-flex justify-content-between align-items-center py-2"
-                  style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}
-                >
-                  <div className="d-flex align-items-center gap-2">
-                    <div
-                      className="d-flex align-items-center justify-content-center"
-                      style={{ width: 28, height: 28, backgroundColor: 'var(--bg-app)', border: '1px solid var(--border-color)', borderRadius: 6, color: 'var(--dark-section)' }}
-                    >
-                      <i className={`bi ${row.icon}`} style={{ fontSize: "0.85rem" }}></i>
+            {/* Attribute List */}
+            <div className="d-flex flex-column gap-3">
+              {/* Floor Core Info */}
+              <div>
+                <h6 className="fw-bold text-dark mb-2 small text-uppercase text-muted" style={{ letterSpacing: '0.04em' }}>Floor Statistics</h6>
+                {[
+                  { label: "Floor Number", value: floor.floorNumber || "N/A", icon: "bi-hash" },
+                  { label: "Floor Type", value: floor.floorType || "Commercial", icon: "bi-building" },
+                  { label: "Total Capacity", value: `${(floor.totalSft || 0).toLocaleString()} SFT`, icon: "bi-aspect-ratio" },
+                  { label: "Occupied Space", value: `${(floor.occupiedSft || 0).toLocaleString()} SFT`, icon: "bi-pie-chart-fill" },
+                  { label: "Available Space", value: `${Math.max(0, (floor.totalSft || 0) - (floor.occupiedSft || 0)).toLocaleString()} SFT`, icon: "bi-check-circle-fill", cls: "text-success" },
+                  { label: "Floor Revenue", value: `₹${(floor.floorRevenue || 0).toLocaleString()}`, icon: "bi-currency-rupee" }
+                ].map((row, idx, arr) => (
+                  <div key={row.label} className="d-flex justify-content-between align-items-center py-1.5" style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}>
+                    <div className="d-flex align-items-center gap-2">
+                      <i className={`bi ${row.icon} text-muted`} style={{ fontSize: "0.85rem" }}></i>
+                      <span className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{row.label}</span>
                     </div>
-                    <span className="text-muted" style={{ fontSize: '0.82rem', fontWeight: 500 }}>{row.label}</span>
+                    <span className={`fw-bold text-dark text-end ${row.cls || ""}`} style={{ fontSize: '0.8rem' }}>{row.value}</span>
                   </div>
-                  <span className={`fw-bold text-dark text-end ${row.cls || ""}`} style={{ fontSize: '0.82rem', maxWidth: '55%' }}>{row.value}</span>
-                </div>
-              ))}
+                ))}
+              </div>
+
+              {/* Property Details */}
+              <div className="pt-2 border-top">
+                <h6 className="fw-bold text-dark mb-2 small text-uppercase text-muted" style={{ letterSpacing: '0.04em' }}>Property Details</h6>
+                {[
+                  { label: "Property Name", value: floor.property?.propertyName || "N/A" },
+                  { label: "Property Code", value: floor.property?.propertyCode || "N/A" },
+                  { label: "Address", value: floor.property?.propertyAddress || "N/A" },
+                  { label: "City / State", value: [floor.property?.city, floor.property?.state].filter(Boolean).join(', ') || "N/A" }
+                ].map((row, idx, arr) => (
+                  <div key={row.label} className="d-flex justify-content-between align-items-center py-1.5" style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}>
+                    <span className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{row.label}</span>
+                    <span className="fw-semibold text-dark text-end" style={{ fontSize: '0.8rem', maxWidth: '60%' }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Floor Owner Details */}
+              <div className="pt-2 border-top">
+                <h6 className="fw-bold text-dark mb-2 small text-uppercase text-muted d-flex align-items-center justify-content-between" style={{ letterSpacing: '0.04em' }}>
+                  <span>Floor Owner Details</span>
+                  <i className="bi bi-person-badge text-primary"></i>
+                </h6>
+                {[
+                  { label: "Owner Name", value: floor.assignedOwner?.ownerName || floor.assignedOwner?.user?.name || "Unassigned" },
+                  { label: "Contact Phone", value: floor.assignedOwner?.contactNumber || floor.assignedOwner?.user?.phoneNumber || "N/A" },
+                  { label: "Email Address", value: floor.assignedOwner?.emailId || floor.assignedOwner?.user?.email || "N/A" },
+                  { label: "Address", value: floor.assignedOwner?.address || "N/A" },
+                  { label: "Owner Type", value: floor.assignedOwner?.ownerType || "Individual" },
+                  { label: "GST / Reg No", value: floor.assignedOwner?.gstNumber || floor.assignedOwner?.companyRegNo || "N/A" },
+                  { label: "ID Proof", value: [floor.assignedOwner?.idProofType, floor.assignedOwner?.idProofNumber].filter(Boolean).join(' - ') || "N/A" }
+                ].map((row, idx, arr) => (
+                  <div key={row.label} className="d-flex justify-content-between align-items-center py-1.5" style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}>
+                    <span className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{row.label}</span>
+                    <span className="fw-bold text-dark text-end" style={{ fontSize: '0.8rem', maxWidth: '60%' }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Floor Admin / Manager */}
+              <div className="pt-2 border-top">
+                <h6 className="fw-bold text-dark mb-2 small text-uppercase text-muted" style={{ letterSpacing: '0.04em' }}>Floor Admin / Manager</h6>
+                {[
+                  { label: "Admin Name", value: floor.assignedAdmin?.name || "Unassigned" },
+                  { label: "Phone", value: floor.assignedAdmin?.phoneNumber || "N/A" },
+                  { label: "Email", value: floor.assignedAdmin?.email || "N/A" }
+                ].map((row, idx, arr) => (
+                  <div key={row.label} className="d-flex justify-content-between align-items-center py-1.5" style={{ borderBottom: idx === arr.length - 1 ? "none" : "1px solid var(--border-color)" }}>
+                    <span className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 500 }}>{row.label}</span>
+                    <span className="fw-semibold text-dark text-end" style={{ fontSize: '0.8rem' }}>{row.value}</span>
+                  </div>
+                ))}
+              </div>
+
             </div>
           </div>
         </div>

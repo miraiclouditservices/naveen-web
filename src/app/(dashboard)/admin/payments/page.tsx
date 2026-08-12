@@ -93,7 +93,7 @@ const DonutChart = ({ data, totalReceivedText }: { data: { label: string; value:
 };
 
 // Cash Flow Trend Flexbar Chart
-const CashFlowTrendChart = ({ months }: { months: { name: string; received: number; pending: number; overdue: number }[] }) => {
+const CashFlowTrendChart = ({ months }: { months: any[] }) => {
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
 
   if (!months || months.length === 0) {
@@ -104,26 +104,27 @@ const CashFlowTrendChart = ({ months }: { months: { name: string; received: numb
     );
   }
 
-  // Calculate the maximum total value across all months to scale the bars proportionally
-  const maxVal = Math.max(...months.map((m) => m.received + m.pending + m.overdue), 0);
+  const maxVal = Math.max(...months.map((m) => (m.received || 0) + (m.pending || 0) + (m.overdue || 0) + (m.amount || 0)), 0);
 
   return (
     <div className="position-relative" style={{ height: "180px" }}>
       <div className="d-flex justify-content-between align-items-end h-100 pb-3" style={{ borderBottom: "1px solid var(--border-color)" }}>
-        {months.map((m) => {
-          const totalVal = m.received + m.pending + m.overdue;
-          // Scale heights relative to the maximum month's total value
+        {months.map((m, idx) => {
+          const mLabel = m.month || m.name || `Month ${idx + 1}`;
+          const recAmt = m.received || m.amount || 0;
+          const penAmt = m.pending || 0;
+          const ovAmt = m.overdue || 0;
           const divisor = maxVal > 0 ? maxVal : 1;
-          const recHeight = (m.received / divisor) * 100;
-          const penHeight = (m.pending / divisor) * 100;
-          const ovHeight = (m.overdue / divisor) * 100;
+          const recHeight = (recAmt / divisor) * 100;
+          const penHeight = (penAmt / divisor) * 100;
+          const ovHeight = (ovAmt / divisor) * 100;
 
           return (
             <div
-              key={m.name}
+              key={`${mLabel}-${idx}`}
               className="d-flex flex-column align-items-center position-relative"
               style={{ width: `${100 / months.length}%`, height: "130px", cursor: "pointer" }}
-              onMouseEnter={() => setHoveredMonth(m.name)}
+              onMouseEnter={() => setHoveredMonth(mLabel)}
               onMouseLeave={() => setHoveredMonth(null)}
             >
               {/* Stacked Bar container */}
@@ -132,10 +133,10 @@ const CashFlowTrendChart = ({ months }: { months: { name: string; received: numb
                 <div style={{ height: `${penHeight}%`, backgroundColor: "#f59e0b" }}></div>
                 <div style={{ height: `${recHeight}%`, backgroundColor: "#10b981" }}></div>
               </div>
-              <span className="text-muted mt-2" style={{ fontSize: "0.68rem" }}>{m.name}</span>
+              <span className="text-muted mt-2" style={{ fontSize: "0.68rem" }}>{mLabel}</span>
 
               {/* Interactive Tooltip */}
-              {hoveredMonth === m.name && (
+              {hoveredMonth === mLabel && (
                 <div
                   className="position-absolute bg-dark text-white p-2 rounded shadow"
                   style={{
@@ -146,10 +147,10 @@ const CashFlowTrendChart = ({ months }: { months: { name: string; received: numb
                     pointerEvents: "none",
                   }}
                 >
-                  <div className="fw-bold mb-1 border-bottom pb-1 border-secondary">{m.name}</div>
-                  <div className="d-flex justify-content-between"><span>Received:</span> <span className="fw-bold text-success">{formatCurrencyShort(m.received)}</span></div>
-                  <div className="d-flex justify-content-between"><span>Pending:</span> <span className="fw-bold text-warning">{formatCurrencyShort(m.pending)}</span></div>
-                  <div className="d-flex justify-content-between"><span>Overdue:</span> <span className="fw-bold text-danger">{formatCurrencyShort(m.overdue)}</span></div>
+                  <div className="fw-bold mb-1 border-bottom pb-1 border-secondary">{mLabel}</div>
+                  <div className="d-flex justify-content-between"><span>Received:</span> <span className="fw-bold text-success">{formatCurrencyShort(recAmt)}</span></div>
+                  {penAmt > 0 && <div className="d-flex justify-content-between"><span>Pending:</span> <span className="fw-bold text-warning">{formatCurrencyShort(penAmt)}</span></div>}
+                  {ovAmt > 0 && <div className="d-flex justify-content-between"><span>Overdue:</span> <span className="fw-bold text-danger">{formatCurrencyShort(ovAmt)}</span></div>}
                 </div>
               )}
             </div>
@@ -222,33 +223,6 @@ function LedgerContent() {
     }
   };
 
-  const fetchFinanceReport = useCallback(async () => {
-    try {
-      const params = new URLSearchParams();
-      if (selectedProperty && selectedProperty !== "All Properties") {
-        params.append("propertyId", selectedProperty);
-      }
-      if (startDate) params.append("startDate", startDate);
-      if (endDate) params.append("endDate", endDate);
-
-      const res = await api.get(`/reports/revenue?${params.toString()}`);
-      if (res.success && res.data) {
-        setMetrics({
-          totalRevenue: res.data.totalRevenue || 0,
-          collected: res.data.paidAmount || 0,
-          pending: res.data.pendingAmount || 0,
-          overdue: res.data.overdueAmount || 0,
-          totalTransactions: res.data.totalTransactions || 0,
-          activeTenants: res.data.activeTenants || 0,
-          cashFlowTrend: res.data.cashFlowTrend || [],
-          topOverdueTenants: res.data.topOverdueTenants || []
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching revenue report:", err);
-    }
-  }, [selectedProperty, startDate, endDate]);
-
   const fetchFinanceData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -272,7 +246,20 @@ function LedgerContent() {
       if (res.success) {
         setInvoices(res.data || []);
         setTotalPages(res.pagination?.totalPages || 1);
-        setTotalItems(res.pagination?.totalPayments || 0);
+        setTotalItems(res.pagination?.totalPayments || res.count || 0);
+
+        if (res.summary) {
+          setMetrics({
+            totalRevenue: res.summary.totalRevenue || 0,
+            collected: res.summary.collected || 0,
+            pending: res.summary.pending || 0,
+            overdue: res.summary.overdue || 0,
+            totalTransactions: res.summary.totalTransactions || 0,
+            activeTenants: res.summary.activeTenants || 0,
+            cashFlowTrend: res.summary.cashFlowTrend || [],
+            topOverdueTenants: res.summary.topOverdueTenants || []
+          });
+        }
       }
     } catch (err) {
       console.error(err);
@@ -284,12 +271,6 @@ function LedgerContent() {
   useEffect(() => {
     fetchProperties();
   }, []);
-
-  useEffect(() => {
-    if (!isTenantRole) {
-      fetchFinanceReport();
-    }
-  }, [fetchFinanceReport, isTenantRole]);
 
   useEffect(() => {
     fetchFinanceData();
@@ -818,44 +799,46 @@ function LedgerContent() {
               {metrics.topOverdueTenants.length === 0 ? (
                 <div className="text-center py-5 text-muted small">No overdue tenants found.</div>
               ) : (
-                metrics.topOverdueTenants.map((ot, idx) => (
-                  <div key={idx} className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center gap-2">
-                      <div
-                        className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
-                        style={{
-                          width: "36px",
-                          height: "36px",
-                          backgroundColor: "#f9f7f3",
-                          color: "var(--text-primary)",
-                          fontSize: "0.8rem",
-                          border: "1px solid var(--border-color)",
-                        }}
-                      >
-                        {ot.name
-                          .split(" ")
-                          .map((n: string) => n[0])
-                          .join("")}
-                      </div>
-                      <div>
-                        <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
-                          {ot.name}
+                metrics.topOverdueTenants.map((ot, idx) => {
+                  const tName = ot.tenantName || ot.name || 'Tenant';
+                  const pName = ot.propertyName || ot.property || 'Commercial Complex';
+                  const amt = typeof ot.amount === 'number' ? `₹${ot.amount.toLocaleString('en-IN')}` : ot.amount;
+                  return (
+                    <div key={`overdue-${tName}-${idx}`} className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center gap-2">
+                        <div
+                          className="rounded-circle d-flex align-items-center justify-content-center fw-bold"
+                          style={{
+                            width: "36px",
+                            height: "36px",
+                            backgroundColor: "#f9f7f3",
+                            color: "var(--text-primary)",
+                            fontSize: "0.8rem",
+                            border: "1px solid var(--border-color)",
+                          }}
+                        >
+                          {tName
+                            .split(" ")
+                            .map((n: string) => n[0])
+                            .join("")}
                         </div>
-                        <div className="text-muted" style={{ fontSize: "0.68rem" }}>
-                          {ot.property}
+                        <div>
+                          <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
+                            {tName}
+                          </div>
+                          <div className="text-muted" style={{ fontSize: "0.68rem" }}>
+                            {pName}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-end">
+                        <div className="fw-bold text-danger" style={{ fontSize: "0.8rem" }}>
+                          {amt}
                         </div>
                       </div>
                     </div>
-                    <div className="text-end">
-                      <div className="fw-bold" style={{ fontSize: "0.8rem", color: "var(--text-primary)" }}>
-                        {ot.amount}
-                      </div>
-                      <div className="text-danger fw-semibold" style={{ fontSize: "0.68rem" }}>
-                        {ot.days}
-                      </div>
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
