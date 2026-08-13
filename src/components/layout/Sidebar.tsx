@@ -53,206 +53,146 @@ export default function Sidebar() {
 
   // Normalize role string to uppercase standard constants
   const rawRole = user?.role || "";
-  const normalizedRole = rawRole === "Owner" || rawRole === "Office Owner" || rawRole === "OFFICE_ADMIN" ? "OFFICE_OWNER"
-    : rawRole === "Admin" || rawRole === "Super Admin" ? "SUPER_ADMIN"
-      : rawRole === "Ultra Super Admin" ? "ULTRA_SUPER_ADMIN"
-        : rawRole === "Co-Working Admin" ? "COWORKING_ADMIN"
-          : rawRole === "Co-Working Member" ? "COWORKING_TENANT"
-            : rawRole === "Floor Admin" ? "FLOOR_ADMIN"
-              : rawRole === "Staff Admin" ? "STAFF_ADMIN"
-                : rawRole === "HR Admin" ? "HR_ADMIN"
-                  : rawRole.toUpperCase().replace(/ /g, "_");
+  const normalizedRole =
+    rawRole === "Super Admin" || rawRole === "SUPER_ADMIN" || rawRole === "Admin" ? "SUPER_ADMIN"
+      : rawRole === "Floor Admin" || rawRole === "FLOOR_ADMIN" ? "FLOOR_ADMIN"
+        : rawRole === "Co-Working Admin" || rawRole === "COWORKING_ADMIN" ? "COWORKING_ADMIN"
+          : rawRole === "Co-Working Member" || rawRole === "COWORKING_TENANT" || rawRole === "COWORKING_TENENT" || rawRole === "Tenant" || rawRole === "TENANT" ? "COWORKING_TENANT"
+            : rawRole === "Ultra Super Admin" || rawRole === "ULTRA_SUPER_ADMIN" ? "ULTRA_SUPER_ADMIN"
+              : rawRole === "Owner" || rawRole === "Office Owner" || rawRole === "OFFICE_OWNER" ? "OFFICE_OWNER"
+                : rawRole.toUpperCase().replace(/ /g, "_");
 
   const isUltraSuperAdmin = normalizedRole === "ULTRA_SUPER_ADMIN";
-  const isCoWorkingAdmin = normalizedRole === "COWORKING_ADMIN";
-  const isCoWorkingTenant = normalizedRole === "COWORKING_TENANT";
-  const isSuperAdmin = normalizedRole === "SUPER_ADMIN" || isUltraSuperAdmin || isCoWorkingAdmin;
-  const isOfficeOwner = normalizedRole === "OFFICE_OWNER";
+  const isSuperAdmin = normalizedRole === "SUPER_ADMIN" || isUltraSuperAdmin;
+  const isCoworkingAdmin = normalizedRole === "COWORKING_ADMIN";
   const isFloorAdmin = normalizedRole === "FLOOR_ADMIN";
-  const isStaffAdmin = normalizedRole === "STAFF_ADMIN";
+  const isCoworkingTenant = normalizedRole === "COWORKING_TENANT";
   const isHrAdmin = normalizedRole === "HR_ADMIN";
 
   const permissions = (user as any)?.permissions || [];
-  const hasAccess = (permission: string) => isSuperAdmin || permissions.includes(permission);
+  const hasAccess = (permission: string) => isSuperAdmin || isCoworkingAdmin || permissions.includes(permission);
 
-  const showCRM = isSuperAdmin || hasAccess('manage_crm') || isStaffAdmin || isFloorAdmin;
+  const showCRM = isSuperAdmin || isCoworkingAdmin || hasAccess('manage_crm');
 
-  const ultraGroups = [
-    {
-      label: "SaaS Administration",
-      items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
-        { name: "Organizations", path: "/admin/dashboard?tab=orgs", icon: "hgi-building-03" },
-        { name: "Property Accounts", path: "/admin/properties", icon: "hgi-building-01" },
-        { name: "Co-working Accounts", path: "/admin/dashboard?tab=coworking", icon: "hgi-door-01" },
-        { name: "Users", path: "/admin/users", icon: "hgi-user-shield-01" },
-        { name: "Subscriptions", path: "/admin/leases", icon: "hgi-agreement-01" },
-        { name: "Payments", path: "/admin/payments", icon: "hgi-credit-card" },
-        { name: "Assets", path: "/admin/assets", icon: "hgi-tools" },
-        { name: "Vendors", path: "/admin/vendors", icon: "hgi-truck" },
-        { name: "Reports", path: "/admin/crm?tab=reports", icon: "hgi-analytics-01" },
-        { name: "Settings", path: "/admin/settings", icon: "hgi-settings-01" }
-      ]
-    }
-  ];
-
-  const accountType = (user as any)?.accountId?.account_type || (user as any)?.account_type || "";
-  const isCoworkingType = isCoWorkingAdmin || isCoWorkingTenant || accountType === "COWORKING" || accountType === "Partner";
-
-  const standardMenuGroups = isCoworkingType
-    ? [
-      {
-        label: "Main",
-        items: [
-          ...(isSuperAdmin || isStaffAdmin || permissions.length > 0 ? [{ name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "WorkSpace & HUB", path: "/admin/properties", icon: "hgi-building-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "Seats and Desks", path: "/admin/units", icon: "hgi-door-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_tenants') || isStaffAdmin ? [{ name: "Member Agreements", path: "/admin/leases", icon: "hgi-agreement-01" }] : []),
-          ...(user ? [{ name: "Payments", path: "/admin/payments", icon: "hgi-credit-card" }] : []),
-        ]
-      },
-      {
-        label: "Operations",
-        items: [
-          ...(isSuperAdmin || hasAccess('manage_helpdesk') || isStaffAdmin || isFloorAdmin || isOfficeOwner ? [{ name: "Helpdesk", path: "/admin/helpdesk", icon: "hgi-headset" }] : []),
-          ...(isSuperAdmin || hasAccess('manage_visitors') || isStaffAdmin || isFloorAdmin || isOfficeOwner ? [
-            { name: "Visitors Log", path: "/admin/visitors", icon: "hgi-identity-card" },
-            { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" },
-            { name: "Meeting Rooms & Booking", path: "/admin/bookings", icon: "hgi-calendar-01" }
-          ] : []),
-          ...(user ? [
-            { name: "Assets", path: "/admin/assets", icon: "hgi-tools" },
-            { name: "Vendors", path: "/admin/vendors", icon: "hgi-truck" }
-          ] : [])
-        ]
-      },
-      // {
-      //   label: "Attendance",
-      //   items: []
-      // },
-      {
-        label: "Management",
-        items: [
-          ...(isSuperAdmin || hasAccess('manage_staff') || isFloorAdmin || isOfficeOwner ? [
-            { name: "Access Management", path: "/admin/users", icon: "hgi-user-shield-01" },
-          ] : [])
-        ]
-      },
-      {
-        label: "Account",
-        items: [
-          { name: "Setting & Profile", path: "/admin/settings", icon: "hgi-settings-01" }
-        ]
-      }
-    ]
-    : [
-      {
-        label: "Main",
-        items: [
-          ...(isSuperAdmin || isStaffAdmin || permissions.length > 0 ? [{ name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "Properties", path: "/admin/properties", icon: "hgi-building-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "Floors", path: "/admin/floors", icon: "hgi-layers-01" }] : []),
-          // ...(isSuperAdmin || hasAccess('view_floors') || isStaffAdmin ? [{ name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" }] : []),
-          ...(isSuperAdmin || hasAccess('view_tenants') || isStaffAdmin ? [{ name: "Lease", path: "/admin/leases", icon: "hgi-agreement-01" }] : []),
-          ...(user ? [{ name: "Payments", path: "/admin/payments", icon: "hgi-credit-card" }] : []),
-        ]
-      },
-      {
-        label: "Operations",
-        items: [
-          ...(isSuperAdmin || hasAccess('manage_helpdesk') || isStaffAdmin || isFloorAdmin || isOfficeOwner ? [{ name: "Helpdesk", path: "/admin/helpdesk", icon: "hgi-headset" }] : []),
-          ...(isSuperAdmin || hasAccess('manage_visitors') || isStaffAdmin || isFloorAdmin || isOfficeOwner ? [
-            { name: "Visitors Log", path: "/admin/visitors", icon: "hgi-identity-card" },
-            { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" }
-          ] : []),
-          ...(user ? [
-            { name: "Assets", path: "/admin/assets", icon: "hgi-tools" },
-            { name: "Vendors", path: "/admin/vendors", icon: "hgi-truck" }
-          ] : [])
-        ]
-      },
-      // {
-      //   label: "Attendance",
-      //   items: []
-      // },
-      {
-        label: "Management",
-        items: [
-          ...(isSuperAdmin || hasAccess('manage_staff') || isFloorAdmin || isOfficeOwner ? [
-            { name: "Access Management", path: "/admin/users", icon: "hgi-user-shield-01" },
-          ] : [])
-        ]
-      },
-      {
-        label: "Account",
-        items: [
-          { name: "Setting & Profile", path: "/admin/settings", icon: "hgi-settings-01" }
-        ]
-      }
-    ];
-
-  const coworkingTenantGroups = [
+  // Role 1: SUPER_ADMIN Menu
+  const superAdminGroups = [
     {
       label: "Main",
       items: [
         { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
-        { name: "My Workspace & Seats", path: "/admin/units", icon: "hgi-door-01" },
-        { name: "Meeting Rooms & Bookings", path: "/admin/bookings", icon: "hgi-calendar-01" },
-        { name: "Visitors Log", path: "/admin/visitors", icon: "hgi-identity-card" },
-        { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" },
-        { name: "Payments & Invoices", path: "/admin/payments", icon: "hgi-credit-card" },
-        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" }
-      ]
-    },
-    {
-      label: "Account",
-      items: [
-        { name: "Setting & Profile", path: "/admin/settings", icon: "hgi-settings-01" }
-      ]
-    }
-  ];
-
-  const floorAdminGroups = [
-    {
-      label: "Main",
-      items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
-        { name: "My Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
+        { name: "Floor Management", path: "/admin/floors", icon: "hgi-layers-01" },
+        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Payment Management", path: "/admin/payments", icon: "hgi-credit-card" }
       ]
     },
     {
       label: "Operations",
       items: [
-        { name: "Helpdesk", path: "/admin/helpdesk", icon: "hgi-headset" },
-        { name: "Visitors Log", path: "/admin/visitors", icon: "hgi-identity-card" },
-        { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" }
+        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" },
+        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Asset & AMC Management", path: "/admin/assets", icon: "hgi-tools" },
+        { name: "Material Management", path: "/admin/materials", icon: "hgi-package" },
+        { name: "Vendor Management", path: "/admin/vendors", icon: "hgi-truck" }
+      ]
+    },
+    {
+      label: "Management",
+      items: [
+        { name: "Access Management", path: "/admin/users", icon: "hgi-user-shield-01" }
+      ]
+    }
+  ];
+
+  // Role 2: FLOOR_ADMIN Menu
+  const floorAdminGroups = [
+    {
+      label: "Main",
+      items: [
+        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
+        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
+      ]
+    },
+    {
+      label: "Operations",
+      items: [
+        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Gate Pass & Material ", path: "/admin/materials", icon: "hgi-package" }
       ]
     },
     {
       label: "Account",
       items: [
-        { name: "Setting & Profile", path: "/admin/settings", icon: "hgi-settings-01" }
+        { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
+      ]
+    }
+  ];
+
+  // Role 3: COWORKING_ADMIN Menu
+  const coworkingAdminGroups = [
+    {
+      label: "Main",
+      items: [
+        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
+        { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
+        { name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" },
+        { name: "Lease ", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Payment ", path: "/admin/payments", icon: "hgi-credit-card" }
+      ]
+    },
+    {
+      label: "Operations",
+      items: [
+        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Material / Gate Pass ", path: "/admin/materials", icon: "hgi-package" },
+        { name: "Asset & AMC ", path: "/admin/assets", icon: "hgi-tools" },
+        { name: "Vendor ", path: "/admin/vendors", icon: "hgi-truck" }
+      ]
+    },
+    {
+      label: "",
+      items: [
+        { name: "Access ", path: "/admin/users", icon: "hgi-user-shield-01" }
+      ]
+    }
+  ];
+
+  // Role 4: COWORKING_TENENT Menu
+  const coworkingTenantGroups = [
+    {
+      label: "Main",
+      items: [
+        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
+        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
+      ]
+    },
+    {
+      label: "Operations",
+      items: [
+        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" },
+        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Gate Pass & Material Requests", path: "/admin/materials", icon: "hgi-package" }
+      ]
+    },
+    {
+      label: "Account",
+      items: [
+        { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
       ]
     }
   ];
 
   const menuGroups = isUltraSuperAdmin
-    ? ultraGroups
-    : isCoWorkingTenant
-      ? coworkingTenantGroups
-      : isFloorAdmin
-        ? floorAdminGroups
-        : standardMenuGroups.map(group => {
-        if (isOfficeOwner) {
-          const itemsToRemove = ["Properties", "Floors", "Units and sft", "Leases", "Assets", "Vendors", "Reports"];
-          return {
-            ...group,
-            items: group.items.filter(item => !itemsToRemove.includes(item.name))
-          };
-        }
-
-        return group;
-      }).filter(group => group.label === "CRM" || group.label === "Attendance" || group.items.length > 0);
+    ? superAdminGroups
+    : isSuperAdmin
+      ? superAdminGroups
+      : isCoworkingAdmin
+        ? coworkingAdminGroups
+        : isFloorAdmin
+          ? floorAdminGroups
+          : isCoworkingTenant
+            ? coworkingTenantGroups
+            : superAdminGroups;
 
   const renderCRMDropdown = () => {
     const crmItems = [
@@ -364,7 +304,7 @@ export default function Sidebar() {
       ...(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE' ? [
         { name: "Attendance Logs", path: "/admin/attendance/logs" },
         { name: "Corrections", path: "/admin/attendance/corrections" },
-        { name: "Leave Management", path: "/admin/attendance/leaves" }
+        { name: "Leave ", path: "/admin/attendance/leaves" }
       ] : [])
     ];
 
