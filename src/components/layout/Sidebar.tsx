@@ -68,6 +68,7 @@ export default function Sidebar() {
   const isFloorAdmin = normalizedRole === "FLOOR_ADMIN";
   const isCoworkingTenant = normalizedRole === "COWORKING_TENANT";
   const isHrAdmin = normalizedRole === "HR_ADMIN";
+  const isStaffAdmin = normalizedRole === "STAFF_ADMIN" || normalizedRole === "STAFF";
 
   const permissions = (user as any)?.permissions || [];
   const hasAccess = (permission: string) => isSuperAdmin || isCoworkingAdmin || permissions.includes(permission);
@@ -182,6 +183,36 @@ export default function Sidebar() {
     }
   ];
 
+  // Role 5: STAFF_ADMIN Menu (Dynamically Filtered by Permissions)
+  const staffOperationsItems = [
+    ...(permissions.length === 0 || permissions.includes('manage_helpdesk') ? [{ name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" }] : []),
+    ...(permissions.length === 0 || permissions.includes('manage_visitors') ? [{ name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" }] : []),
+    ...(permissions.length === 0 || permissions.includes('manage_materials') ? [{ name: "Gate Pass & Material Requests", path: "/admin/materials", icon: "hgi-package" }] : []),
+    ...(permissions.includes('manage_assets') ? [{ name: "Asset & AMC Management", path: "/admin/assets", icon: "hgi-tools" }] : []),
+    ...(permissions.includes('manage_vendors') ? [{ name: "Vendor Management", path: "/admin/vendors", icon: "hgi-truck" }] : []),
+    ...(permissions.includes('manage_leases') ? [{ name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }] : []),
+    ...(permissions.includes('manage_floors') ? [{ name: "Floor Management", path: "/admin/floors", icon: "hgi-layers-01" }] : []),
+  ];
+
+  const staffAdminGroups = [
+    {
+      label: "Main",
+      items: [
+        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" }
+      ]
+    },
+    ...(staffOperationsItems.length > 0 ? [{
+      label: "Operations",
+      items: staffOperationsItems
+    }] : []),
+    {
+      label: "Account",
+      items: [
+        { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
+      ]
+    }
+  ];
+
   const menuGroups = isUltraSuperAdmin
     ? superAdminGroups
     : isSuperAdmin
@@ -192,7 +223,9 @@ export default function Sidebar() {
           ? floorAdminGroups
           : isCoworkingTenant
             ? coworkingTenantGroups
-            : superAdminGroups;
+            : isStaffAdmin
+              ? staffAdminGroups
+              : superAdminGroups;
 
   const renderCRMDropdown = () => {
     const crmItems = [

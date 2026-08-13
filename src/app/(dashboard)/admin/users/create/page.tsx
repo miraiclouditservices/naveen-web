@@ -65,6 +65,8 @@ function CreateUserContent() {
             setFormData(prev => ({ ...prev, role: 'STAFF_ADMIN' }));
           } else if (r === 'COWORKING_ADMIN' || parsed.workspaceType === 'COWORKING') {
             setFormData(prev => ({ ...prev, role: 'COWORKING_TENANT' }));
+          } else if (r === 'SUPER_ADMIN' || r === 'SUPERADMIN' || r === 'ADMIN') {
+            setFormData(prev => ({ ...prev, role: 'FLOOR_ADMIN' }));
           } else {
             setFormData(prev => ({ ...prev, role: 'COWORKING_TENANT' }));
           }
@@ -725,12 +727,37 @@ function CreateUserContent() {
                                 ...prev,
                                 role: r,
                                 staffCategory: r === 'STAFF_ADMIN' ? 'Security' : 'None',
+                                permissions: r === 'STAFF_ADMIN' && prev.permissions.length === 0
+                                  ? ['manage_helpdesk', 'manage_visitors', 'manage_materials']
+                                  : prev.permissions,
                                 assignedProperties: [], assignedFloors: [], assignedUnits: []
                               }));
                             }}
                           >
                             {(() => {
                               const norm = (currentUser?.role || '').toUpperCase().replace(/[-\s]+/g, '_');
+                              if (norm === 'SUPER_ADMIN' || norm === 'SUPERADMIN' || norm === 'ADMIN') {
+                                return (
+                                  <>
+                                    {formData.role && !['FLOOR_ADMIN', 'STAFF_ADMIN'].includes(formData.role) && (
+                                      <option value={formData.role}>{formData.role.replace(/_/g, ' ')}</option>
+                                    )}
+                                    <option value="FLOOR_ADMIN">Floor Admin</option>
+                                    <option value="STAFF_ADMIN">Staff Admin</option>
+                                  </>
+                                );
+                              }
+                              if (norm === 'COWORKING_ADMIN' || norm === 'COWORKING') {
+                                return (
+                                  <>
+                                    {formData.role && !['COWORKING_TENANT', 'STAFF_ADMIN'].includes(formData.role) && (
+                                      <option value={formData.role}>{formData.role.replace(/_/g, ' ')}</option>
+                                    )}
+                                    <option value="COWORKING_TENANT">Co-Working Member</option>
+                                    <option value="STAFF_ADMIN">Staff Admin</option>
+                                  </>
+                                );
+                              }
                               if (norm === 'FLOOR_ADMIN') {
                                 return (
                                   <>
@@ -767,25 +794,98 @@ function CreateUserContent() {
                       </div>
 
                       {formData.role === 'STAFF_ADMIN' && (
-                        <div className="col-md-6">
-                          <label className="form-label small fw-bold text-dark mb-1">Staff Category *</label>
-                          <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
-                            <i className="hgi-stroke hgi-user text-muted" style={{ fontSize: '1.1rem' }}></i>
-                            <select className="border-0 p-0 w-100 shadow-none text-dark fw-medium" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent', cursor: 'pointer' }} required value={formData.staffCategory}
-                              onChange={(e) => setFormData({ ...formData, staffCategory: e.target.value })}
-                            >
-                              <option value="Security">Security / Guard</option>
-                              <option value="Watchman">Watchman / Caretaker</option>
-                              <option value="Electrician">Electrician</option>
-                              <option value="Plumber">Plumber</option>
-                              <option value="Helpdesk">Helpdesk Executive</option>
-                              <option value="Gardener">Gardener</option>
-                              <option value="Housekeeping">Housekeeping / Cleaner</option>
-                              <option value="Supervisor">Supervisor</option>
-                              <option value="Other">Other Staff</option>
-                            </select>
+                        <>
+                          <div className="col-md-6">
+                            <label className="form-label small fw-bold text-dark mb-1">Staff Category *</label>
+                            <div className="d-flex align-items-center form-control bg-white px-3 py-2" style={{ border: '1px solid var(--border-color)', borderRadius: '8px', gap: '10px' }}>
+                              <i className="hgi-stroke hgi-user text-muted" style={{ fontSize: '1.1rem' }}></i>
+                              <select className="border-0 p-0 w-100 shadow-none text-dark fw-medium" style={{ outline: 'none', fontSize: '0.9rem', backgroundColor: 'transparent', cursor: 'pointer' }} required value={formData.staffCategory}
+                                onChange={(e) => setFormData({ ...formData, staffCategory: e.target.value })}
+                              >
+                                <option value="Security">Security / Guard</option>
+                                <option value="Watchman">Watchman / Caretaker</option>
+                                <option value="Electrician">Electrician</option>
+                                <option value="Plumber">Plumber</option>
+                                <option value="Helpdesk">Helpdesk Executive</option>
+                                <option value="Gardener">Gardener</option>
+                                <option value="Housekeeping">Housekeeping / Cleaner</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Other">Other Staff</option>
+                              </select>
+                            </div>
                           </div>
-                        </div>
+
+                          <div className="col-12 mt-2 mb-2">
+                            <div className="p-3 rounded-3 border" style={{ backgroundColor: '#f8fafc', borderColor: '#e2e8f0' }}>
+                              <div className="d-flex align-items-center justify-content-between mb-2">
+                                <div className="d-flex align-items-center gap-2">
+                                  <i className="hgi-stroke hgi-security-check text-primary" style={{ fontSize: '1.2rem' }}></i>
+                                  <span className="fw-bold text-dark small text-uppercase" style={{ letterSpacing: '0.05em' }}>
+                                    Staff Module Access Controls
+                                  </span>
+                                </div>
+                                <span className="badge bg-primary-subtle text-primary fw-semibold" style={{ fontSize: '0.72rem' }}>
+                                  Select Enabled Sidebar Modules
+                                </span>
+                              </div>
+                              <p className="text-muted small mb-3" style={{ fontSize: '0.8rem' }}>
+                                Toggle ON the modules this Staff member is allowed to see and manage upon successful login.
+                              </p>
+
+                              <div className="row g-2">
+                                {[
+                                  { key: 'manage_helpdesk', label: 'Helpdesk & Complaints', icon: 'hgi-headset' },
+                                  { key: 'manage_visitors', label: 'Visitor Management', icon: 'hgi-identity-card' },
+                                  { key: 'manage_materials', label: 'Gate Pass & Materials', icon: 'hgi-package' },
+                                  { key: 'manage_assets', label: 'Asset & AMC Management', icon: 'hgi-tools' },
+                                  { key: 'manage_vendors', label: 'Vendor Management', icon: 'hgi-truck' },
+                                  { key: 'manage_leases', label: 'Lease Details', icon: 'hgi-agreement-01' },
+                                  { key: 'manage_floors', label: 'Floor Management', icon: 'hgi-layers-01' },
+                                ].map(mod => {
+                                  const isChecked = formData.permissions.includes(mod.key);
+                                  return (
+                                    <div key={mod.key} className="col-md-6 col-lg-4">
+                                      <div
+                                        className={`d-flex align-items-center justify-content-between p-2 rounded-2 border bg-white cursor-pointer transition-all ${isChecked ? 'border-primary shadow-sm' : ''}`}
+                                        style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                                        onClick={() => {
+                                          const exists = formData.permissions.includes(mod.key);
+                                          const updated = exists
+                                            ? formData.permissions.filter(p => p !== mod.key)
+                                            : [...formData.permissions, mod.key];
+                                          setFormData({ ...formData, permissions: updated });
+                                        }}
+                                      >
+                                        <div className="d-flex align-items-center gap-2">
+                                          <i className={`hgi-stroke ${mod.icon} ${isChecked ? 'text-primary' : 'text-muted'}`} style={{ fontSize: '1rem' }}></i>
+                                          <span className={`small ${isChecked ? 'fw-bold text-dark' : 'text-secondary'}`} style={{ fontSize: '0.82rem' }}>
+                                            {mod.label}
+                                          </span>
+                                        </div>
+                                        <div className="form-check form-switch m-0 min-height-0">
+                                          <input
+                                            className="form-check-input cursor-pointer"
+                                            type="checkbox"
+                                            role="switch"
+                                            checked={isChecked}
+                                            onChange={(e) => {
+                                              e.stopPropagation();
+                                              const checked = e.target.checked;
+                                              const updated = checked
+                                                ? [...formData.permissions.filter(p => p !== mod.key), mod.key]
+                                                : formData.permissions.filter(p => p !== mod.key);
+                                              setFormData({ ...formData, permissions: updated });
+                                            }}
+                                          />
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        </>
                       )}
 
                       <div className="col-md-6">
