@@ -16,6 +16,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Mirai CloudIT SERVICES | Property Management & Operations",
   description: "Manage buildings, floors, units and tenants from one beautiful dashboard.",
+  icons: {
+    icon: "/mirai_logo.png",
+    shortcut: "/mirai_logo.png",
+    apple: "/mirai_logo.png",
+  },
 };
 
 export default function RootLayout({
