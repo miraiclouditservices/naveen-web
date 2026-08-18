@@ -166,7 +166,7 @@ export default function LoginPage() {
             <div className="d-flex justify-content-center mt-3 position-relative">
               <img
                 src="/hero-right.png"
-                alt="ANVAYA360 Platform"
+                alt="Mirai CloudIT SERVICES Platform"
                 className="img-fluid rounded-4 shadow-lg border border-secondary border-opacity-25"
                 style={{ maxWidth: '88%', maxHeight: 260, objectFit: 'cover', transform: 'rotate(-2deg)' }}
               />
@@ -175,7 +175,7 @@ export default function LoginPage() {
 
           {/* Left Panel Bottom Footer */}
           <div className="d-flex align-items-center justify-content-between extra-small position-relative z-2" style={{ color: '#94a3b8' }}>
-            <span>© {new Date().getFullYear()} ANVAYA360 OS</span>
+            <span>© {new Date().getFullYear()} Mirai CloudIT SERVICES OS</span>
             <span className="badge bg-secondary bg-opacity-25 text-white">v2.4 Live</span>
           </div>
         </div>
@@ -187,9 +187,9 @@ export default function LoginPage() {
           <div className="d-flex align-items-center justify-content-between mb-4 pb-2">
             <Link href="/" className="d-flex align-items-center text-decoration-none">
               <img
-                src="/brand-logo.png"
-                alt="ANVAYA360"
-                style={{ height: 46 }}
+                src="/mirai_logo.png"
+                alt="Mirai CloudIT SERVICES"
+                style={{ height: 48 }}
                 className="w-auto object-fit-contain"
               />
             </Link>

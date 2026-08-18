@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -120,7 +120,7 @@ export default function InvoicePrintPage() {
               🏢
             </div>
             <div>
-              <div className="fw-bold" style={{ fontSize: "1.1rem", color: "#040404" }}>ANVAYA360</div>
+              <div className="fw-bold" style={{ fontSize: "1.1rem", color: "#040404" }}>MIRAI CLOUD IT SERVICES</div>
               <div className="text-muted" style={{ fontSize: "0.72rem" }}>All in one App</div>
             </div>
           </div>
@@ -137,13 +137,12 @@ export default function InvoicePrintPage() {
               Billed From
             </div>
             <div className="fw-bold text-dark small" style={{ fontSize: "0.85rem" }}>
-              Anvaya360 Services Pvt Ltd
+              Mirai CloudIT Services Pvt Ltd
             </div>
             <div className="text-muted mt-1 lh-base" style={{ fontSize: "0.74rem" }}>
-              Suite 501, 5th Floor, Valley Towers,<br />
-              Sector 62, Noida, UP - 201301<br />
-              GSTIN: 09AAHCA9081B1ZX<br />
-              Email: billing@anvaya360.com
+              Kalki chambers A Block 108, NH 65,<br />
+              widia colony Miyapur, Hyderabad, India, 502032<br />
+              Email: info@miraiclouditservices.com
             </div>
           </div>
           <div className="col-4">

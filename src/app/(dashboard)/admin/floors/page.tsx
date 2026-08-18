@@ -1,7 +1,7 @@
 import FloorsPageClient from "./FloorsPageClient";
 
 export const metadata = {
-  title: "Floor Management | Anvaya360",
+  title: "Floor Management | MIRAI",
   description: "Configure floor plans, assign administrators, and manage occupancy.",
 };
 

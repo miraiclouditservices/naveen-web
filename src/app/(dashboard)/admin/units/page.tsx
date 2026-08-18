@@ -1,7 +1,7 @@
 import UnitsPageClient from "./UnitsPageClient";
 
 export const metadata = {
-  title: "Units & SFT Management | Anvaya360",
+  title: "Units & SFT Management | MIRAI",
   description: "Manage commercial spaces, occupancy, availability, and lease terms dynamically.",
 };
 

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 
@@ -24,7 +24,7 @@ export default function Comparison() {
           </div>
           <h2 className="mkt-title mb-3">Comparison Matrix</h2>
           <p className="mkt-subtitle mx-auto text-secondary">
-            See how Anvaya360 stacks up against legacy traditional ERPs and fragmented single-purpose tools.
+            See how Mirai CloudIT SERVICES stacks up against legacy traditional ERPs and fragmented single-purpose tools.
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export default function Comparison() {
                 <tr>
                   <th className="py-3 px-4 text-start fw-bold fs-6">Feature</th>
                   <th className="py-3 px-4 fw-bold fs-6" style={{ background: 'var(--brand-orange)' }}>
-                    <i className="bi bi-stars me-1"></i> Anvaya360
+                    <i className="bi bi-stars me-1"></i> Mirai CloudIT SERVICES
                   </th>
                   <th className="py-3 px-4 fw-bold fs-6 text-secondary">Traditional ERP</th>
                   <th className="py-3 px-4 fw-bold fs-6 text-secondary">Multiple Software</th>

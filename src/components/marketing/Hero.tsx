@@ -66,7 +66,7 @@ export default function Hero() {
           <div className="col-lg-6 position-relative text-center">
             <img
               src="/hero-right.png"
-              alt="Anvaya360 Platform Preview"
+              alt="Mirai CloudIT SERVICES Platform Preview"
               className="w-100 h-auto object-fit-contain rounded-3"
             />
           </div>

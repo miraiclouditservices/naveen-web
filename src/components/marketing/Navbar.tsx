@@ -8,7 +8,7 @@ export default function Navbar() {
   const [activeSection, setActiveSection] = useState("hero");
 
   useEffect(() => {
-    const sectionIds = ["who-uses", "problems", "modules", "dashboard", "comparison", "pricing", "contact"];
+    const sectionIds = ["who-uses", "problems", "modules", "services", "dashboard", "comparison", "contact"];
     const observerOptions = {
       root: null,
       rootMargin: "-20% 0px -60% 0px",
@@ -51,9 +51,9 @@ export default function Navbar() {
         {/* Brand Logo */}
         <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
           <img
-            src="/brand-logo.png"
-            alt="ANVAYA360"
-            style={{ height: 40 }}
+            src="/mirai_logo.png"
+            alt="Mirai CloudIT SERVICES"
+            style={{ height: 42 }}
             className="w-auto object-fit-contain"
           />
         </Link>
@@ -67,16 +67,16 @@ export default function Navbar() {
             Why Us
           </a>
           <a href="#modules" className={`mkt-nav-link ${activeSection === "modules" ? "active" : ""}`}>
-            Modules
+            Products
+          </a>
+          <a href="#services" className={`mkt-nav-link ${activeSection === "services" ? "active" : ""}`}>
+            Services
           </a>
           <a href="#dashboard" className={`mkt-nav-link ${activeSection === "dashboard" ? "active" : ""}`}>
             Dashboard
           </a>
           <a href="#comparison" className={`mkt-nav-link ${activeSection === "comparison" ? "active" : ""}`}>
             Comparison
-          </a>
-          <a href="#pricing" className={`mkt-nav-link ${activeSection === "pricing" ? "active" : ""}`}>
-            Pricing
           </a>
           <a href="#contact" className={`mkt-nav-link ${activeSection === "contact" ? "active" : ""}`}>
             Contact
@@ -105,10 +105,10 @@ export default function Navbar() {
         <div className="d-lg-none bg-white border-top p-4 d-flex flex-column gap-3 shadow-sm animate-fade-up">
           <a href="#who-uses" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Industries</a>
           <a href="#problems" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Why Us</a>
-          <a href="#modules" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Modules</a>
+          <a href="#modules" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Products</a>
+          <a href="#services" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Services</a>
           <a href="#dashboard" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Dashboard</a>
           <a href="#comparison" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Comparison</a>
-          <a href="#pricing" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Pricing</a>
           <a href="#contact" onClick={() => setMobileNavOpen(false)} className="text-decoration-none text-dark fw-bold small">Contact</a>
           <hr className="my-2" />
           <Link href="/login" onClick={() => setMobileNavOpen(false)} className="btn-orange-primary text-center text-decoration-none">

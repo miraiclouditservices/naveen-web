@@ -630,7 +630,7 @@ export default function AssetFormModal({
                             name="companyName"
                             className="form-control"
                             style={inputStyle}
-                            placeholder="e.g. Anvaya360 Corp"
+                            placeholder="e.g. Mirai CloudIT Corp"
                             value={formData.companyName}
                             onChange={handleChange}
                             required

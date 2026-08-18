@@ -254,30 +254,16 @@ export default function FloorsPageClient() {
     {
       header: "Floor & Property",
       render: (f) => (
-        <div className="d-flex align-items-center gap-2.5">
-          <div
-            className="d-flex align-items-center justify-content-center flex-shrink-0"
-            style={{
-              width: "32px",
-              height: "32px",
-              borderRadius: "8px",
-              backgroundColor: "#eff6ff",
-              color: "#2563eb"
-            }}
+        <div>
+          <Link
+            href={`/admin/floors/${f._id}`}
+            className="text-decoration-none fw-bold text-dark text-start d-block"
+            style={{ fontSize: "0.85rem", lineHeight: 1.2 }}
           >
-            <i className="bi bi-layers" style={{ fontSize: "0.95rem" }} />
-          </div>
-          <div>
-            <Link
-              href={`/admin/floors/${f._id}`}
-              className="text-decoration-none fw-bold text-dark text-start d-block"
-              style={{ fontSize: "0.85rem", lineHeight: 1.2 }}
-            >
-              {f.floorName || `Floor ${f.floorNumber}`}
-            </Link>
-            <div className="text-muted small mt-0.5" style={{ fontSize: "0.75rem" }}>
-              {f.property?.propertyName || "Commercial Property"}
-            </div>
+            {f.floorName || `Floor ${f.floorNumber}`}
+          </Link>
+          <div className="text-muted small mt-0.5" style={{ fontSize: "0.75rem" }}>
+            {f.property?.propertyName || "Commercial Property"}
           </div>
         </div>
       ),

@@ -50,7 +50,7 @@ export default function Problems() {
                   <i className="bi bi-x-lg fs-5"></i>
                 </div>
                 <div>
-                  <h4 className="fw-bold text-danger mb-0">BEFORE ANVAYA360</h4>
+                  <h4 className="fw-bold text-danger mb-0">BEFORE MIRAI</h4>
                   <span className="small text-danger opacity-75">Chaotic, manual & disconnected operations</span>
                 </div>
               </div>
@@ -77,7 +77,7 @@ export default function Problems() {
                   <i className="bi bi-check-lg fs-4"></i>
                 </div>
                 <div>
-                  <h4 className="fw-bold text-success mb-0">AFTER ANVAYA360</h4>
+                  <h4 className="fw-bold text-success mb-0">AFTER MIRAI</h4>
                   <span className="small text-success opacity-75">Unified, automated & AI-powered efficiency</span>
                 </div>
               </div>

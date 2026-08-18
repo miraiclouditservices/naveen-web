@@ -87,7 +87,7 @@ export default function HelpdeskPage() {
     try {
       const queryParams = new URLSearchParams({
         page: currentPage.toString(),
-        limit: "10",
+        limit: "30",
         search: searchTerm,
         status: statusFilter,
         priority: priorityFilter,
@@ -433,20 +433,35 @@ export default function HelpdeskPage() {
             {/* Right selectors */}
             <div className="d-flex gap-2 flex-wrap">
               {/* Property Filter */}
-              <select
-                className="form-select bg-white py-1 rounded-3"
-                style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
-                value={propertyFilter}
-                onChange={(e) => {
-                  setPropertyFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All Properties</option>
-                {properties.map((p) => (
-                  <option key={p._id} value={p._id}>{p.propertyName}</option>
-                ))}
-              </select>
+              {(() => {
+                const userAssignedPropIds = (currentUser?.assignedProperties || []).map((p: any) =>
+                  typeof p === 'object' ? p._id || p.id : p
+                ).filter(Boolean);
+                const isSuperAdmin = currentUser?.role === 'SUPER_ADMIN' || currentUser?.role === 'ULTRA_SUPER_ADMIN';
+
+                const selectableProperties = (isSuperAdmin || userAssignedPropIds.length === 0)
+                  ? properties
+                  : (currentUser?.assignedProperties && currentUser.assignedProperties.length > 0 && typeof currentUser.assignedProperties[0] === 'object')
+                    ? currentUser.assignedProperties.map((p: any) => ({ _id: p._id || p.id, propertyName: p.propertyName || p.name || 'Assigned Property' }))
+                    : properties.filter((p: any) => userAssignedPropIds.includes(p._id));
+
+                return (
+                  <select
+                    className="form-select bg-white py-1 rounded-3"
+                    style={{ border: "1px solid var(--border-color)", fontSize: "0.78rem", width: "150px", outline: "none", boxShadow: "none" }}
+                    value={propertyFilter}
+                    onChange={(e) => {
+                      setPropertyFilter(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value="All">All Properties</option>
+                    {selectableProperties.map((p: any) => (
+                      <option key={p._id} value={p._id}>{p.propertyName}</option>
+                    ))}
+                  </select>
+                );
+              })()}
 
               {/* Category Filter */}
               <select

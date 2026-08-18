@@ -5,119 +5,261 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="bg-dark text-white pt-5 pb-4 border-top border-secondary border-opacity-25">
-      <div className="container">
-
-        {/* Modern Card Pattern Container */}
-        <div className="p-4 p-md-5 rounded-4 mb-4" style={{ background: '#1e293b', border: '1px solid #334155' }}>
-          <div className="row gy-4 align-items-center justify-content-between">
-
-            {/* Column 1: White BG Logo + Tagline + Social Badges */}
-            <div className="col-lg-4 col-md-6">
-              {/* White Background Container for Logo */}
-              <div className="p-2.5 px-3 bg-white rounded-3 d-inline-block shadow-xs mb-3">
-                <Link href="/" className="d-flex align-items-center text-decoration-none">
-                  <img
-                    src="/brand-logo.png"
-                    alt="ANVAYA360"
-                    style={{ height: 38 }}
-                    className="w-auto object-fit-contain"
-                  />
-                </Link>
-              </div>
-
-              <p className="text-secondary extra-small mb-3" style={{ maxWidth: 320, lineHeight: 1.6 }}>
-                AI-Powered Business Operations & Property Management Platform. Manage CRM, visitor passes, helpdesk SLA, attendance, and finance in one connected portal.
-              </p>
-
-              {/* Social Media Badges */}
-              <div className="d-flex align-items-center gap-2">
-                <a href="#" className="p-2 rounded-circle bg-secondary bg-opacity-25 text-white hover-orange text-decoration-none d-flex align-items-center justify-content-center" style={{ width: 34, height: 34 }}>
-                  <i className="bi bi-linkedin extra-small"></i>
-                </a>
-                <a href="#" className="p-2 rounded-circle bg-secondary bg-opacity-25 text-white hover-orange text-decoration-none d-flex align-items-center justify-content-center" style={{ width: 34, height: 34 }}>
-                  <i className="bi bi-twitter-x extra-small"></i>
-                </a>
-                <a href="#" className="p-2 rounded-circle bg-secondary bg-opacity-25 text-white hover-orange text-decoration-none d-flex align-items-center justify-content-center" style={{ width: 34, height: 34 }}>
-                  <i className="bi bi-github extra-small"></i>
-                </a>
-                <a href="#" className="p-2 rounded-circle bg-secondary bg-opacity-25 text-white hover-orange text-decoration-none d-flex align-items-center justify-content-center" style={{ width: 34, height: 34 }}>
-                  <i className="bi bi-youtube extra-small"></i>
-                </a>
-              </div>
+    <footer
+      style={{
+        backgroundColor: "#070d19",
+        color: "#ffffff",
+        fontFamily: "system-ui, -apple-system, sans-serif",
+      }}
+      className="pt-5 pb-4"
+    >
+      <div className="container py-lg-3">
+        <div className="row gy-4 mb-5 justify-content-between">
+          
+          {/* Column 1: Brand Logo + Tagline + Social Icons */}
+          <div className="col-lg-3 col-md-6">
+            <div className="mb-3">
+              <Link href="/" className="d-flex align-items-center text-decoration-none">
+                <img
+                  src="/mirai_logo.png"
+                  alt="Mirai Cloud IT SERVICES"
+                  style={{ height: 44 }}
+                  className="w-auto object-fit-contain"
+                />
+              </Link>
             </div>
+            
+            <p
+              className="small mb-4"
+              style={{
+                color: "#8b9cb8",
+                lineHeight: 1.6,
+                fontSize: "0.88rem",
+                maxWidth: 300,
+              }}
+            >
+              Secure, scalable and reliable technology solutions for businesses ready to move forward.
+            </p>
 
-            {/* Column 2: Direct Contact Block */}
-            <div className="col-lg-4 col-md-6">
-              <div className="p-3 rounded-3 bg-secondary bg-opacity-10 border border-secondary border-opacity-25">
-                <h6 className="extra-small fw-bold text-uppercase text-orange mb-3" style={{ color: '#ea580c' }}>
-                  <i className="bi bi-headset me-1"></i> DIRECT SUPPORT CONTACT
-                </h6>
-                <div className="d-flex flex-column gap-2 extra-small text-white">
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-telephone-fill text-orange" style={{ color: '#ea580c' }}></i>
-                    <a href="tel:8106651649" className="text-white text-decoration-none hover-orange fw-bold">
-                      +91 8106651649 (24/7 Support)
-                    </a>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-envelope-fill text-orange" style={{ color: '#ea580c' }}></i>
-                    <a href="mailto:sales.anvaya360@gmail.com" className="text-white text-decoration-none hover-orange">
-                      sales.anvaya360@gmail.com
-                    </a>
-                  </div>
-                  <div className="d-flex align-items-center gap-2">
-                    <i className="bi bi-geo-alt-fill text-orange" style={{ color: '#ea580c' }}></i>
-                    <span className="text-secondary">Hitech City, Hyderabad, India</span>
-                  </div>
-                </div>
-              </div>
+            {/* Social Icons */}
+            <div className="d-flex align-items-center gap-2">
+              <a
+                href="#"
+                className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
+                style={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: "#111b2e",
+                  color: "#8b9cb8",
+                  border: "1px solid #1a273e",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <i className="bi bi-linkedin small"></i>
+              </a>
+              <a
+                href="#"
+                className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
+                style={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: "#111b2e",
+                  color: "#8b9cb8",
+                  border: "1px solid #1a273e",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <i className="bi bi-instagram small"></i>
+              </a>
+              <a
+                href="#"
+                className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
+                style={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: "#111b2e",
+                  color: "#8b9cb8",
+                  border: "1px solid #1a273e",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <i className="bi bi-facebook small"></i>
+              </a>
+              <a
+                href="#"
+                className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
+                style={{
+                  width: 36,
+                  height: 36,
+                  backgroundColor: "#111b2e",
+                  color: "#8b9cb8",
+                  border: "1px solid #1a273e",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                <i className="bi bi-whatsapp small"></i>
+              </a>
             </div>
-
-            {/* Column 3: Navigation Grid */}
-            <div className="col-lg-4 col-md-12">
-              <h6 className="extra-small fw-bold text-uppercase text-white mb-3">Quick Navigation</h6>
-              <div className="row g-2 extra-small">
-                <div className="col-6">
-                  <a href="#who-uses" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • Industries & Sectors
-                  </a>
-                  <a href="#problems" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • Problems We Solve
-                  </a>
-                  <a href="#modules" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • 12 Platform Modules
-                  </a>
-                </div>
-                <div className="col-6">
-                  <a href="#dashboard" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • Command Center
-                  </a>
-                  <a href="#pricing" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • Transparent Pricing
-                  </a>
-                  <a href="#contact" className="text-decoration-none text-secondary hover-white d-block py-1">
-                    • 24/7 Contact Team
-                  </a>
-                </div>
-              </div>
-            </div>
-
           </div>
+
+          {/* Column 2: Company */}
+          <div className="col-lg-2 col-md-6 col-6">
+            <div className="mb-3 position-relative d-inline-block">
+              <h6
+                className="fw-bold text-white mb-2"
+                style={{ fontSize: "1rem", letterSpacing: "0.01em" }}
+              >
+                Company
+              </h6>
+              <div
+                style={{
+                  width: 28,
+                  height: 3,
+                  backgroundColor: "#2563eb",
+                  borderRadius: 2,
+                }}
+              ></div>
+            </div>
+
+            <ul className="list-unstyled d-flex flex-column gap-2.5 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+              <li>
+                <a href="/" className="text-decoration-none text-reset hover-white">
+                  Home
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Services
+                </a>
+              </li>
+              <li>
+                <a href="#who-uses" className="text-decoration-none text-reset hover-white">
+                  Industries
+                </a>
+              </li>
+              <li>
+                <a href="#problems" className="text-decoration-none text-reset hover-white">
+                  About Us
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Solutions */}
+          <div className="col-lg-3 col-md-6 col-6">
+            <div className="mb-3 position-relative d-inline-block">
+              <h6
+                className="fw-bold text-white mb-2"
+                style={{ fontSize: "1rem", letterSpacing: "0.01em" }}
+              >
+                Solutions
+              </h6>
+              <div
+                style={{
+                  width: 28,
+                  height: 3,
+                  backgroundColor: "#2563eb",
+                  borderRadius: 2,
+                }}
+              ></div>
+            </div>
+
+            <ul className="list-unstyled d-flex flex-column gap-2.5 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Cloud Services
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Cybersecurity
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Network Infrastructure
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Managed IT Support
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Get in touch */}
+          <div className="col-lg-4 col-md-6">
+            <div className="mb-3 position-relative d-inline-block">
+              <h6
+                className="fw-bold text-white mb-2"
+                style={{ fontSize: "1rem", letterSpacing: "0.01em" }}
+              >
+                Get in touch
+              </h6>
+              <div
+                style={{
+                  width: 28,
+                  height: 3,
+                  backgroundColor: "#2563eb",
+                  borderRadius: 2,
+                }}
+              ></div>
+            </div>
+
+            <div className="d-flex flex-column gap-3 pt-1 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+              <div className="d-flex align-items-center gap-2.5">
+                <i className="bi bi-envelope fs-6 text-primary" style={{ color: "#2563eb" }}></i>
+                <a
+                  href="mailto:info@miraiclouditservices.com"
+                  className="text-decoration-none text-reset hover-white text-break"
+                >
+                  info@miraiclouditservices.com
+                </a>
+              </div>
+
+              <div className="d-flex align-items-center gap-2.5">
+                <i className="bi bi-telephone fs-6 text-primary" style={{ color: "#2563eb" }}></i>
+                <a
+                  href="tel:+919100218218"
+                  className="text-decoration-none text-reset hover-white"
+                >
+                  +91 91002 18218
+                </a>
+              </div>
+
+              <div className="d-flex align-items-start gap-2.5">
+                <i className="bi bi-geo-alt fs-6 text-primary mt-0.5" style={{ color: "#2563eb" }}></i>
+                <span style={{ lineHeight: 1.5, maxWidth: 320 }}>
+                  Kalki chambers A Block 108, NH 65, widia colony Miyapur, Hyderabad, India, 502032
+                </span>
+              </div>
+            </div>
+          </div>
+
         </div>
 
-        {/* Bottom Copyright & Security Badges Bar */}
-        <div className="d-flex flex-column flex-md-row align-items-center justify-content-between extra-small text-secondary pt-2">
+        {/* Bottom Footer Line */}
+        <div
+          className="pt-4 mt-2 d-flex flex-column flex-md-row align-items-center justify-content-between small"
+          style={{
+            borderTop: "1px solid #111e36",
+            color: "#64748b",
+            fontSize: "0.85rem",
+          }}
+        >
           <p className="mb-2 mb-md-0">
-            © {new Date().getFullYear()} Anvaya360. All rights reserved. Built for modern property & business portfolios.
+            © {new Date().getFullYear()} Mirai Cloud IT Services. All rights reserved.
           </p>
-          <div className="d-flex align-items-center gap-3">
-            <span className="text-success"><i className="bi bi-shield-check me-1"></i> SOC2 Certified</span>
-            <a href="#" className="text-decoration-none text-secondary hover-white">Privacy Policy</a>
-            <a href="#" className="text-decoration-none text-secondary hover-white">Terms of Service</a>
+          <div className="d-flex align-items-center gap-4">
+            <a href="#" className="text-decoration-none text-reset hover-white">
+              Privacy Policy
+            </a>
+            <a href="#" className="text-decoration-none text-reset hover-white">
+              Terms of Use
+            </a>
           </div>
         </div>
-
       </div>
     </footer>
   );

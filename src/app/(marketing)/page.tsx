@@ -3,23 +3,23 @@ import Hero from "@/components/marketing/Hero";
 import WhoUses from "@/components/marketing/WhoUses";
 import Problems from "@/components/marketing/Problems";
 import Modules from "@/components/marketing/Modules";
+import Services from "@/components/marketing/Services";
 import WhyChooseUs from "@/components/marketing/WhyChooseUs";
 import DashboardShowcase from "@/components/marketing/DashboardShowcase";
 import Solutions from "@/components/marketing/Solutions";
 import Comparison from "@/components/marketing/Comparison";
-import Pricing from "@/components/marketing/Pricing";
 import Contact from "@/components/marketing/Contact";
 import CTASection from "@/components/marketing/CTASection";
 import Footer from "@/components/marketing/Footer";
 
 export const metadata = {
-  title: "Anvaya360 – AI-Powered Business Operations & Property Platform",
+  title: "Mirai CloudIT SERVICES – AI-Powered Business Operations & Property Platform",
   description: "Manage CRM, Property Management, Coworking, Employees, Visitors, Attendance, Helpdesk, Assets, Reports and AI — everything connected in one intelligent platform.",
   openGraph: {
-    title: "Anvaya360 – AI-Powered Business Operations Platform",
+    title: "Mirai CloudIT SERVICES – AI-Powered Business Operations Platform",
     description: "One intelligent platform for CRM, properties, coworking, employees, visitors, attendance, helpdesk, and AI.",
     type: "website",
-    url: "https://anvaya360.com"
+    url: "https://miraicloudit.com"
   }
 };
 
@@ -37,8 +37,11 @@ export default function Home() {
         {/* Section 3: Problems We Solve */}
         <Problems />
 
-        {/* Section 4: Everything You Need (Modules) */}
+        {/* Section 4: Platform Products */}
         <Modules />
+
+        {/* Section 5: Technology Services */}
+        <Services />
 
         {/* Section 5: Why Businesses Choose Anvaya360 */}
         <WhyChooseUs />
@@ -51,9 +54,6 @@ export default function Home() {
 
         {/* Section 8: Why We're Different (Comparison) */}
         <Comparison />
-
-        {/* Section 9: Pricing */}
-        <Pricing />
 
         {/* Contact Section */}
         <Contact />

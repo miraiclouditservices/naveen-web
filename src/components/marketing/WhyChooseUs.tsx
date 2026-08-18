@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 
@@ -83,7 +83,7 @@ export default function WhyChooseUs() {
             <span className="mkt-pulse-dot"></span>
             <span>CORE ADVANTAGES</span>
           </div>
-          <h2 className="mkt-title mb-3">Why Businesses Choose Anvaya360</h2>
+          <h2 className="mkt-title mb-3">Why Businesses Choose Mirai CloudIT SERVICES</h2>
           <p className="mkt-subtitle mx-auto text-muted">
             Engineered from the ground up for speed, security, elegance, and enterprise scalability.
           </p>

@@ -960,7 +960,7 @@ function LedgerContent() {
                     🏢
                   </div>
                   <div>
-                    <div className="fw-bold" style={{ fontSize: "0.95rem", color: "#040404" }}>ANVAYA360</div>
+                    <div className="fw-bold" style={{ fontSize: "0.95rem", color: "#040404" }}>MIRAI CLOUD IT SERVICES</div>
                     <div className="text-muted" style={{ fontSize: "0.68rem" }}>All in one App</div>
                   </div>
                 </div>
@@ -989,13 +989,12 @@ function LedgerContent() {
                           Billed From
                         </div>
                         <div className="fw-bold text-dark small" style={{ fontSize: "0.85rem" }}>
-                          Anvaya360 Services Pvt Ltd
+                          Mirai CloudIT Services Pvt Ltd
                         </div>
                         <div className="text-muted mt-1 lh-base" style={{ fontSize: "0.74rem" }}>
-                          Suite 501, 5th Floor, Valley Towers,<br />
-                          Sector 62, Noida, UP - 201301<br />
-                          GSTIN: 09AAHCA9081B1ZX<br />
-                          Email: billing@anvaya360.com
+                          Kalki chambers A Block 108, NH 65,<br />
+                          widia colony Miyapur, Hyderabad, India, 502032<br />
+                          Email: info@miraiclouditservices.com
                         </div>
                       </div>
                       <div className="col-4">

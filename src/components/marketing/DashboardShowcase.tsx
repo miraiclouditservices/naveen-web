@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 
@@ -48,7 +48,7 @@ export default function DashboardShowcase() {
                 <span className="rounded-circle bg-warning d-inline-block" style={{ width: 12, height: 12 }}></span>
                 <span className="rounded-circle bg-success d-inline-block" style={{ width: 12, height: 12 }}></span>
               </div>
-              <span className="fw-mono text-secondary small">anvaya360.app/dashboard/live</span>
+              <span className="fw-mono text-secondary small">mirai.app/dashboard/live</span>
             </div>
             <div className="d-flex align-items-center gap-2">
               <span className="badge bg-success bg-opacity-25 text-success border border-success border-opacity-50">

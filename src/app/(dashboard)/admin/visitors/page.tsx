@@ -282,34 +282,6 @@ export default function VisitorsPage() {
   // ── Table Columns (Matching high fidelity mockup) ────────────────────────
   const columns: TableColumn<any>[] = [
     {
-      header: (
-        <input
-          type="checkbox"
-          className="form-check-input"
-          checked={filteredVisitors.length > 0 && selectedRows.length === filteredVisitors.length}
-          onChange={handleSelectAll}
-        />
-      ),
-      style: { width: 40 },
-      render: (v: any) => (
-        <input
-          type="checkbox"
-          className="form-check-input"
-          checked={selectedRows.includes(v._id)}
-          onChange={e => handleSelectRow(v._id, e)}
-          onClick={e => e.stopPropagation()}
-        />
-      ),
-    },
-    {
-      header: "Visitor ID",
-      render: (v: any) => (
-        <span className="fw-semibold text-secondary" style={{ fontSize: "0.8rem" }}>
-          {v.visitorCode || `VIS-${v._id.toString().slice(-5).toUpperCase()}`}
-        </span>
-      )
-    },
-    {
       header: "Visitor Name",
       render: (v: any) => {
         const initials = v.visitorName ? v.visitorName.split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase() : "VI";

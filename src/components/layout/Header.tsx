@@ -262,7 +262,7 @@ export default function Header() {
             color: "var(--text-primary)"
           }}
           title="Help & Documentation"
-          onClick={() => alert("ANVAYA360 Property Directory Help:\n- Search & Filter properties in real time\n- Toggle between Grid, Table, and Map views\n- Click any property for full details")}
+          onClick={() => alert("MIRAI Property Directory Help:\n- Search & Filter properties in real time\n- Toggle between Grid, Table, and Map views\n- Click any property for full details")}
         >
           <i className="bi bi-question-circle" style={{ fontSize: "1rem" }}></i>
         </button>

@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Estatly | Property Management, simplified",
+  title: "Mirai CloudIT SERVICES | Property Management & Operations",
   description: "Manage buildings, floors, units and tenants from one beautiful dashboard.",
 };
 

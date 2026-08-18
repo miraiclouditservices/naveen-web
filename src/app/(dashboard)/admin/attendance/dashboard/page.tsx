@@ -173,7 +173,7 @@ export default function AttendanceDashboard() {
         return (
             <div className="d-flex justify-content-center align-items-center min-vh-80 flex-column gap-3" style={{ backgroundColor: "var(--bg-app)" }}>
                 <div className="spinner-border" style={{ color: "var(--dark-section)" }} role="status"></div>
-                <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Loading ANVAYA360 Attendance...</span>
+                <span style={{ color: "var(--text-muted)", fontSize: "0.9rem" }}>Loading MIRAI Attendance...</span>
             </div>
         );
     }

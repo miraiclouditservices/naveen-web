@@ -27,7 +27,7 @@ export default function RegisterPage() {
             </p>
           </div>
           <div className="extra-small text-muted">
-            © {new Date().getFullYear()} ANVAYA360 OS
+            © {new Date().getFullYear()} Mirai CloudIT SERVICES OS
           </div>
         </div>
 
@@ -36,9 +36,9 @@ export default function RegisterPage() {
           <div className="d-flex align-items-center justify-content-between mb-4">
             <Link href="/" className="d-flex align-items-center text-decoration-none">
               <img
-                src="/brand-logo.png"
-                alt="ANVAYA360"
-                style={{ height: 42 }}
+                src="/mirai_logo.png"
+                alt="Mirai CloudIT SERVICES"
+                style={{ height: 44 }}
                 className="w-auto object-fit-contain"
               />
             </Link>
@@ -84,7 +84,7 @@ export default function RegisterPage() {
           </div>
 
           <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: 'auto', color: 'var(--text-secondary)', fontSize: '0.7rem' }}>
-            Anvaya360 Security &amp; Access Compliance
+            Mirai CloudIT SERVICES Security &amp; Access Compliance
           </div>
         </div>
       </div>

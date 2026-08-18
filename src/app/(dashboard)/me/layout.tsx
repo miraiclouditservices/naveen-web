@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
@@ -124,7 +124,7 @@ export default function EmployeeLayout({
                             <ClipboardCheck size={22} />
                         </div>
                         <div>
-                            <h5 className="fw-bold mb-0 text-dark" style={{ letterSpacing: "-0.02em" }}>ANVAYA360</h5>
+                            <h5 className="fw-bold mb-0 text-dark" style={{ letterSpacing: "-0.02em" }}>MIRAI</h5>
                             <span className="text-muted small fw-semibold">Employee Hub</span>
                         </div>
                     </div>
@@ -180,7 +180,9 @@ export default function EmployeeLayout({
                     <div className="d-flex align-items-center justify-content-center rounded-2 text-white" style={{ width: "32px", height: "32px", backgroundColor: "#1E2A78" }}>
                         <ClipboardCheck size={18} />
                     </div>
-                    <span className="fw-bold text-dark mb-0" style={{ fontSize: "1.1rem" }}>ANVAYA360</span>
+                    <Link href="/" className="text-decoration-none">
+                        <span className="fw-bold text-dark mb-0" style={{ fontSize: "1.1rem" }}>MIRAI</span>
+                    </Link>
                 </div>
                 <div className="d-flex align-items-center gap-3">
                     <button className="btn p-1 border-0 position-relative text-muted">

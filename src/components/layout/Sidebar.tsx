@@ -9,22 +9,14 @@ import { api, getStoredUser, setStoredUser } from "@/utils/api";
 export default function Sidebar() {
   const pathname = usePathname();
 
-  // useState(null) keeps SSR and client initial renders identical → no hydration mismatch.
-  // useLayoutEffect runs synchronously before the browser paints on the client,
-  // so the menu items appear immediately without a visible flash.
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
   const [isCRMOpen, setIsCRMOpen] = useState(true);
   const [isAttendanceOpen, setIsAttendanceOpen] = useState(true);
   const [activeCRMTab, setActiveCRMTab] = useState("dashboard");
 
-  // Sync user from localStorage before first paint (client only)
-  useLayoutEffect(() => {
-    const stored = getStoredUser();
-    if (stored) setUser(stored);
-  }, []);
-
   useEffect(() => {
-    // Fetch fresh profile from server and keep localStorage in sync
+    setUser(getStoredUser());
+
     const fetchFreshProfile = async () => {
       try {
         const res = await api.get('/auth/profile');
@@ -32,7 +24,7 @@ export default function Sidebar() {
           setStoredUser(res.user);
           setUser(res.user);
         }
-      } catch (err) {
+      } catch {
         // Quietly handle network or profile sync errors
       }
     };
@@ -43,8 +35,10 @@ export default function Sidebar() {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      const tab = params.get("tab") || "dashboard";
-      setActiveCRMTab(tab);
+      const tab = params.get("tab");
+      if (tab && tab !== activeCRMTab) {
+        setActiveCRMTab(tab);
+      }
     }
     if (pathname.startsWith("/admin/crm")) {
       setIsCRMOpen(true);
@@ -70,7 +64,7 @@ export default function Sidebar() {
   const isHrAdmin = normalizedRole === "HR_ADMIN";
   const isStaffAdmin = normalizedRole === "STAFF_ADMIN" || normalizedRole === "STAFF";
 
-  const permissions = (user as any)?.permissions || [];
+  const permissions: string[] = (user as { permissions?: string[] })?.permissions || [];
   const hasAccess = (permission: string) => isSuperAdmin || isCoworkingAdmin || permissions.includes(permission);
 
   const showCRM = isSuperAdmin || isCoworkingAdmin || hasAccess('manage_crm');
@@ -78,29 +72,48 @@ export default function Sidebar() {
   // Role 1: SUPER_ADMIN Menu
   const superAdminGroups = [
     {
-      label: "Main",
+      label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
         { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
         { name: "Floor Management", path: "/admin/floors", icon: "hgi-layers-01" },
-        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" }
+      ]
+    },
+    {
+      label: "FINANCE MANAGEMENT",
+      items: [
         { name: "Payment Management", path: "/admin/payments", icon: "hgi-credit-card" }
       ]
     },
     {
-      label: "Operations",
+      label: "SUPPORT MANAGEMENT",
       items: [
-        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" },
-        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" }
+      ]
+    },
+    {
+      label: "VISITOR & SECURITY",
+      items: [
+        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" }
+      ]
+    },
+    {
+      label: "ASSET & MAINTENANCE",
+      items: [
         { name: "Asset & AMC Management", path: "/admin/assets", icon: "hgi-tools" },
-        { name: "Material Management", path: "/admin/materials", icon: "hgi-package" },
+        { name: "Material Management", path: "/admin/materials", icon: "hgi-package" }
+      ]
+    },
+    {
+      label: "VENDOR MANAGEMENT",
+      items: [
         { name: "Vendor Management", path: "/admin/vendors", icon: "hgi-truck" }
       ]
     },
     {
-      label: "Management",
+      label: "USER MANAGEMENT",
       items: [
-        { name: "Access Management", path: "/admin/users", icon: "hgi-user-shield-01" }
+        { name: "Access Control Management", path: "/admin/users", icon: "hgi-user-shield-01" }
       ]
     }
   ];
@@ -108,21 +121,20 @@ export default function Sidebar() {
   // Role 2: FLOOR_ADMIN Menu
   const floorAdminGroups = [
     {
-      label: "Main",
+      label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
         { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
       ]
     },
     {
-      label: "Operations",
+      label: "VISITOR & SECURITY",
       items: [
-        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
-        { name: "Gate Pass & Material ", path: "/admin/materials", icon: "hgi-package" }
+        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Gate Pass & Materials", path: "/admin/materials", icon: "hgi-package" }
       ]
     },
     {
-      label: "Account",
+      label: "ACCOUNT MANAGEMENT",
       items: [
         { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
       ]
@@ -132,51 +144,69 @@ export default function Sidebar() {
   // Role 3: COWORKING_ADMIN Menu
   const coworkingAdminGroups = [
     {
-      label: "Main",
+      label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
         { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
         { name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" },
-        { name: "Lease ", path: "/admin/leases", icon: "hgi-agreement-01" },
-        { name: "Payment ", path: "/admin/payments", icon: "hgi-credit-card" }
+        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" }
       ]
     },
     {
-      label: "Operations",
+      label: "FINANCE MANAGEMENT",
       items: [
-        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
-        { name: "Material / Gate Pass ", path: "/admin/materials", icon: "hgi-package" },
-        { name: "Asset & AMC ", path: "/admin/assets", icon: "hgi-tools" },
-        { name: "Vendor ", path: "/admin/vendors", icon: "hgi-truck" }
+        { name: "Payment Management", path: "/admin/payments", icon: "hgi-credit-card" }
       ]
     },
     {
-      label: "",
+      label: "VISITOR & SECURITY",
       items: [
-        { name: "Access ", path: "/admin/users", icon: "hgi-user-shield-01" }
+        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" }
+      ]
+    },
+    {
+      label: "ASSET & MAINTENANCE",
+      items: [
+        { name: "Asset & AMC Management", path: "/admin/assets", icon: "hgi-tools" },
+        { name: "Material / Gate Pass", path: "/admin/materials", icon: "hgi-package" }
+      ]
+    },
+    {
+      label: "VENDOR MANAGEMENT",
+      items: [
+        { name: "Vendor Management", path: "/admin/vendors", icon: "hgi-truck" }
+      ]
+    },
+    {
+      label: "USER MANAGEMENT",
+      items: [
+        { name: "Access Control Management", path: "/admin/users", icon: "hgi-user-shield-01" }
       ]
     }
   ];
 
-  // Role 4: COWORKING_TENENT Menu
+  // Role 4: COWORKING_TENANT Menu
   const coworkingTenantGroups = [
     {
-      label: "Main",
+      label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" },
         { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
       ]
     },
     {
-      label: "Operations",
+      label: "SUPPORT MANAGEMENT",
       items: [
-        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" },
-        { name: "Visitor ", path: "/admin/visitors", icon: "hgi-identity-card" },
+        { name: "Helpdesk & Complaints", path: "/admin/helpdesk", icon: "hgi-headset" }
+      ]
+    },
+    {
+      label: "VISITOR & SECURITY",
+      items: [
+        { name: "Visitor Management", path: "/admin/visitors", icon: "hgi-identity-card" },
         { name: "Gate Pass & Material Requests", path: "/admin/materials", icon: "hgi-package" }
       ]
     },
     {
-      label: "Account",
+      label: "ACCOUNT MANAGEMENT",
       items: [
         { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
       ]
@@ -192,21 +222,17 @@ export default function Sidebar() {
     ...(permissions.includes('manage_vendors') ? [{ name: "Vendor Management", path: "/admin/vendors", icon: "hgi-truck" }] : []),
     ...(permissions.includes('manage_leases') ? [{ name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }] : []),
     ...(permissions.includes('manage_floors') ? [{ name: "Floor Management", path: "/admin/floors", icon: "hgi-layers-01" }] : []),
+    ...(permissions.includes('manage_bookings') ? [{ name: "Booking Management", path: "/admin/bookings", icon: "hgi-calendar-03" }] : []),
+    ...(permissions.includes('manage_payments') ? [{ name: "Payment Management", path: "/admin/payments", icon: "hgi-credit-card" }] : []),
   ];
 
   const staffAdminGroups = [
-    {
-      label: "Main",
-      items: [
-        { name: "Dashboard", path: "/admin/dashboard", icon: "hgi-dashboard-square-01" }
-      ]
-    },
     ...(staffOperationsItems.length > 0 ? [{
-      label: "Operations",
+      label: "OPERATIONS",
       items: staffOperationsItems
     }] : []),
     {
-      label: "Account",
+      label: "ACCOUNT MANAGEMENT",
       items: [
         { name: "Profile & Settings", path: "/admin/settings", icon: "hgi-settings-01" }
       ]
@@ -227,6 +253,9 @@ export default function Sidebar() {
               ? staffAdminGroups
               : superAdminGroups;
 
+  const isCRMPath = pathname.startsWith("/admin/crm");
+  const isAttendancePath = pathname.startsWith("/admin/attendance");
+
   const renderCRMDropdown = () => {
     const crmItems = [
       { name: "Overview", tab: "dashboard", path: "/admin/crm?tab=dashboard" },
@@ -240,42 +269,37 @@ export default function Sidebar() {
       { name: "Settings", tab: "settings", path: "/admin/crm?tab=settings" }
     ];
 
-    const isCRMPath = pathname.startsWith("/admin/crm");
-
     return (
-      <div className="w-100 my-1">
-        {/* Dropdown Header Trigger */}
+      <div className="w-100 mb-3">
+        <div className={styles.navGroupHeader}>CRM MANAGEMENT</div>
         <div
           onClick={() => setIsCRMOpen(!isCRMOpen)}
-          className="d-flex align-items-center justify-content-between"
+          className="d-flex align-items-center justify-content-between px-3 py-2"
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
+            backgroundColor: isCRMPath ? "#1e293b" : "rgba(255, 255, 255, 0.04)",
+            border: isCRMPath ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)",
             color: "#ffffff",
-            padding: "10px 14px",
             borderRadius: "10px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.85rem",
+            fontSize: "0.84rem",
             userSelect: "none",
-            transition: "all 0.2s"
+            transition: "all 0.18s ease"
           }}
         >
           <div className="d-flex align-items-center gap-2">
-            <i className="hgi-stroke hgi-user-add" style={{ fontSize: "1.1rem" }}></i>
-            <span>CRM</span>
+            <i className="hgi-stroke hgi-user-add" style={{ fontSize: "1.15rem", color: isCRMPath ? "#ffffff" : "#94a3b8" }}></i>
+            <span>CRM Portal</span>
           </div>
-          <i className={`bi bi-chevron-${isCRMOpen ? 'up' : 'down'}`} style={{ fontSize: "0.75rem" }}></i>
+          <i className={`bi bi-chevron-${isCRMOpen ? 'up' : 'down'}`} style={{ fontSize: "0.75rem", color: "#94a3b8" }}></i>
         </div>
 
-        {/* Collapsible Submenu list */}
         {isCRMOpen && (
           <div
-            className="d-flex flex-column gap-1 mt-2"
+            className="d-flex flex-column gap-1 mt-2 ps-2"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.02)",
-              borderRadius: "8px",
-              padding: "6px"
+              borderLeft: "1.5px solid rgba(255, 255, 255, 0.1)",
+              marginLeft: "12px"
             }}
           >
             {crmItems.map((item) => {
@@ -285,29 +309,22 @@ export default function Sidebar() {
                   key={item.name}
                   href={item.path}
                   onClick={() => setActiveCRMTab(item.tab)}
-                  className="d-flex align-items-center gap-2 px-3 py-2 text-decoration-none"
+                  className="d-flex align-items-center gap-2 px-3 py-1.5 text-decoration-none"
                   style={{
                     borderRadius: "6px",
                     fontSize: "0.82rem",
                     fontWeight: "500",
-                    color: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                    color: isActive ? "#ffffff" : "#94a3b8",
                     backgroundColor: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                    transition: "all 0.2s"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
+                    transition: "all 0.18s ease"
                   }}
                 >
-                  {/* Bullet Indicator Dot */}
                   <span
                     style={{
-                      width: "6px",
-                      height: "6px",
+                      width: "5px",
+                      height: "5px",
                       borderRadius: "50%",
-                      backgroundColor: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.35)",
+                      backgroundColor: isActive ? "#ffffff" : "#64748b",
                       display: "inline-block"
                     }}
                   ></span>
@@ -337,46 +354,43 @@ export default function Sidebar() {
       ...(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE' ? [
         { name: "Attendance Logs", path: "/admin/attendance/logs" },
         { name: "Corrections", path: "/admin/attendance/corrections" },
-        { name: "Leave ", path: "/admin/attendance/leaves" }
+        { name: "Leaves", path: "/admin/attendance/leaves" }
       ] : [])
     ];
 
     if (attendanceItems.length === 0) return null;
 
     return (
-      <div className="w-100 my-1">
-        {/* Dropdown Header Trigger */}
+      <div className="w-100 mb-3">
+        <div className={styles.navGroupHeader}>HR & ATTENDANCE</div>
         <div
           onClick={() => setIsAttendanceOpen(!isAttendanceOpen)}
-          className="d-flex align-items-center justify-content-between"
+          className="d-flex align-items-center justify-content-between px-3 py-2"
           style={{
-            backgroundColor: "rgba(255, 255, 255, 0.08)",
-            border: "1px solid rgba(255, 255, 255, 0.12)",
+            backgroundColor: isAttendancePath ? "#1e293b" : "rgba(255, 255, 255, 0.04)",
+            border: isAttendancePath ? "1px solid rgba(255, 255, 255, 0.12)" : "1px solid rgba(255, 255, 255, 0.06)",
             color: "#ffffff",
-            padding: "10px 14px",
             borderRadius: "10px",
             cursor: "pointer",
             fontWeight: "600",
-            fontSize: "0.85rem",
+            fontSize: "0.84rem",
             userSelect: "none",
-            transition: "all 0.2s"
+            transition: "all 0.18s ease"
           }}
         >
           <div className="d-flex align-items-center gap-2">
-            <i className="hgi-stroke hgi-clipboard-check" style={{ fontSize: "1.1rem" }}></i>
-            <span>Attendance</span>
+            <i className="hgi-stroke hgi-clipboard-check" style={{ fontSize: "1.15rem", color: isAttendancePath ? "#ffffff" : "#94a3b8" }}></i>
+            <span>Attendance Portal</span>
           </div>
-          <i className={`bi bi-chevron-${isAttendanceOpen ? 'up' : 'down'}`} style={{ fontSize: "0.75rem" }}></i>
+          <i className={`bi bi-chevron-${isAttendanceOpen ? 'up' : 'down'}`} style={{ fontSize: "0.75rem", color: "#94a3b8" }}></i>
         </div>
 
-        {/* Collapsible Submenu list */}
         {isAttendanceOpen && (
           <div
-            className="d-flex flex-column gap-1 mt-2"
+            className="d-flex flex-column gap-1 mt-2 ps-2"
             style={{
-              backgroundColor: "rgba(255, 255, 255, 0.02)",
-              borderRadius: "8px",
-              padding: "6px"
+              borderLeft: "1.5px solid rgba(255, 255, 255, 0.1)",
+              marginLeft: "12px"
             }}
           >
             {attendanceItems.map((item) => {
@@ -385,29 +399,22 @@ export default function Sidebar() {
                 <Link
                   key={item.name}
                   href={item.path}
-                  className="d-flex align-items-center gap-3 px-3 py-2 text-decoration-none"
+                  className="d-flex align-items-center gap-2 px-3 py-1.5 text-decoration-none"
                   style={{
                     borderRadius: "6px",
                     fontSize: "0.82rem",
                     fontWeight: "500",
-                    color: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.7)",
+                    color: isActive ? "#ffffff" : "#94a3b8",
                     backgroundColor: isActive ? "rgba(255, 255, 255, 0.08)" : "transparent",
-                    transition: "all 0.2s"
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "rgba(255, 255, 255, 0.04)";
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive) e.currentTarget.style.backgroundColor = "transparent";
+                    transition: "all 0.18s ease"
                   }}
                 >
-                  {/* Bullet Indicator Dot */}
                   <span
                     style={{
-                      width: "6px",
-                      height: "6px",
+                      width: "5px",
+                      height: "5px",
                       borderRadius: "50%",
-                      backgroundColor: isActive ? "#ffffff" : "rgba(255, 255, 255, 0.35)",
+                      backgroundColor: isActive ? "#ffffff" : "#64748b",
                       display: "inline-block"
                     }}
                   ></span>
@@ -421,61 +428,108 @@ export default function Sidebar() {
     );
   };
 
+  const isDashboardActive = pathname === "/admin/dashboard" || pathname === "/admin";
+
   return (
     <aside className={styles.sidebar}>
-      {/* Brand */}
-      <div className={styles.brand} style={{ padding: '16px 12px', display: 'flex', alignItems: 'center' }}>
-        <div style={{ marginRight: '12px' }}>
-          <i className="hgi-stroke hgi-building-03" style={{ fontSize: '2rem', color: '#ffffff' }}></i>
-        </div>
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{
-            fontWeight: 700, fontSize: '1.1rem', color: '#ffffff', letterSpacing: '0.02em', fontFamily: "'Cinzel', 'Orbitron', serif",
-          }}>
-            {/* ANVAYA360 */} PMS
-          </span>
-          <span style={{ fontSize: '0.65rem', color: 'rgba(255, 255, 255, 0.6)', fontWeight: 500 }}>
-            All in one App
-          </span>
-        </div>
+      {/* Brand Header */}
+      <div className={styles.brand}>
+        <img
+          src="/mirai_logo.png"
+          alt="MIRAI CLOUD IT SERVICES"
+          style={{ height: 38 }}
+          className="w-auto object-fit-contain"
+        />
       </div>
 
-      {/* Navigation */}
+      {/* Navigation Section */}
       <nav className={styles.navSection}>
-        {menuGroups.map((group) => {
-          if (group.label === "CRM") {
-            return showCRM ? <React.Fragment key="CRM">{renderCRMDropdown()}</React.Fragment> : null;
-          }
-          if (group.label === "Attendance") {
-            const hasAttendanceAccess = isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE';
-            return hasAttendanceAccess ? <React.Fragment key="Attendance">{renderAttendanceDropdown()}</React.Fragment> : null;
-          }
+        {/* Top Featured Dashboard Card Button */}
+        <Link
+          href="/admin/dashboard"
+          className={`${styles.dashboardCard} ${isDashboardActive ? styles.dashboardCardActive : styles.dashboardCardInactive}`}
+        >
+          <i className="hgi-stroke hgi-dashboard-square-01" style={{ fontSize: "1.2rem", color: isDashboardActive ? "#ffffff" : "#94a3b8" }}></i>
+          <span>Dashboard</span>
+        </Link>
 
-          return (
-            <div key={group.label} className={styles.navGroup}>
-              <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
-                {group.items.map((item) => {
-                  // Match /admin/units and all sub-paths like /admin/units/[id]
-                  const isActive = item.path === "/admin/units"
-                    ? pathname === "/admin/units" || pathname.startsWith("/admin/units/")
-                    : pathname.startsWith(item.path);
-                  return (
-                    <li key={item.path}>
-                      <Link
-                        href={item.path}
-                        className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
-                      >
-                        <i className={`hgi-stroke ${item.icon} ${styles.navIcon}`}></i>
-                        <span>{item.name}</span>
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })}
+        {/* Grouped Navigation Links */}
+        {menuGroups.map((group) => (
+          <div key={group.label} className={styles.navGroup}>
+            {group.label && (
+              <div className={styles.navGroupHeader}>
+                {group.label}
+              </div>
+            )}
+            <ul className="list-unstyled mb-0 d-flex flex-column gap-1">
+              {group.items.map((item) => {
+                const isActive = item.path === "/admin/units"
+                  ? pathname === "/admin/units" || pathname.startsWith("/admin/units/")
+                  : pathname.startsWith(item.path);
+
+                return (
+                  <li key={item.path}>
+                    <Link
+                      href={item.path}
+                      className={`${styles.navLink} ${isActive ? styles.navLinkActive : ""}`}
+                    >
+                      <i className={`hgi-stroke ${item.icon} ${styles.navIcon}`}></i>
+                      <span>{item.name}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+
+        {/* CRM Dropdown */}
+        {showCRM && renderCRMDropdown()}
+
+        {/* Attendance Dropdown */}
+        {(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE') && renderAttendanceDropdown()}
       </nav>
+
+      {/* Bottom User Card */}
+      {user && (
+        <div
+          style={{
+            padding: "12px 14px",
+            borderTop: "1px solid rgba(255, 255, 255, 0.07)",
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            backgroundColor: "#070a10"
+          }}
+        >
+          <div
+            style={{
+              width: 34,
+              height: 34,
+              borderRadius: "50%",
+              background: "linear-gradient(135deg, #f97316 0%, #ea580c 100%)",
+              color: "#ffffff",
+              fontWeight: 700,
+              fontSize: "0.85rem",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexShrink: 0,
+              boxShadow: "0 2px 8px rgba(249, 115, 22, 0.3)"
+            }}
+          >
+            {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#ffffff", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
+              {user.name || "Admin User"}
+            </div>
+            <div style={{ fontSize: "0.65rem", color: "#64748b", textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", textTransform: "capitalize" }}>
+              {user.role ? user.role.replace(/_/g, " ").toLowerCase() : "Administrator"}
+            </div>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

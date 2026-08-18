@@ -48,7 +48,7 @@ export default function Contact() {
               <span className="extra-small text-secondary d-block">Our dedicated technical team monitors and resolves issues around the clock.</span>
             </div>
           </div>
-          <a href="tel:8106651649" className="btn-orange-primary text-decoration-none flex-shrink-0 px-4 py-2.5">
+          <a href="tel:+919100218218" className="btn-orange-primary text-decoration-none flex-shrink-0 px-4 py-2.5">
             <i className="bi bi-telephone-outbound-fill"></i> Call 24/7 Support
           </a>
         </div>
@@ -66,8 +66,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <span className="extra-small text-muted fw-bold text-uppercase d-block mb-0.5">24/7 Call & WhatsApp Support</span>
-                  <a href="tel:8106651649" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange">
-                    +91 8106651649
+                  <a href="tel:+919100218218" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange">
+                    +91 91002 18218
                   </a>
                   <span className="extra-small text-success fw-bold d-block mt-0.5">
                     <i className="bi bi-check-circle-fill me-1"></i> 24/7 Available (365 Days) • Instant Resolution
@@ -82,8 +82,8 @@ export default function Contact() {
                 </div>
                 <div>
                   <span className="extra-small text-muted fw-bold text-uppercase d-block mb-0.5">24/7 Support & Sales Email</span>
-                  <a href="mailto:sales.anvaya360@gmail.com" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange text-break">
-                    sales.anvaya360@gmail.com
+                  <a href="mailto:info@miraiclouditservices.com" className="fw-extrabold text-dark fs-6 text-decoration-none hover-orange text-break">
+                    info@miraiclouditservices.com
                   </a>
                   <span className="extra-small text-muted d-block mt-0.5">Priority Response SLA within 15 mins</span>
                 </div>
@@ -96,9 +96,9 @@ export default function Contact() {
                 </div>
                 <div>
                   <span className="extra-small text-muted fw-bold text-uppercase d-block mb-0.5">Global Operations Center</span>
-                  <h6 className="fw-extrabold text-dark mb-1 fs-6">Anvaya360 Command Tower</h6>
+                  <h6 className="fw-extrabold text-dark mb-1 fs-6">Mirai CloudIT SERVICES Tower</h6>
                   <p className="text-muted extra-small mb-0" style={{ lineHeight: 1.5 }}>
-                    Hitech City, Mindspace Cyberabad, Hyderabad, Telangana 500081, India
+                    Kalki chambers A Block 108, NH 65, widia colony Miyapur, Hyderabad, India, 502032
                   </p>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-﻿﻿"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from "react";
 import Table, { TableColumn } from "@/components/common/Table";
@@ -146,7 +146,7 @@ export default function DealsManager({}: DealsManagerProps) {
       else {
         // Fallback owners list
         setUsersList([
-          { _id: "1", name: "Anvaya Admin" },
+          { _id: "1", name: "Mirai Admin" },
           { _id: "2", name: "Rajesh Kumar" },
           { _id: "3", name: "Suresh Raina" }
         ]);
