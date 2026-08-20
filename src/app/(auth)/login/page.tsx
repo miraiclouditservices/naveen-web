@@ -132,50 +132,64 @@ export default function LoginPage() {
         style={{ maxWidth: 1040, minHeight: 560, borderRadius: 28, boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.15)' }}
       >
 
-        {/* Left Panel: Dark Elegant Brand & Hero Preview (Visible on Large Screens) */}
+        {/* Left Panel: Dark Elegant Brand Presentation (Visible on Large Screens) */}
         <div
           className="col-lg-6 d-none d-lg-flex flex-column justify-content-between p-4 p-xl-5 text-white position-relative overflow-hidden"
-          style={{ background: '#1c1917' }}
+          style={{ background: "#0f172a" }}
         >
-          {/* Subtle Glow Orb */}
+          {/* Ambient Radial Glow */}
           <div
-            className="position-absolute top-0 end-0 translate-middle-y rounded-circle pointer-events-none opacity-25"
+            className="position-absolute top-0 end-0 translate-middle-y rounded-circle pointer-events-none opacity-20"
             style={{
-              width: 350,
-              height: 350,
-              background: 'radial-gradient(circle, var(--brand-orange) 0%, transparent 70%)',
-              filter: 'blur(60px)'
+              width: 400,
+              height: 400,
+              background: "radial-gradient(circle, #2563eb 0%, transparent 70%)",
+              filter: "blur(70px)"
             }}
           ></div>
 
           {/* Top Tagline */}
           <div className="position-relative z-2">
-            <p className="mb-0 fw-medium" style={{ color: '#cbd5e1', fontSize: '0.85rem', letterSpacing: '0.01em' }}>
+            <p className="mb-0 fw-medium" style={{ color: "#94a3b8", fontSize: "0.88rem", letterSpacing: "0.01em" }}>
               Global business operations made simple — online solutions for you.
             </p>
           </div>
 
-          {/* Center Heading & Image Showcase */}
+          {/* Center Heading & Feature Highlights */}
           <div className="my-auto py-3 position-relative z-2 text-start">
-            <h1 className="text-white mb-4" style={{ fontWeight: 800, fontSize: '3rem', lineHeight: 1.1, letterSpacing: '-0.04em' }}>
+            <h1 className="text-white mb-4" style={{ fontWeight: 800, fontSize: "2.8rem", lineHeight: 1.15, letterSpacing: "-0.03em" }}>
               Manage <br />
-              <span style={{ color: 'var(--brand-orange-light)', fontWeight: 800 }}>your business</span>
+              <span style={{ color: "#60a5fa", fontWeight: 800 }}>your business</span>
             </h1>
 
-            {/* Mobile / App Platform Preview */}
-            <div className="d-flex justify-content-center mt-3 position-relative">
-              <img
-                src="/hero-right.png"
-                alt="Mirai CloudIT SERVICES Platform"
-                className="img-fluid rounded-4 shadow-lg border border-secondary border-opacity-25"
-                style={{ maxWidth: '88%', maxHeight: 260, objectFit: 'cover', transform: 'rotate(-2deg)' }}
-              />
+            {/* Feature Highlights List */}
+            <div className="d-flex flex-column gap-3 mt-4" style={{ maxWidth: "360px" }}>
+              <div className="d-flex align-items-center gap-3 p-3 rounded-3" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 36, height: 36, backgroundColor: "#2563eb", color: "#ffffff" }}>
+                  <i className="bi bi-shield-check fs-6"></i>
+                </div>
+                <div>
+                  <h6 className="fw-bold text-white mb-0" style={{ fontSize: "0.88rem" }}>Bank-Grade Security</h6>
+                  <p className="text-secondary extra-small mb-0" style={{ fontSize: "0.76rem", color: "#94a3b8" }}>Encrypted data & SOC2 compliant</p>
+                </div>
+              </div>
+
+              <div className="d-flex align-items-center gap-3 p-3 rounded-3" style={{ backgroundColor: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+                <div className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0" style={{ width: 36, height: 36, backgroundColor: "#2563eb", color: "#ffffff" }}>
+                  <i className="bi bi-speedometer2 fs-6"></i>
+                </div>
+                <div>
+                  <h6 className="fw-bold text-white mb-0" style={{ fontSize: "0.88rem" }}>Real-Time Operations</h6>
+                  <p className="text-secondary extra-small mb-0" style={{ fontSize: "0.76rem", color: "#94a3b8" }}>Live analytics & instant reporting</p>
+                </div>
+              </div>
             </div>
+
           </div>
 
           {/* Left Panel Bottom Footer */}
-          <div className="d-flex align-items-center justify-content-between extra-small position-relative z-2" style={{ color: '#94a3b8' }}>
-            <span>© {new Date().getFullYear()} Mirai CloudIT SERVICES OS</span>
+          <div className="d-flex align-items-center justify-content-between extra-small position-relative z-2" style={{ color: "#94a3b8" }}>
+            <span>© {new Date().getFullYear()} Mirai Cloud IT Services OS</span>
             <span className="badge bg-secondary bg-opacity-25 text-white">v2.4 Live</span>
           </div>
         </div>
@@ -183,31 +197,31 @@ export default function LoginPage() {
         {/* Right Panel: White Clean Sign In Form */}
         <div className="col-lg-6 col-12 bg-white p-4 p-sm-5 d-flex flex-column justify-content-between">
 
-          {/* Right Header: Logo & Sign Up Link */}
+          {/* Right Header: Logo */}
           <div className="d-flex align-items-center justify-content-between mb-4 pb-2">
-            <Link href="/" className="d-flex align-items-center text-decoration-none">
+            <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
               <img
                 src="/mirai_logo.png"
-                alt="Mirai CloudIT SERVICES"
-                style={{ height: 48 }}
+                alt="Mirai Cloud IT SERVICES"
+                style={{ height: 44 }}
                 className="w-auto object-fit-contain"
               />
             </Link>
 
             <div className="d-flex align-items-center gap-2">
-              <span className="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold" style={{ fontSize: '0.75rem', letterSpacing: '0.02em' }}>
-                <i className="bi bi-shield-lock-fill text-warning me-1" /> Enterprise SaaS Portal
+              <span className="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold" style={{ fontSize: "0.75rem", letterSpacing: "0.02em" }}>
+                <i className="bi bi-shield-lock-fill text-primary me-1" style={{ color: "#2563eb" }} /> Enterprise SaaS Portal
               </span>
             </div>
           </div>
 
           {/* Form Content Container */}
-          <div className="py-2 my-auto" style={{ maxWidth: 380, width: '100%', margin: '0 auto' }}>
+          <div className="py-2 my-auto" style={{ maxWidth: 380, width: "100%", margin: "0 auto" }}>
 
-            <h2 style={{ fontSize: '2.1rem', fontWeight: 800, letterSpacing: '-0.03em', color: 'var(--text-primary)' }} className="mb-1">
+            <h2 style={{ fontSize: "2.1rem", fontWeight: 800, letterSpacing: "-0.03em", color: "#0f172a" }} className="mb-1">
               Sign In
             </h2>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.55 }} className="mb-4">
+            <p style={{ fontSize: "0.88rem", color: "#64748b", lineHeight: 1.55 }} className="mb-4">
               Enter your credentials to access your operations dashboard
             </p>
 
@@ -223,18 +237,18 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   style={{
                     height: 48,
-                    fontSize: '0.9rem',
+                    fontSize: "0.9rem",
                     borderRadius: 999,
-                    background: '#f8fafc',
-                    border: '1.5px solid #e2e8f0',
-                    color: 'var(--text-primary)'
+                    background: "#f8fafc",
+                    border: "1.5px solid #e2e8f0",
+                    color: "#0f172a"
                   }}
                   required
                 />
               </div>
 
               {/* Password Field */}
-              <div className="mb-2">
+              <div className="mb-4">
                 <div className="position-relative d-flex align-items-center">
                   <input
                     type={showPassword ? "text" : "password"}
@@ -244,28 +258,21 @@ export default function LoginPage() {
                     onChange={(e) => setPassword(e.target.value)}
                     style={{
                       height: 48,
-                      fontSize: '0.9rem',
+                      fontSize: "0.9rem",
                       paddingRight: 52,
                       borderRadius: 999,
-                      background: '#f8fafc',
-                      border: '1.5px solid #e2e8f0',
-                      color: 'var(--text-primary)'
+                      background: "#f8fafc",
+                      border: "1.5px solid #e2e8f0",
+                      color: "#0f172a"
                     }}
                     required
                   />
                   <i
-                    className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} position-absolute top-50 translate-middle-y`}
-                    style={{ right: 18, fontSize: '1rem', cursor: 'pointer', color: 'var(--text-secondary)', zIndex: 5 }}
+                    className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"} position-absolute top-50 translate-middle-y`}
+                    style={{ right: 18, fontSize: "1rem", cursor: "pointer", color: "#64748b", zIndex: 5 }}
                     onClick={() => setShowPassword(!showPassword)}
                   />
                 </div>
-              </div>
-
-              {/* Forgot Password Link */}
-              <div className="d-flex justify-content-start mb-4">
-                <a href="#contact" className="extra-small fw-bold text-decoration-none" style={{ color: 'var(--brand-orange)' }}>
-                  Forgot password?
-                </a>
               </div>
 
               {/* Sign In Button */}
@@ -276,13 +283,13 @@ export default function LoginPage() {
                 style={{
                   height: 50,
                   borderRadius: 999,
-                  background: 'linear-gradient(90deg, #ea580c 0%, #f97316 100%)',
-                  color: '#ffffff',
+                  background: "linear-gradient(90deg, #2563eb 0%, #1d4ed8 100%)",
+                  color: "#ffffff",
                   fontWeight: 700,
-                  fontSize: '0.95rem',
-                  letterSpacing: '0.01em',
-                  boxShadow: '0 4px 14px rgba(234, 88, 12, 0.35)',
-                  transition: 'opacity 0.2s ease, transform 0.2s ease'
+                  fontSize: "0.95rem",
+                  letterSpacing: "0.01em",
+                  boxShadow: "0 4px 14px rgba(37, 99, 235, 0.35)",
+                  transition: "all 0.2s ease"
                 }}
               >
                 {isLoading ? (
@@ -298,8 +305,8 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '1rem', marginTop: 'auto', color: 'var(--text-secondary)', fontSize: '0.7rem', opacity: 0.85 }}>
-            © {new Date().getFullYear()} Anvaya360 Inc. All rights reserved.
+          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "1rem", marginTop: "auto", color: "#64748b", fontSize: "0.78rem" }}>
+            © {new Date().getFullYear()} Mirai Cloud IT Services. All rights reserved.
           </div>
 
         </div>

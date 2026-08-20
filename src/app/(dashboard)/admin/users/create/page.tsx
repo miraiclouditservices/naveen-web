@@ -983,205 +983,22 @@ function CreateUserContent() {
                             </div>
                           )}
 
-                          {/* Units & Workspaces (Offices / Desks): Display for COWORKING_ADMIN logged in user */}
-                          {(isCoWorkingAdminLoggedIn || (!isSuperAdminLoggedIn && (formData.assignedProperties.length > 0 || filteredUnits.length > 0))) && (
-                            <div className="col-12">
-                              <label className="form-label small fw-bold text-dark mb-1">Units &amp; Workspaces (Offices / Desks) *</label>
-                              <MultiSelect
-                                options={filteredUnits.length > 0 ? filteredUnits : units}
-                                selectedIds={formData.assignedUnits}
-                                onChange={handleUnitSelectionChange}
-                                placeholder="Select Offices / Desks"
-                              />
-                              {validationErrors.units && <div className="text-danger small mt-1">{validationErrors.units}</div>}
-                            </div>
-                          )}
+                          {/* Units & Workspaces (Offices / Desks): Always displayed to allow selecting units for all admin roles */}
+                          <div className="col-12">
+                            <label className="form-label small fw-bold text-dark mb-1">Select Units / Offices / Workspaces (Optional)</label>
+                            <MultiSelect
+                              options={filteredUnits.length > 0 ? filteredUnits : units}
+                              selectedIds={formData.assignedUnits}
+                              onChange={handleUnitSelectionChange}
+                              placeholder="Select Offices / Desks"
+                            />
+                            {validationErrors.units && <div className="text-danger small mt-1">{validationErrors.units}</div>}
+                          </div>
                         </div>
                       );
                     })()}
 
-                    {/* PRO BOOKMYSHOW-STYLE SEAT MAP SELECTION UI */}
-                    {formData.assignedUnits.length > 0 && (
-                      <div className="col-12 mt-3">
-                        <div className="p-4 border rounded-4 bg-white" style={{ borderColor: 'var(--border-color)', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
-                          <div className="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom flex-wrap gap-2">
-                            <div className="d-flex align-items-center gap-2.5">
-                              <div className="rounded-circle d-flex align-items-center justify-content-center text-white" style={{ width: '38px', height: '38px', backgroundColor: 'var(--brand-orange)' }}>
-                                <i className="bi bi-person-workspace fs-5"></i>
-                              </div>
-                              <div>
-                                <h6 className="fw-bold text-dark m-0" style={{ fontSize: '1.05rem', letterSpacing: '-0.01em' }}>Interactive Seat Map & Workspace Allocation</h6>
-                                <span className="text-muted extra-small">Click individual seats to select/deselect or use quick row controls.</span>
-                              </div>
-                            </div>
-                            <div className="d-flex align-items-center gap-2">
-                              <span className="badge rounded-pill fw-bold" style={{ backgroundColor: 'var(--brand-orange-bg)', color: 'var(--brand-orange)', border: '1px solid var(--brand-orange-border)', fontSize: '0.8rem', padding: '6px 14px' }}>
-                                {formData.assignedUnits.length} Office Unit{formData.assignedUnits.length > 1 ? 's' : ''} Selected
-                              </span>
-                            </div>
-                          </div>
 
-                          <div className="d-flex flex-column gap-4">
-                            {formData.assignedUnits.map((unitId) => {
-                              const unit = units.find(u => u._id === unitId);
-                              if (!unit) return null;
-                              const maxSeats = unit.seatCount || 10;
-                              const occupiedSeats = unit.occupiedSeatCount || 0;
-                              const selectedSeatsList = formData.unitSelectedSeatsMap?.[unitId] || [];
-                              const currentSeatsCount = selectedSeatsList.length;
-
-                              return (
-                                <div key={unitId} className="card border bg-white p-4 shadow-sm" style={{ borderRadius: '16px', borderColor: '#e2e8f0', backgroundColor: '#ffffff' }}>
-
-                                  {/* Unit Header */}
-                                  <div className="d-flex align-items-center justify-content-between flex-wrap gap-3 pb-3 border-bottom" style={{ borderColor: '#f1f5f9' }}>
-                                    <div className="d-flex align-items-center gap-3">
-                                      <div className="d-flex align-items-center justify-content-center rounded-3 text-white fw-bold shadow-sm" style={{ width: '44px', height: '44px', minWidth: '44px', backgroundColor: '#0f172a', fontSize: '1.15rem' }}>
-                                        <i className="bi bi-building"></i>
-                                      </div>
-                                      <div>
-                                        <div className="fw-bold text-dark" style={{ fontSize: '0.98rem', letterSpacing: '-0.01em' }}>
-                                          Unit {unit.unitNumber} {unit.unitName ? `– ${unit.unitName}` : ''}
-                                        </div>
-                                        <div className="text-muted small" style={{ fontSize: '0.8rem' }}>
-                                          {unit.property?.propertyName || 'Property'} · Floor {unit.floor?.floorNumber || unit.floorNumber || '3'}
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="d-flex align-items-center gap-3 flex-wrap">
-                                      <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
-                                        <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>AREA</span>
-                                        <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{unit.sqft ? `${unit.sqft.toLocaleString('en-IN')} SFT` : '1,000 SFT'}</span>
-                                      </div>
-
-                                      <div className="bg-light border text-center" style={{ padding: '6px 16px', borderRadius: '50px', backgroundColor: '#f8fafc' }}>
-                                        <span className="text-muted d-block fw-bold" style={{ fontSize: '0.62rem', letterSpacing: '0.06em', textTransform: 'uppercase' }}>TOTAL SEATS</span>
-                                        <span className="fw-bold text-dark" style={{ fontSize: '0.85rem', lineHeight: '1.2' }}>{maxSeats} Seats</span>
-                                      </div>
-
-                                      {/* Quick Action Buttons: Select All / Clear */}
-                                      <div className="d-flex align-items-center gap-2">
-                                        <button
-                                          type="button"
-                                          className="btn btn-sm btn-light border fw-semibold text-dark shadow-2xs"
-                                          style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
-                                          onClick={() => selectAllUnitSeats(unitId, maxSeats, occupiedSeats)}
-                                        >
-                                          Select All
-                                        </button>
-                                        <button
-                                          type="button"
-                                          className="btn btn-sm btn-light border fw-semibold text-muted shadow-2xs"
-                                          style={{ fontSize: '0.78rem', padding: '6px 14px', borderRadius: '8px', transition: 'all 0.15s ease' }}
-                                          onClick={() => clearAllUnitSeats(unitId)}
-                                        >
-                                          Clear
-                                        </button>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* SEAT MAP PODIUM / BAY HEADER */}
-                                  <div className="my-4 text-center">
-                                    <div className="d-inline-flex align-items-center justify-content-center rounded-pill border text-muted small fw-bold mb-2" style={{ backgroundColor: '#f8fafc', padding: '6px 20px', fontSize: '0.75rem', letterSpacing: '0.08em' }}>
-                                      <i className="bi bi-display me-2 text-primary"></i> MAIN EXECUTIVE DESK BAY & PODIUM
-                                    </div>
-                                    <div className="mx-auto rounded-pill" style={{ width: '60%', height: '4px', background: 'linear-gradient(90deg, transparent 0%, var(--brand-orange) 50%, transparent 100%)', opacity: 0.85 }}></div>
-                                  </div>
-
-                                  {/* INTERACTIVE SEAT GRID */}
-                                  <div className="p-4 bg-white border rounded-3 text-center mb-3" style={{ borderColor: '#e2e8f0', backgroundColor: '#fafafa' }}>
-                                    <div className="row g-2 justify-content-center">
-                                      {Array.from({ length: maxSeats }, (_, idx) => {
-                                        const seatNum = idx + 1;
-                                        const isOccupiedByOther = idx < occupiedSeats;
-                                        const isSelectedForUser = !isOccupiedByOther && selectedSeatsList.includes(seatNum);
-
-                                        return (
-                                          <div key={idx} className="col-auto">
-                                            <button
-                                              type="button"
-                                              disabled={isOccupiedByOther}
-                                              onClick={() => {
-                                                if (!isOccupiedByOther) {
-                                                  toggleSeatSelection(unitId, seatNum);
-                                                }
-                                              }}
-                                              className="btn p-2 d-flex flex-column align-items-center justify-content-center position-relative"
-                                              style={{
-                                                width: "56px",
-                                                height: "56px",
-                                                borderRadius: "12px",
-                                                backgroundColor: isOccupiedByOther ? "#f1f5f9" : isSelectedForUser ? "#f0fdf4" : "#ffffff",
-                                                border: isOccupiedByOther ? "1px solid #cbd5e1" : isSelectedForUser ? "2px solid #16a34a" : "1px solid #e2e8f0",
-                                                color: isOccupiedByOther ? "#94a3b8" : isSelectedForUser ? "#16a34a" : "var(--dark-heading)",
-                                                transition: "all 0.2s cubic-bezier(0.4, 0, 0.2, 1)",
-                                                cursor: isOccupiedByOther ? "not-allowed" : "pointer",
-                                                boxShadow: isSelectedForUser ? "0 4px 12px rgba(22, 163, 74, 0.18)" : "0 1px 2px rgba(0,0,0,0.03)"
-                                              }}
-                                              title={isOccupiedByOther ? `Seat ${seatNum} (Occupied)` : `Click to ${isSelectedForUser ? 'Deselect' : 'Select'} Seat ${seatNum}`}
-                                            >
-                                              <i className={`bi ${isOccupiedByOther ? 'bi-lock-fill' : 'bi-person-workspace'}`} style={{ fontSize: "1.1rem" }}></i>
-                                              <span className="fw-bold mt-1" style={{ fontSize: "0.72rem", lineHeight: "1" }}>
-                                                {seatNum}
-                                              </span>
-                                              {isSelectedForUser && (
-                                                <span className="position-absolute top-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle" style={{ width: '10px', height: '10px' }}></span>
-                                              )}
-                                            </button>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-
-                                    {/* SEAT LEGEND */}
-                                    <div className="d-flex align-items-center justify-content-center gap-4 mt-4 pt-3 border-top flex-wrap" style={{ fontSize: '0.8rem', borderColor: '#e2e8f0' }}>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f0fdf4', borderColor: '#16a34a' }}></span>
-                                        <span className="fw-bold text-dark">Selected ({currentSeatsCount})</span>
-                                      </div>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#ffffff', borderColor: '#e2e8f0' }}></span>
-                                        <span className="fw-medium text-muted">Available ({Math.max(maxSeats - occupiedSeats - currentSeatsCount, 0)})</span>
-                                      </div>
-                                      <div className="d-flex align-items-center gap-2">
-                                        <span className="rounded-2 d-inline-block border" style={{ width: '14px', height: '14px', backgroundColor: '#f1f5f9', borderColor: '#cbd5e1' }}></span>
-                                        <span className="fw-medium text-muted">Occupied ({occupiedSeats})</span>
-                                      </div>
-                                    </div>
-                                  </div>
-
-                                  {/* Selected Seats Numbers List Display */}
-                                  {selectedSeatsList.length > 0 && (
-                                    <div className="small text-muted fw-semibold px-1">
-                                      Selected Seat Numbers: <span className="text-dark fw-bold">{selectedSeatsList.map(s => `Seat ${s}`).join(', ')}</span>
-                                    </div>
-                                  )}
-
-                                </div>
-                              );
-                            })}
-
-                            {/* Total Summary */}
-                            <div className="bg-white border rounded-3 d-flex align-items-center justify-content-between flex-wrap gap-2 mt-1 shadow-sm" style={{ padding: '14px 20px', borderRadius: '12px', borderColor: '#e2e8f0' }}>
-                              <div className="d-flex align-items-center gap-2">
-                                <i className="bi bi-calculator text-primary fs-5"></i>
-                                <span className="fw-bold text-dark" style={{ fontSize: '0.9rem' }}>Total Workspace Allocation:</span>
-                              </div>
-                              <div className="d-flex align-items-center gap-3 flex-wrap">
-                                <span className="badge bg-light text-dark border rounded-pill fw-semibold" style={{ fontSize: '0.82rem', padding: '8px 16px' }}>
-                                  {totalManagedSft.toLocaleString('en-IN')} Total SFT
-                                </span>
-                                <span className="badge rounded-pill fw-bold" style={{ backgroundColor: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0', fontSize: '0.82rem', padding: '8px 16px' }}>
-                                  <i className="bi bi-check-circle-fill me-2"></i> {totalAssignedSeatCount} Total Seats Assigned
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}

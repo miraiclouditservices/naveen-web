@@ -324,3 +324,112 @@ body {
     transform: translate3d(0, 0, 0);
   }
 }
+
+/* ==========================================================================
+   Dashboard Grids, Panels & Quick Action Controls
+   ========================================================================== */
+.dash-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.dash-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.dash-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 1024px) {
+
+  .dash-grid-4,
+  .dash-grid-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+
+  .dash-grid-4,
+  .dash-grid-3,
+  .dash-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: all 0.25s ease;
+}
+
+.panel-head {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #fafaf9;
+}
+
+.panel-title {
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.panel-body {
+  padding: 18px;
+}
+
+.qa-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 10px;
+  border-radius: 12px;
+  text-decoration: none !important;
+  color: #1e293b !important;
+  background-color: #ffffff !important;
+  border: 1px solid var(--border);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.qa-btn:hover,
+.qa-btn:focus,
+.qa-btn:active {
+  background-color: #ffffff !important;
+  color: #1e293b !important;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08) !important;
+  text-decoration: none !important;
+}
+
+.qa-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.qa-btn:hover .qa-icon {
+  transform: scale(1.08);
+}

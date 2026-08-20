@@ -15,14 +15,23 @@ export default function Sidebar() {
   const [activeCRMTab, setActiveCRMTab] = useState("dashboard");
 
   useEffect(() => {
-    setUser(getStoredUser());
+    const initialUser = getStoredUser();
+    setUser(initialUser);
 
     const fetchFreshProfile = async () => {
       try {
         const res = await api.get('/auth/profile');
         if (res && res.success && res.user) {
-          setStoredUser(res.user);
-          setUser(res.user);
+          const stored = getStoredUser() || {};
+          const mergedUser = {
+            ...stored,
+            ...res.user,
+            orgName: res.user.orgName || res.user.organizationName || res.user.organization?.name || stored.orgName || stored.organizationName || stored.organization?.name,
+            organizationName: res.user.organizationName || res.user.orgName || res.user.organization?.name || stored.organizationName || stored.orgName || stored.organization?.name,
+            organization: res.user.organization || stored.organization
+          };
+          setStoredUser(mergedUser);
+          setUser(mergedUser);
         }
       } catch {
         // Quietly handle network or profile sync errors
@@ -76,7 +85,9 @@ export default function Sidebar() {
       items: [
         { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
         { name: "Floor Management", path: "/admin/floors", icon: "hgi-layers-01" },
-        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" }
+        { name: "SFT", path: "/admin/units", icon: "hgi-door-01" },
+        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Booking Management", path: "/admin/bookings", icon: "hgi-calendar-03" }
       ]
     },
     {
@@ -123,7 +134,9 @@ export default function Sidebar() {
     {
       label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
+        { name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" },
+        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Booking Management", path: "/admin/bookings", icon: "hgi-calendar-03" }
       ]
     },
     {
@@ -148,7 +161,8 @@ export default function Sidebar() {
       items: [
         { name: "Properties", path: "/admin/properties", icon: "hgi-building-01" },
         { name: "SFT and Seats", path: "/admin/units", icon: "hgi-door-01" },
-        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" }
+        { name: "Lease Management", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Booking Management", path: "/admin/bookings", icon: "hgi-calendar-03" }
       ]
     },
     {
@@ -189,7 +203,8 @@ export default function Sidebar() {
     {
       label: "PROPERTY MANAGEMENT",
       items: [
-        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" }
+        { name: "Lease Details", path: "/admin/leases", icon: "hgi-agreement-01" },
+        { name: "Booking Management", path: "/admin/bookings", icon: "hgi-calendar-03" }
       ]
     },
     {
@@ -430,16 +445,31 @@ export default function Sidebar() {
 
   const isDashboardActive = pathname === "/admin/dashboard" || pathname === "/admin";
 
+  const orgDisplay =
+    (user as any)?.orgName ||
+    (user as any)?.organizationName ||
+    (user as any)?.organization?.name ||
+    (user as any)?.assignedProperties?.[0]?.propertyName ||
+    "Mirai Cloud IT Services";
+
   return (
     <aside className={styles.sidebar}>
-      {/* Brand Header */}
-      <div className={styles.brand}>
-        <img
+      {/* Brand Header & Organization Display */}
+      <div className="px-3 py-3 d-flex align-items-center gap-2.5 border-bottom border-secondary border-opacity-10" style={{ backgroundColor: "#0b0f19" }}>
+        {/* <img
           src="/mirai_logo.png"
           alt="MIRAI CLOUD IT SERVICES"
-          style={{ height: 38 }}
-          className="w-auto object-fit-contain"
-        />
+          style={{ height: 34 }}
+          className="w-auto object-fit-contain flex-shrink-0"
+        /> */}
+        <div className="d-flex flex-column justify-content-center" style={{ minWidth: 0, lineHeight: 1.25 }}>
+          <span className="fw-bold text-white text-truncate" style={{ fontSize: "0.85rem", letterSpacing: "-0.01em" }} title={orgDisplay}>
+            {orgDisplay}
+          </span>
+          <span style={{ fontSize: "0.62rem", fontWeight: 700, color: "#38bdf8", textTransform: "uppercase", letterSpacing: "0.06em", marginTop: "2px" }}>
+            ORGANIZATION
+          </span>
+        </div>
       </div>
 
       {/* Navigation Section */}
@@ -483,11 +513,11 @@ export default function Sidebar() {
           </div>
         ))}
 
-        {/* CRM Dropdown */}
-        {showCRM && renderCRMDropdown()}
+        {/* CRM Dropdown (Hidden per user request) */}
+        {/* {showCRM && renderCRMDropdown()} */}
 
-        {/* Attendance Dropdown */}
-        {(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE') && renderAttendanceDropdown()}
+        {/* HR & Attendance Dropdown (Hidden per user request) */}
+        {/* {(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE') && renderAttendanceDropdown()} */}
       </nav>
 
       {/* Bottom User Card */}

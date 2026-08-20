@@ -57,66 +57,7 @@ function StatCard({ label, value, icon, color, sub }: any) {
   );
 }
 
-function MiniBar({ label, val, max, color }: any) {
-  const pct = max > 0 ? Math.min(100, Math.round((val / max) * 100)) : 0;
-  return (
-    <div style={{ marginBottom: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: "0.75rem", fontWeight: 600, color: "var(--text-primary)", marginBottom: 3 }}>
-        <span>{label}</span><span>{pct}%</span>
-      </div>
-      <div style={{ background: "var(--border-color)", borderRadius: 6, height: 7 }}>
-        <div style={{ width: `${pct}%`, height: "100%", borderRadius: 6, background: color, transition: "width 0.6s ease" }} />
-      </div>
-    </div>
-  );
-}
 
-function RevenueBar({ items }: { items: { label: string; revenue: number }[] }) {
-  const max = Math.max(...items.map(i => i.revenue), 1);
-  return (
-    <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 120, paddingTop: 8 }}>
-      {items.map((item, i) => (
-        <div key={i} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-          <div style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 700 }}>
-            {item.revenue > 0 ? `₹${(item.revenue / 1000).toFixed(0)}K` : "—"}
-          </div>
-          <div style={{
-            width: "100%", background: i === items.length - 1 ? "var(--dark-section)" : "#bfdbfe", borderRadius: "4px 4px 0 0",
-            height: `${Math.max(6, (item.revenue / max) * 100)}px`, transition: "height 0.5s ease"
-          }} />
-          <div style={{ fontSize: "0.6rem", color: "var(--text-muted)", fontWeight: 600, whiteSpace: "nowrap" }}>{item.label}</div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function VisitorLine({ items }: { items: { label: string; count: number }[] }) {
-  const max = Math.max(...items.map(i => i.count), 1);
-  const w = 280, h = 80, pad = 10;
-  const pts = items.map((item, i) => {
-    const x = pad + (i / (items.length - 1 || 1)) * (w - 2 * pad);
-    const y = pad + (1 - item.count / max) * (h - 2 * pad);
-    return `${x},${y}`;
-  }).join(" ");
-  return (
-    <div>
-      <svg width="100%" viewBox={`0 0 ${w} ${h}`} style={{ overflow: "visible" }}>
-        <polyline fill="none" stroke="var(--dark-section)" strokeWidth="2.5" strokeLinejoin="round" points={pts} />
-        {items.map((item, i) => {
-          const x = pad + (i / (items.length - 1 || 1)) * (w - 2 * pad);
-          const y = pad + (1 - item.count / max) * (h - 2 * pad);
-          return <circle key={i} cx={x} cy={y} r="3.5" fill="var(--dark-section)" />;
-        })}
-      </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ fontSize: "0.58rem", color: "var(--text-muted)", fontWeight: 600, textAlign: "center", flex: 1 }}>{item.label}</div>
-        ))}
-      </div>
-    </div>
-  );
-}
 
 const STATUS_PILL: Record<string, { bg: string; cl: string }> = {
   Pending: { bg: "#fef9c3", cl: "#854d0e" }, Approved: { bg: "#dcfce7", cl: "#166534" },
@@ -344,95 +285,32 @@ export default function DashboardPage() {
         <StatCard label="Total Staff" value={m.totalStaff ?? 0} icon="bi-person-workspace" color={COLOR.purple} sub="Floor & security staff" />
       </div>
 
-      {/* ── Agreement & Financial Analytics ── */}
-      <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "#1e293b", marginBottom: 14, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-        Agreement & Financial Analytics
-      </h3>
-
-      <div className="dash-grid-4" style={{ marginBottom: 24 }}>
-        <StatCard label="Total Agreements" value={agreementM.totalAgreements ?? 0} icon="bi-file-earmark-check-fill" color={COLOR.purple} sub="Customer agreements" />
-        <StatCard label="Total Revenue" value={`₹${(agreementM.totalRevenue || 0).toLocaleString()}`} icon="bi-currency-rupee" color={COLOR.green} sub="Agreement collections" />
-        <StatCard label="Pending Payments" value={`₹${(agreementM.pendingPayments || 0).toLocaleString()}`} icon="bi-clock" color={COLOR.yellow} sub="Pending dues" />
-        <StatCard label="Overdue Payments" value={`₹${(agreementM.overduePayments || 0).toLocaleString()}`} icon="bi-exclamation-octagon-fill" color={COLOR.red} sub="Overdue amount" />
-      </div>
 
       {/* ── Quick Actions ── */}
       <div className="panel" style={{ marginBottom: 24 }}>
         <div className="panel-head">
-          <h6 className="panel-title"><i className="bi bi-lightning-fill me-2" style={{ color: "#fbbf24" }} />Quick Actions</h6>
+          <h6 className="panel-title"><i className="bi bi-lightning-fill me-2" style={{ color: "#f59e0b" }} />Quick Actions</h6>
         </div>
         <div className="panel-body">
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(7,1fr)", gap: 10 }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 12 }}>
             {[
-              { label: "Add Property", icon: "bi-building-add", href: "/admin/properties" },
-              { label: "Add Floor", icon: "bi-layers", href: "/admin/floors" },
-              { label: "Add Visitor", icon: "bi-person-plus-fill", href: "/admin/visitors" },
-              { label: "Gate Pass", icon: "bi-card-checklist", href: "/admin/materials" },
-              { label: "Add Lease", icon: "bi-file-earmark-text", href: "/admin/leases" },
-              { label: "Add Asset", icon: "bi-tools", href: "/admin/assets" },
-              { label: "Add Staff", icon: "bi-person-badge", href: "/admin/users" },
+              { label: "Add Visitor", icon: "bi-person-plus-fill", href: "/admin/visitors", color: "#059669", bg: "#ecfdf5", border: "#a7f3d0" },
+              { label: "Gate Pass", icon: "bi-card-checklist", href: "/admin/materials", color: "#d97706", bg: "#fffbeb", border: "#fde68a" },
+              { label: "Add Asset", icon: "bi-tools", href: "/admin/assets", color: "#0891b2", bg: "#ecfeff", border: "#a5f3fc" },
+              { label: "Add Staff", icon: "bi-person-badge", href: "/admin/users", color: "#e11d48", bg: "#fff1f2", border: "#fecdd3" },
             ].map(a => (
-              <Link key={a.label} href={a.href} className="qa-btn">
-                <div className="qa-icon"><i className={`bi ${a.icon}`} style={{ fontSize: "1.1rem", color: "var(--dark-section)" }} /></div>
-                <span style={{ fontSize: "0.68rem", fontWeight: 700, textAlign: "center", lineHeight: 1.3 }}>{a.label}</span>
+              <Link key={a.label} href={a.href} className="qa-btn" style={{ borderColor: a.border }}>
+                <div className="qa-icon" style={{ backgroundColor: a.bg }}>
+                  <i className={`bi ${a.icon}`} style={{ fontSize: "1.15rem", color: a.color }} />
+                </div>
+                <span style={{ fontSize: "0.72rem", fontWeight: 700, color: "#1e293b", textAlign: "center", lineHeight: 1.3 }}>{a.label}</span>
               </Link>
             ))}
           </div>
         </div>
       </div>
 
-      {/* ── Charts Row ── */}
-      <div className="dash-grid-3" style={{ marginBottom: 24 }}>
 
-        {/* Revenue Bar Chart */}
-        <div className="panel">
-          <div className="panel-head">
-            <h6 className="panel-title"><i className="bi bi-bar-chart-fill me-2" style={{ color: "#34d399" }} />Revenue Trend</h6>
-            <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Last 6 months</span>
-          </div>
-          <div className="panel-body">
-            {rev.length > 0 ? <RevenueBar items={rev} /> : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No revenue data</p>}
-            <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Rent</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.leaseRevenue || 0) / 1000).toFixed(0)}K</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>CAM</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>₹{((m.camRevenue || 0) / 1000).toFixed(0)}K</div></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Visitor Line Chart */}
-        <div className="panel">
-          <div className="panel-head">
-            <h6 className="panel-title"><i className="bi bi-graph-up-arrow me-2" style={{ color: "#60a5fa" }} />Visitor Analytics</h6>
-            <span style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Last 7 days</span>
-          </div>
-          <div className="panel-body">
-            {vis.length > 0 ? <VisitorLine items={vis} /> : <p style={{ color: "var(--text-muted)", fontSize: "0.8rem", textAlign: "center", margin: "30px 0" }}>No visitor data</p>}
-            <div style={{ display: "flex", gap: 16, marginTop: 12 }}>
-              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Today</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#1e293b" }}>{m.visitorsToday ?? 0}</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Pending</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#d97706" }}>{m.visitorsPending ?? 0}</div></div>
-              <div><div style={{ fontSize: "0.65rem", color: "var(--text-muted)" }}>Inside</div><div style={{ fontSize: "0.9rem", fontWeight: 800, color: "#016a34" }}>{m.visitorsCheckedIn ?? 0}</div></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Occupancy Panel */}
-        <div className="panel">
-          <div className="panel-head">
-            <h6 className="panel-title"><i className="bi bi-building me-2" style={{ color: "#c084fc" }} />Occupancy Overview</h6>
-          </div>
-          <div className="panel-body">
-            <div style={{ textAlign: "center", marginBottom: 16 }}>
-              <div style={{ fontSize: "2.4rem", fontWeight: 800, color: COLOR.blue }}>{m.occupancyPct ?? 0}<span style={{ fontSize: "1.2rem" }}>%</span></div>
-              <div style={{ fontSize: "0.72rem", color: "var(--text-muted)", fontWeight: 600 }}>Overall Occupancy Rate</div>
-            </div>
-            <MiniBar label="Occupied SFT" val={m.occupiedSft || 0} max={m.totalSft || 1} color={COLOR.blue} />
-            <MiniBar label="Available SFT" val={m.availableSft || 0} max={m.totalSft || 1} color={COLOR.orange} />
-            {props.slice(0, 3).map((p: any, i: number) => (
-              <MiniBar key={i} label={p.name} val={p.occupiedSft} max={p.totalSft || 1} color={i === 0 ? COLOR.green : i === 1 ? COLOR.purple : COLOR.teal} />
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* ── Gate Pass & Lease Row ── */}
       <div className="dash-grid-2" style={{ marginBottom: 24 }}>

@@ -44,8 +44,16 @@ export default function Header() {
       try {
         const res = await api.get('/auth/profile');
         if (res && res.success && res.user) {
-          setStoredUser(res.user);
-          setUser(res.user);
+          const stored = getStoredUser() || {};
+          const mergedUser = {
+            ...stored,
+            ...res.user,
+            orgName: res.user.orgName || res.user.organizationName || res.user.organization?.name || stored.orgName || stored.organizationName || stored.organization?.name,
+            organizationName: res.user.organizationName || res.user.orgName || res.user.organization?.name || stored.organizationName || stored.orgName || stored.organization?.name,
+            organization: res.user.organization || stored.organization
+          };
+          setStoredUser(mergedUser);
+          setUser(mergedUser);
         }
       } catch (err) { }
     };

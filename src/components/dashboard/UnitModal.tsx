@@ -28,7 +28,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
 
   const [properties, setProperties] = useState<any[]>([]);
   const [floors, setFloors] = useState<any[]>([]);
-  
+
   const [formData, setFormData] = useState({
     property: "",
     floor: "",
@@ -134,19 +134,29 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
   const unitSqft = Number(formData.sqft) || 0;
 
   const isSameFloor = formData.floor === originalFloorId;
-  const floorTotalSft = selectedFloor?.totalSft || 0;
-  const allocatedFloorSft = selectedFloor
-    ? (selectedFloor.occupiedSft || 0) - (isSameFloor ? originalUnitSqft : 0)
+  const floorTotalSft = Number(selectedFloor?.totalSft || 0);
+
+  // Existing allocated SFT on floor (prior to current edit/input)
+  const existingAllocatedFloorSft = selectedFloor
+    ? Math.max(0, (selectedFloor.occupiedSft || (selectedFloor.totalSft - (selectedFloor.availableSft ?? selectedFloor.totalSft))) - (isSameFloor ? originalUnitSqft : 0))
     : 0;
 
-  const trueAvailableFloorSft = Math.max(floorTotalSft - allocatedFloorSft, 0);
-  const remainingFloorSft = trueAvailableFloorSft - unitSqft;
-  const occupancyPercentage = floorTotalSft > 0 ? Math.round(((allocatedFloorSft + unitSqft) / floorTotalSft) * 100) : 0;
+  // Total allocated SFT including the new unit area entered in the form
+  const totalAllocatedSft = existingAllocatedFloorSft + unitSqft;
+
+  // Maximum SFT available for a new unit before user types
+  const availableSftBeforeInput = Math.max(0, floorTotalSft - existingAllocatedFloorSft);
+
+  // Remaining SFT on floor after entering current unit's SFT
+  const remainingFloorSft = floorTotalSft - totalAllocatedSft;
+
+  // Occupancy projection percentage
+  const occupancyPercentage = floorTotalSft > 0 ? Math.min(100, Math.round((totalAllocatedSft / floorTotalSft) * 100)) : 0;
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (selectedFloor && unitSqft > trueAvailableFloorSft) {
-      alert(`Unit SFT (${unitSqft}) cannot exceed Available Floor SFT (${trueAvailableFloorSft}).`);
+    if (selectedFloor && floorTotalSft > 0 && unitSqft > availableSftBeforeInput) {
+      alert(`Unit area (${unitSqft.toLocaleString()} SFT) cannot exceed available floor space (${availableSftBeforeInput.toLocaleString()} SFT).`);
       return;
     }
     setIsSubmitting(true);
@@ -174,7 +184,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
 
         <form onSubmit={handleSubmit}>
           <div className="p-4" style={{ maxHeight: '72vh', overflowY: 'auto' }}>
-            
+
             {/* Property and Floor Information Section */}
             <div className="mb-4">
               <span className="fw-bold text-dark d-block mb-3" style={{ fontSize: '0.88rem' }}>
@@ -226,15 +236,20 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                 <div className="d-flex flex-wrap gap-3 mt-3 p-3 bg-light rounded border">
                   <div className="flex-fill">
                     <div className="text-muted small fw-bold" style={{ fontSize: '0.7rem' }}>Floor Total SFT</div>
-                    <div className="fw-bold text-dark" style={{ fontSize: '0.88rem' }}>{floorTotalSft.toLocaleString()}</div>
+                    <div className="fw-bold text-dark" style={{ fontSize: '0.88rem' }}>{floorTotalSft.toLocaleString()} SFT</div>
                   </div>
                   <div className="flex-fill border-start ps-3">
                     <div className="text-muted small fw-bold" style={{ fontSize: '0.7rem' }}>Allocated SFT</div>
-                    <div className="fw-bold text-primary" style={{ fontSize: '0.88rem' }}>{allocatedFloorSft.toLocaleString()}</div>
+                    <div className="fw-bold text-primary" style={{ fontSize: '0.88rem' }}>
+                      {totalAllocatedSft.toLocaleString()} SFT
+                      {unitSqft > 0 && <span className="text-muted fw-normal ms-1" style={{ fontSize: '0.75rem' }}>(+ {unitSqft.toLocaleString()})</span>}
+                    </div>
                   </div>
                   <div className="flex-fill border-start ps-3">
                     <div className="text-muted small fw-bold" style={{ fontSize: '0.7rem' }}>Remaining Floor SFT</div>
-                    <div className="fw-bold text-success" style={{ fontSize: '0.88rem' }}>{trueAvailableFloorSft.toLocaleString()}</div>
+                    <div className={`fw-bold ${remainingFloorSft < 0 ? 'text-danger' : 'text-success'}`} style={{ fontSize: '0.88rem' }}>
+                      {remainingFloorSft.toLocaleString()} SFT
+                    </div>
                   </div>
                 </div>
               )}
@@ -254,7 +269,7 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                   <label style={LABEL_STYLE}>Unit Name (Optional)</label>
                   <input type="text" name="unitName" value={formData.unitName} onChange={handleChange} placeholder="e.g., Office 501" style={FIELD_STYLE} />
                 </div>
-                
+
                 <div className="col-md-6">
                   <label style={LABEL_STYLE}>Unit Type</label>
                   <select name="unitType" value={formData.unitType} onChange={handleChange} style={FIELD_STYLE}>
@@ -279,76 +294,45 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                 <div className="col-md-6">
                   <label style={LABEL_STYLE}>Area (SFT) *</label>
                   <div className="position-relative">
-                    <input 
-                      type="number" 
-                      name="sqft" 
-                      value={formData.sqft} 
-                      onChange={handleChange} 
-                      placeholder="Enter SFT Area" 
-                      min="0"
-                      required 
-                      style={FIELD_STYLE} 
+                    <input
+                      type="number"
+                      name="sqft"
+                      value={formData.sqft}
+                      onChange={handleChange}
+                      placeholder="Enter SFT Area"
+                      min="1"
+                      required
+                      style={{
+                        ...FIELD_STYLE,
+                        borderColor: selectedFloor && floorTotalSft > 0 && unitSqft > availableSftBeforeInput ? "#ef4444" : FIELD_STYLE.borderColor
+                      }}
                     />
                     <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
                   </div>
-                  {selectedFloor && unitSqft > trueAvailableFloorSft && (
+                  {selectedFloor && floorTotalSft > 0 && unitSqft > availableSftBeforeInput && (
                     <div className="text-danger small mt-1 fw-bold">
                       <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                      Exceeds available floor space!
+                      Exceeds available floor area ({availableSftBeforeInput.toLocaleString()} SFT remaining)!
                     </div>
                   )}
                 </div>
-                
+
                 {!isCoWorking && selectedFloor && (
                   <div className="col-md-6">
                     <label style={LABEL_STYLE}>Remaining Floor SFT</label>
                     <div className="position-relative">
-                      <input 
-                        type="text" 
-                        value={remainingFloorSft.toLocaleString()} 
-                        readOnly 
-                        style={{ ...FIELD_STYLE, backgroundColor: "var(--bg-app)", color: remainingFloorSft < 0 ? "#ef4444" : "#4b5563", fontWeight: 700 }} 
+                      <input
+                        type="text"
+                        value={remainingFloorSft.toLocaleString()}
+                        readOnly
+                        style={{ ...FIELD_STYLE, backgroundColor: "var(--bg-app)", color: remainingFloorSft < 0 ? "#ef4444" : "#16a34a", fontWeight: 700 }}
                       />
                       <span className="position-absolute text-muted small" style={{ right: 12, top: "50%", transform: "translateY(-50%)", fontWeight: 600 }}>SFT</span>
                     </div>
                   </div>
                 )}
 
-                {/* Seat Count */}
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}>Total Seats</label>
-                  <input
-                    type="number"
-                    name="seatCount"
-                    value={formData.seatCount}
-                    onChange={handleChange}
-                    placeholder="e.g., 10"
-                    min="0"
-                    style={FIELD_STYLE}
-                  />
-                </div>
 
-                {/* Occupied Seat Count */}
-                <div className="col-md-6">
-                  <label style={LABEL_STYLE}>Occupied Seats</label>
-                  <input
-                    type="number"
-                    name="occupiedSeatCount"
-                    value={formData.occupiedSeatCount}
-                    onChange={handleChange}
-                    placeholder="e.g., 4"
-                    min="0"
-                    max={formData.seatCount ? Number(formData.seatCount) : undefined}
-                    style={FIELD_STYLE}
-                  />
-                  {formData.seatCount && formData.occupiedSeatCount &&
-                    Number(formData.occupiedSeatCount) > Number(formData.seatCount) && (
-                    <div className="text-danger small mt-1 fw-bold">
-                      <i className="bi bi-exclamation-triangle-fill me-1"></i>
-                      Cannot exceed total seats ({formData.seatCount})
-                    </div>
-                  )}
-                </div>
 
                 {!isCoWorking && selectedFloor && (
                   <div className="col-12 mt-2">
@@ -357,10 +341,10 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
                       <span>{occupancyPercentage > 100 ? 100 : occupancyPercentage}%</span>
                     </label>
                     <div className="progress" style={{ height: '8px', borderRadius: 4 }}>
-                      <div 
+                      <div
                         className={`progress-bar ${occupancyPercentage > 90 ? 'bg-danger' : occupancyPercentage > 75 ? 'bg-warning' : 'bg-primary'}`}
-                        role="progressbar" 
-                        style={{ width: `${occupancyPercentage > 100 ? 100 : occupancyPercentage}%` }} 
+                        role="progressbar"
+                        style={{ width: `${occupancyPercentage > 100 ? 100 : occupancyPercentage}%` }}
                       ></div>
                     </div>
                   </div>
@@ -372,12 +356,12 @@ export default function UnitModal({ isOpen, onClose, onSave, editData }: any) {
           {/* Footer Actions */}
           <div className="px-4 py-3 border-top d-flex gap-2 justify-content-end bg-light">
             <button type="button" className="btn btn-sm btn-outline-secondary fw-bold px-3 py-2" onClick={onClose} disabled={isSubmitting} style={{ fontSize: '0.85rem', borderRadius: '4px' }}>Cancel</button>
-            <button 
-              type="submit" 
-              className="btn btn-sm fw-bold text-white px-4 py-2" 
+            <button
+              type="submit"
+              className="btn btn-sm fw-bold text-white px-4 py-2"
               disabled={
                 isSubmitting ||
-                (selectedFloor ? unitSqft > trueAvailableFloorSft : false) ||
+                (selectedFloor ? unitSqft > availableSftBeforeInput : false) ||
                 (!!formData.seatCount && !!formData.occupiedSeatCount &&
                   Number(formData.occupiedSeatCount) > Number(formData.seatCount))
               }

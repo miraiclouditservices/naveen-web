@@ -314,34 +314,6 @@ export default function UnitsPageClient() {
       ),
     },
     {
-      header: "Unit Seats & Occupancy",
-      render: (u) => {
-        const total = u.seatCount || 10;
-        const occupied = u.occupiedSeatCount || 0;
-        const available = Math.max(total - occupied, 0);
-        const pct = total > 0 ? Math.round((occupied / total) * 100) : 0;
-        return (
-          <div style={{ minWidth: "150px" }}>
-            <div className="d-flex align-items-center justify-content-between gap-2 mb-1">
-              <span className="fw-bold text-dark" style={{ fontSize: "0.82rem" }}>
-                <i className="bi bi-person-workspace me-1 text-primary"></i>{occupied} / {total} Seats
-              </span>
-              <span className={`badge extra-small px-2 py-0.5 rounded-pill ${available > 0 ? 'bg-success-subtle text-success border border-success-subtle' : 'bg-light text-muted border'}`} style={{ fontSize: '0.7rem' }}>
-                {available} Available
-              </span>
-            </div>
-            <div className="progress" style={{ height: "5px", borderRadius: 3 }}>
-              <div
-                className={`progress-bar ${pct >= 100 ? "bg-danger" : pct >= 75 ? "bg-warning" : "bg-success"
-                  }`}
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-          </div>
-        );
-      },
-    },
-    {
       header: "Status",
       render: (u) => {
         const isMeeting = u.isMeetingRoom || false;
@@ -366,7 +338,7 @@ export default function UnitsPageClient() {
       style: { textAlign: "right" as const },
       render: (u) => (
         <div className="d-flex gap-2 align-items-center justify-content-end" onClick={(e) => e.stopPropagation()}>
-          <Link
+          {/* <Link
             href={`/admin/units/${u._id}`}
             className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center border"
             style={{
@@ -380,7 +352,7 @@ export default function UnitsPageClient() {
             title="View Details"
           >
             <i className="bi bi-eye" style={{ fontSize: "0.85rem", color: "var(--brand-orange)" }} />
-          </Link>
+          </Link> */}
           {!isTenantRole && (
             <button
               onClick={() => {
@@ -468,29 +440,6 @@ export default function UnitsPageClient() {
         onReset={handleReset}
       />
 
-      {/* ── PAGE HEADER ── */}
-      <div className="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-4">
-        <div>
-          <h4 className="fw-bold m-0" style={{ fontSize: "1.35rem", color: "var(--dark-heading)", letterSpacing: "-0.01em" }}>
-            {isTenantRole ? "My Workspace & Seats" : "My Workspace & Seats"}
-          </h4>
-          <div className="mt-1" style={{ fontSize: "0.82rem", color: "var(--text-body)" }}>
-            {isTenantRole
-              ? "Your assigned units, seats, and workspace overview"
-              : "Manage all commercial spaces, seat assignments and occupancy"}
-          </div>
-        </div>
-        {!isTenantRole && (
-          <button
-            onClick={() => { setEditUnit(null); setIsModalOpen(true); }}
-            className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
-            style={{ backgroundColor: "var(--dark-section)", borderRadius: "10px", height: "38px", fontSize: "0.85rem" }}
-          >
-            <i className="bi bi-plus-lg"></i> Add Unit
-          </button>
-        )}
-      </div>
-
       {/* ── METRIC STAT CARDS ── */}
       <div className="mb-4">
         {/* Single row of 5 clean metric cards */}
@@ -500,7 +449,6 @@ export default function UnitsPageClient() {
             { label: "Occupied Units",    value: metrics.occupiedUnits,                       icon: "bi-person-check",    bg: "#f0fdf4", color: "#16a34a" },
             { label: "Available Units",   value: metrics.availableUnits,                      icon: "bi-door-open",       bg: "#fff7ed", color: "#f97316" },
             { label: "Total Area (SFT)",  value: metrics.totalSft.toLocaleString("en-IN"),    icon: "bi-aspect-ratio",    bg: "#f5f3ff", color: "#7c3aed" },
-            { label: "Seats (Occ / Total)", value: `${metrics.occupiedSeats} / ${metrics.totalSeats}`, icon: "bi-person-workspace", bg: "#fdf2f8", color: "#be185d" },
           ].map((card, i) => (
             <div key={i} className="col">
               <div
@@ -535,7 +483,7 @@ export default function UnitsPageClient() {
         {/* TOOLBAR */}
         <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
           <h5 className="fw-bold m-0" style={{ color: "var(--dark-heading)", fontSize: "1rem" }}>
-            {isTenantRole ? "My Assigned Units" : "Units Directory"}
+            {isTenantRole ? "My Assigned Units" : "SFT Directory"}
           </h5>
 
           <div className="d-flex gap-2 align-items-center flex-wrap">
@@ -584,6 +532,14 @@ export default function UnitsPageClient() {
                 >
                   <i className="bi bi-funnel"></i> Filters
                   {activeFilters > 0 && <span className="badge bg-dark rounded-pill ms-1">{activeFilters}</span>}
+                </button>
+
+                <button
+                  onClick={() => { setEditUnit(null); setIsModalOpen(true); }}
+                  className="btn btn-dark btn-sm fw-bold px-3 d-flex align-items-center gap-2"
+                  style={{ backgroundColor: "var(--dark-section)", borderRadius: "10px", height: "36px", fontSize: "0.85rem" }}
+                >
+                  <i className="bi bi-plus-lg"></i> Add SFT
                 </button>
               </>
             )}

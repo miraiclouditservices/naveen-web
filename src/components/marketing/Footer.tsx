@@ -9,9 +9,8 @@ export default function Footer() {
       style={{
         backgroundColor: "#070d19",
         color: "#ffffff",
-        fontFamily: "system-ui, -apple-system, sans-serif",
       }}
-      className="pt-5 pb-4"
+      className="pt-5 pb-4 border-top border-secondary border-opacity-10"
     >
       <div className="container py-lg-3">
         <div className="row gy-4 mb-5 justify-content-between">
@@ -44,7 +43,10 @@ export default function Footer() {
             {/* Social Icons */}
             <div className="d-flex align-items-center gap-2">
               <a
-                href="#"
+                href="https://www.linkedin.com/company/mirai-cloud-it-services/posts/?feedView=all"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="LinkedIn"
                 className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
                 style={{
                   width: 36,
@@ -58,7 +60,10 @@ export default function Footer() {
                 <i className="bi bi-linkedin small"></i>
               </a>
               <a
-                href="#"
+                href="https://www.instagram.com/miraicloud_itservices?igsh=MTRqczhxYjFyemx3bQ%3D%3D&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="Instagram"
                 className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
                 style={{
                   width: 36,
@@ -72,21 +77,10 @@ export default function Footer() {
                 <i className="bi bi-instagram small"></i>
               </a>
               <a
-                href="#"
-                className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
-                style={{
-                  width: 36,
-                  height: 36,
-                  backgroundColor: "#111b2e",
-                  color: "#8b9cb8",
-                  border: "1px solid #1a273e",
-                  transition: "all 0.2s ease",
-                }}
-              >
-                <i className="bi bi-facebook small"></i>
-              </a>
-              <a
-                href="#"
+                href="https://www.whatsapp.com/channel/0029Vb5ZMnB8fewwm8tvFk2c"
+                target="_blank"
+                rel="noopener noreferrer"
+                title="WhatsApp Channel"
                 className="d-flex align-items-center justify-content-center rounded-3 text-decoration-none"
                 style={{
                   width: 36,
@@ -103,7 +97,7 @@ export default function Footer() {
           </div>
 
           {/* Column 2: Company */}
-          <div className="col-lg-2 col-md-6 col-6">
+          <div className="col-lg-2 col-md-4 col-6">
             <div className="mb-3 position-relative d-inline-block">
               <h6
                 className="fw-bold text-white mb-2"
@@ -121,38 +115,48 @@ export default function Footer() {
               ></div>
             </div>
 
-            <ul className="list-unstyled d-flex flex-column gap-2.5 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+            <ul className="list-unstyled d-flex flex-column gap-2 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
               <li>
                 <a href="/" className="text-decoration-none text-reset hover-white">
                   Home
                 </a>
               </li>
               <li>
-                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                <a href="#about" className="text-decoration-none text-reset hover-white">
+                  About Us
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="text-decoration-none text-reset hover-white">
                   Services
                 </a>
               </li>
               <li>
-                <a href="#who-uses" className="text-decoration-none text-reset hover-white">
-                  Industries
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Products
                 </a>
               </li>
               <li>
                 <a href="#problems" className="text-decoration-none text-reset hover-white">
-                  About Us
+                  Why Us
+                </a>
+              </li>
+              <li>
+                <a href="#contact" className="text-decoration-none text-reset hover-white">
+                  Contact
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 3: Solutions */}
-          <div className="col-lg-3 col-md-6 col-6">
+          {/* Column 3: Services */}
+          <div className="col-lg-2 col-md-4 col-6">
             <div className="mb-3 position-relative d-inline-block">
               <h6
                 className="fw-bold text-white mb-2"
                 style={{ fontSize: "1rem", letterSpacing: "0.01em" }}
               >
-                Solutions
+                Services
               </h6>
               <div
                 style={{
@@ -164,32 +168,85 @@ export default function Footer() {
               ></div>
             </div>
 
-            <ul className="list-unstyled d-flex flex-column gap-2.5 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+            <ul className="list-unstyled d-flex flex-column gap-2 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
               <li>
-                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                <a href="#services" className="text-decoration-none text-reset hover-white">
                   Cloud Services
                 </a>
               </li>
               <li>
-                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                <a href="#services" className="text-decoration-none text-reset hover-white">
                   Cybersecurity
                 </a>
               </li>
               <li>
-                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                <a href="#services" className="text-decoration-none text-reset hover-white">
                   Network Infrastructure
                 </a>
               </li>
               <li>
-                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                <a href="#services" className="text-decoration-none text-reset hover-white">
                   Managed IT Support
+                </a>
+              </li>
+              <li>
+                <a href="#services" className="text-decoration-none text-reset hover-white">
+                  DevOps & Automation
                 </a>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: Get in touch */}
-          <div className="col-lg-4 col-md-6">
+          {/* Column 4: Products */}
+          <div className="col-lg-2 col-md-4 col-6">
+            <div className="mb-3 position-relative d-inline-block">
+              <h6
+                className="fw-bold text-white mb-2"
+                style={{ fontSize: "1rem", letterSpacing: "0.01em" }}
+              >
+                Products
+              </h6>
+              <div
+                style={{
+                  width: 28,
+                  height: 3,
+                  backgroundColor: "#2563eb",
+                  borderRadius: 2,
+                }}
+              ></div>
+            </div>
+
+            <ul className="list-unstyled d-flex flex-column gap-2 pt-1 mb-0 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Property Management
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Coworking Space Portal
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Visitor & Gate Pass
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Employee & Helpdesk
+                </a>
+              </li>
+              <li>
+                <a href="#modules" className="text-decoration-none text-reset hover-white">
+                  Asset AMC & SLA
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 5: Get in touch */}
+          <div className="col-lg-3 col-md-6 col-12">
             <div className="mb-3 position-relative d-inline-block">
               <h6
                 className="fw-bold text-white mb-2"
@@ -208,8 +265,8 @@ export default function Footer() {
             </div>
 
             <div className="d-flex flex-column gap-3 pt-1 small" style={{ color: "#8b9cb8", fontSize: "0.88rem" }}>
-              <div className="d-flex align-items-center gap-2.5">
-                <i className="bi bi-envelope fs-6 text-primary" style={{ color: "#2563eb" }}></i>
+              <div className="d-flex align-items-center" style={{ gap: "12px" }}>
+                <i className="bi bi-envelope fs-6 flex-shrink-0" style={{ color: "#2563eb", width: 18 }}></i>
                 <a
                   href="mailto:info@miraiclouditservices.com"
                   className="text-decoration-none text-reset hover-white text-break"
@@ -218,8 +275,8 @@ export default function Footer() {
                 </a>
               </div>
 
-              <div className="d-flex align-items-center gap-2.5">
-                <i className="bi bi-telephone fs-6 text-primary" style={{ color: "#2563eb" }}></i>
+              <div className="d-flex align-items-center" style={{ gap: "12px" }}>
+                <i className="bi bi-telephone fs-6 flex-shrink-0" style={{ color: "#2563eb", width: 18 }}></i>
                 <a
                   href="tel:+919100218218"
                   className="text-decoration-none text-reset hover-white"
@@ -228,9 +285,9 @@ export default function Footer() {
                 </a>
               </div>
 
-              <div className="d-flex align-items-start gap-2.5">
-                <i className="bi bi-geo-alt fs-6 text-primary mt-0.5" style={{ color: "#2563eb" }}></i>
-                <span style={{ lineHeight: 1.5, maxWidth: 320 }}>
+              <div className="d-flex align-items-start" style={{ gap: "12px" }}>
+                <i className="bi bi-geo-alt fs-6 mt-1 flex-shrink-0" style={{ color: "#2563eb", width: 18 }}></i>
+                <span style={{ lineHeight: 1.55, maxWidth: 320 }}>
                   Kalki chambers A Block 108, NH 65, widia colony Miyapur, Hyderabad, India, 502032
                 </span>
               </div>
@@ -239,7 +296,7 @@ export default function Footer() {
 
         </div>
 
-        {/* Bottom Footer Line */}
+        {/* Bottom Footer Bar */}
         <div
           className="pt-4 mt-2 d-flex flex-column flex-md-row align-items-center justify-content-between small"
           style={{

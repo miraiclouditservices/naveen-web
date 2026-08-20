@@ -268,90 +268,8 @@ export default function FloorsPageClient() {
         </div>
       ),
     },
-    {
-      header: "Assigned Admin",
-      render: (f) => {
-        const adminName = f.assignedAdmin?.name || f.assignedOwner?.ownerName;
-        const adminPhone = f.assignedAdmin?.phoneNumber || f.assignedOwner?.contactNumber;
 
-        return adminName ? (
-          <div className="d-flex align-items-center gap-2">
-            <div
-              style={{
-                width: "24px",
-                height: "24px",
-                borderRadius: "50%",
-                backgroundColor: "var(--border-light)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                fontSize: "0.7rem",
-                fontWeight: "600",
-                color: "var(--text-body)",
-                border: "1px solid var(--border-color)"
-              }}
-            >
-              {adminName.charAt(0).toUpperCase()}
-            </div>
-            <div className="d-flex flex-column">
-              <span className="fw-medium text-dark" style={{ fontSize: "0.85rem" }}>
-                {adminName}
-              </span>
-              {adminPhone && (
-                <span className="text-muted" style={{ fontSize: "0.75rem" }}>
-                  {adminPhone}
-                </span>
-              )}
-            </div>
-          </div>
-        ) : (
-          <span
-            className="badge px-2 py-1 fw-semibold"
-            style={{
-              backgroundColor: "#fef2f2",
-              color: "#dc2626",
-              border: "1px solid #fee2e2",
-              fontSize: "0.75rem",
-              borderRadius: "var(--radius-full)"
-            }}
-          >
-            Unassigned
-          </span>
-        );
-      },
-    },
-    {
-      header: "Monthly Fee",
-      render: (f) => f.floorRevenue > 0 ? (
-        <div style={{ fontSize: "0.85rem" }}>
-          <span className="fw-bold text-dark">₹ {Number(f.floorRevenue).toLocaleString("en-IN")}</span>
-          <span className="text-muted d-block" style={{ fontSize: "0.72rem" }}>Monthly</span>
-        </div>
-      ) : (
-        <span className="text-muted">—</span>
-      ),
-    },
-    {
-      header: "Next Payment",
-      render: (f) => {
-        const activeLease = f.occupants?.find((o: any) => o.nextDueDate);
-        if (!activeLease || !activeLease.nextDueDate) return <span className="text-muted">—</span>;
 
-        const nextDate = new Date(activeLease.nextDueDate);
-        const formattedDate = nextDate.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
-        const diffTime = nextDate.getTime() - Date.now();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-        return (
-          <div style={{ fontSize: "0.85rem" }}>
-            <span className="fw-semibold text-dark">{formattedDate}</span>
-            <span className={diffDays < 0 ? "text-danger d-block fw-semibold" : "text-success d-block fw-semibold"} style={{ fontSize: "0.72rem" }}>
-              {diffDays < 0 ? `Overdue by ${Math.abs(diffDays)} Days` : `In ${diffDays} Days`}
-            </span>
-          </div>
-        );
-      },
-    },
     {
       header: "Occupancy",
       render: (f) => {
@@ -395,7 +313,7 @@ export default function FloorsPageClient() {
       style: { textAlign: "right" as const },
       render: (f) => (
         <div className="d-flex gap-2 align-items-center justify-content-end" onClick={(e) => e.stopPropagation()}>
-          <Link
+          {/* <Link
             href={`/admin/floors/${f._id}`}
             className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"
             style={{
@@ -409,7 +327,7 @@ export default function FloorsPageClient() {
             title="View Full Floor Page"
           >
             <i className="bi bi-eye" style={{ fontSize: "0.85rem" }} />
-          </Link>
+          </Link> */}
           {isSuperAdmin && (
             <button
               className="btn btn-sm p-0 d-inline-flex align-items-center justify-content-center"

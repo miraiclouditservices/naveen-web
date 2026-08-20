@@ -21,9 +21,16 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
     }).finally(()=>setLoading(false));
   },[]);
 
-  if(loading) return <div className="d-flex align-items-center justify-content-center" style={{ height:"50vh" }}><div className="spinner-border" style={{ color:"#0891b2" }} /></div>;
+  if(loading) return <div className="d-flex align-items-center justify-content-center" style={{ height:"50vh" }}><div className="spinner-border" style={{ color:"var(--primary)" }} /></div>;
 
-  const C = { teal:"#0891b2",blue:"var(--dark-section)",green:"#16a34a",yellow:"#d97706",red:"#dc2626",slate:"var(--text-primary)" };
+  const C = {
+    teal: "var(--primary)",
+    blue: "var(--primary)",
+    green: "var(--success)",
+    yellow: "var(--warning)",
+    red: "var(--error)",
+    slate: "var(--text-secondary)"
+  };
   const today = new Date().toLocaleDateString("en-IN",{weekday:"long",day:"numeric",month:"long"});
 
   return (
@@ -33,7 +40,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
       <DashHeader
         title="Staff Admin Dashboard"
         subtitle={`Daily operations control · ${today}`}
-        user={user} accentColor="#38bdf8" gradientFrom="#0c4a6e" gradientTo="#082f49"
+        user={user} accentColor="var(--warning)" gradientFrom="var(--primary)" gradientTo="#111827"
       />
 
       {/* Stats */}
@@ -52,7 +59,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
 
       {/* Quick Actions */}
       <div className="d-mb">
-        <Panel title="Quick Actions" icon="bi-lightning-fill" iconColor="#fbbf24" accent="#0c4a6e">
+        <Panel title="Quick Actions" icon="bi-lightning-fill" iconColor="var(--warning)" accent="var(--primary)">
           <QuickActions actions={[
             { label:"Manage Visitors",  icon:"bi-person-badge",      href:"/admin/visitors",  color:C.teal },
             { label:"Gate Passes",      icon:"bi-card-checklist",    href:"/admin/materials", color:C.blue },
@@ -64,7 +71,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
 
       {/* Charts */}
       <div className="d-g2 d-mb">
-        <Panel title="Daily Visitor Trend" icon="bi-graph-up-arrow" iconColor="#38bdf8" accent="#0c4a6e">
+        <Panel title="Daily Visitor Trend" icon="bi-graph-up-arrow" iconColor="var(--primary)" accent="var(--primary)">
           {vis.length>0
             ? <LineChart items={vis.map(v=>({label:v.label,value:v.count}))} color={C.teal} />
             : <p style={{ textAlign:"center",color:"var(--text-muted)",margin:"30px 0",fontSize:"0.8rem" }}>No visitor data</p>}
@@ -75,7 +82,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
           </div>
         </Panel>
 
-        <Panel title="Gate Pass Analytics" icon="bi-bar-chart-fill" iconColor="#34d399" accent="#0c4a6e">
+        <Panel title="Gate Pass Analytics" icon="bi-bar-chart-fill" iconColor="var(--success)" accent="var(--primary)">
           <BarChart items={[
             { label:"Total",   value:m.gatePassTotal??0 },
             { label:"Approved",value:m.gatePassApproved??0 },
@@ -90,7 +97,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
 
       {/* Recent Activity */}
       <div className="d-g2">
-        <Panel title="Recent Visitors" icon="bi-person-badge" iconColor="#38bdf8" link="/admin/visitors" accent="#0c4a6e">
+        <Panel title="Recent Visitors" icon="bi-person-badge" iconColor="var(--primary)" link="/admin/visitors" accent="var(--primary)">
           {recentV.length>0
             ? recentV.slice(0,5).map((v:any,i:number)=>(
               <AlertItem key={i} icon="bi-person-check" iconColor={C.teal}
@@ -98,7 +105,7 @@ export default function StaffAdminDashboard({ user }: { user: any }) {
             ))
             : <p style={{ textAlign:"center",color:"var(--text-muted)",fontSize:"0.8rem",margin:"20px 0" }}>No visitors</p>}
         </Panel>
-        <Panel title="Recent Gate Passes" icon="bi-card-checklist" iconColor="#34d399" link="/admin/materials" accent="#0c4a6e">
+        <Panel title="Recent Gate Passes" icon="bi-card-checklist" iconColor="var(--success)" link="/admin/materials" accent="var(--primary)">
           {recentG.length>0
             ? recentG.slice(0,5).map((g:any,i:number)=>(
               <AlertItem key={i} icon="bi-box-seam" iconColor={C.blue}

@@ -117,14 +117,14 @@ export function DonutGauge({ pct, color="var(--dark-section)", label, size=100 }
 }
 
 // ── Panel Wrapper ─────────────────────────────────────────────────────────────
-export function Panel({ title, icon, iconColor="#60a5fa", link, linkLabel="View All", children, accent="#1e293b" }: any) {
+export function Panel({ title, icon, iconColor="var(--warning)", link, linkLabel="View All", children, accent="var(--primary)" }: any) {
   return (
     <div style={{ background:"var(--bg-card)",borderRadius:12,border:"1px solid var(--border-color)",overflow:"hidden",boxShadow:"0 1px 4px rgba(0,0,0,0.05)" }}>
       <div style={{ background:accent,padding:"12px 16px",display:"flex",justifyContent:"space-between",alignItems:"center" }}>
         <h6 style={{ color:"var(--bg-card)",margin:0,fontSize:"0.8rem",fontWeight:700,display:"flex",alignItems:"center",gap:8 }}>
           {icon && <i className={`bi ${icon}`} style={{ color:iconColor }} />}{title}
         </h6>
-        {link && <Link href={link} style={{ fontSize:"0.68rem",color:"#60a5fa",textDecoration:"none",fontWeight:700 }}>{linkLabel} →</Link>}
+        {link && <Link href={link} style={{ fontSize:"0.68rem",color:"var(--warning)",textDecoration:"none",fontWeight:700 }}>{linkLabel} →</Link>}
       </div>
       <div style={{ padding:16 }}>{children}</div>
     </div>
@@ -139,10 +139,8 @@ export function QuickActions({ actions }: { actions:{label:string;icon:string;hr
         <Link key={i} href={a.href} style={{
           display:"flex",flexDirection:"column",alignItems:"center",gap:8,padding:"14px 8px",
           borderRadius:10,border:"1.5px solid var(--border-color)",background:"var(--bg-card)",textDecoration:"none",
-          color:"#1e293b",transition:"all 0.15s",
-        }}
-          onMouseEnter={e=>{e.currentTarget.style.background=a.color||"var(--dark-section)";e.currentTarget.style.borderColor=a.color||"var(--dark-section)";e.currentTarget.style.color="var(--bg-card)";}}
-          onMouseLeave={e=>{e.currentTarget.style.background="var(--bg-card)";e.currentTarget.style.borderColor="var(--border-color)";e.currentTarget.style.color="#1e293b";}}>
+          color:"var(--text-primary)"
+        }}>
           <div style={{ width:38,height:38,borderRadius:9,background:(a.color||"var(--dark-section)")+"18",display:"flex",alignItems:"center",justifyContent:"center" }}>
             <i className={`bi ${a.icon}`} style={{ fontSize:"1.1rem",color:a.color||"var(--dark-section)" }} />
           </div>
@@ -166,7 +164,7 @@ export function StatusPill({ status }: { status:string }) {
 }
 
 // ── Dash Header ───────────────────────────────────────────────────────────────
-export function DashHeader({ title, subtitle, user, accentColor="var(--dark-section)", gradientFrom="#1e293b", gradientTo="var(--text-main)", children }: any) {
+export function DashHeader({ title, subtitle, user, accentColor="var(--dark-section)", gradientFrom="var(--primary)", gradientTo="#111827", children }: any) {
   return (
     <div style={{ background:`linear-gradient(135deg,${gradientFrom} 0%,${gradientTo} 100%)`,
       borderRadius:16,padding:"22px 28px",marginBottom:22,
@@ -200,7 +198,7 @@ export function AlertItem({ icon, iconColor, title, sub, time }: any) {
         <i className={`bi ${icon}`} style={{ color:iconColor,fontSize:"0.85rem" }} />
       </div>
       <div style={{ flex:1,minWidth:0 }}>
-        <div style={{ fontSize:"0.78rem",fontWeight:700,color:"#1e293b" }}>{title}</div>
+        <div style={{ fontSize:"0.78rem",fontWeight:700,color:"var(--text-primary)" }}>{title}</div>
         <div style={{ fontSize:"0.68rem",color:"var(--text-muted)" }}>{sub}</div>
       </div>
       {time && <div style={{ fontSize:"0.62rem",color:"var(--text-muted)",flexShrink:0 }}>{time}</div>}
