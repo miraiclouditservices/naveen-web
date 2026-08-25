@@ -355,22 +355,14 @@ export default function Sidebar() {
 
   const renderAttendanceDropdown = () => {
     const attendanceItems = [
-      ...(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE' ? [
-        { name: "Dashboard", path: "/admin/attendance/dashboard" }
-      ] : []),
-      ...(isSuperAdmin || isHrAdmin ? [
-        { name: "Employee Directory", path: "/admin/attendance/employees" },
-        { name: "Shifts & Policies", path: "/admin/attendance/shifts" },
-        { name: "Holiday Calendar", path: "/admin/attendance/holidays" }
-      ] : []),
-      ...(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' ? [
-        { name: "Shift Calendar", path: "/admin/attendance/calendar" }
-      ] : []),
-      ...(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE' ? [
-        { name: "Attendance Logs", path: "/admin/attendance/logs" },
-        { name: "Corrections", path: "/admin/attendance/corrections" },
-        { name: "Leaves", path: "/admin/attendance/leaves" }
-      ] : [])
+      { name: "Dashboard", path: "/admin/attendance/dashboard" },
+      { name: "Employee Directory", path: "/admin/attendance/employees" },
+      { name: "Shifts & Policies", path: "/admin/attendance/shifts" },
+      { name: "Holiday Calendar", path: "/admin/attendance/holidays" },
+      { name: "Shift Calendar", path: "/admin/attendance/calendar" },
+      { name: "Attendance Logs", path: "/admin/attendance/logs" },
+      { name: "Corrections", path: "/admin/attendance/corrections" },
+      { name: "Leaves", path: "/admin/attendance/leaves" }
     ];
 
     if (attendanceItems.length === 0) return null;
@@ -513,11 +505,11 @@ export default function Sidebar() {
           </div>
         ))}
 
-        {/* CRM Dropdown (Hidden per user request) */}
-        {/* {showCRM && renderCRMDropdown()} */}
+        {/* CRM Dropdown */}
+        {renderCRMDropdown()}
 
-        {/* HR & Attendance Dropdown (Hidden per user request) */}
-        {/* {(isSuperAdmin || isHrAdmin || normalizedRole === 'MANAGER' || normalizedRole === 'EMPLOYEE') && renderAttendanceDropdown()} */}
+        {/* HR & Attendance Dropdown */}
+        {renderAttendanceDropdown()}
       </nav>
 
       {/* Bottom User Card */}
