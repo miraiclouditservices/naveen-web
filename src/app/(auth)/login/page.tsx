@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, setStoredToken, setStoredUser } from "@/utils/api";
 
@@ -188,8 +187,7 @@ export default function LoginPage() {
           </div>
 
           {/* Left Panel Bottom Footer */}
-          <div className="d-flex align-items-center justify-content-between extra-small position-relative z-2" style={{ color: "#94a3b8" }}>
-            <span>© {new Date().getFullYear()} Mirai Cloud IT Services OS</span>
+          <div className="d-flex align-items-center justify-content-end extra-small position-relative z-2" style={{ color: "#94a3b8" }}>
             <span className="badge bg-secondary bg-opacity-25 text-white">v2.4 Live</span>
           </div>
         </div>
@@ -197,17 +195,8 @@ export default function LoginPage() {
         {/* Right Panel: White Clean Sign In Form */}
         <div className="col-lg-6 col-12 bg-white p-4 p-sm-5 d-flex flex-column justify-content-between">
 
-          {/* Right Header: Logo */}
-          <div className="d-flex align-items-center justify-content-between mb-4 pb-2">
-            <Link href="/" className="d-flex align-items-center gap-2 text-decoration-none">
-              <img
-                src="/mirai_logo.png"
-                alt="Mirai Cloud IT SERVICES"
-                style={{ height: 44 }}
-                className="w-auto object-fit-contain"
-              />
-            </Link>
-
+          {/* Right Header */}
+          <div className="d-flex align-items-center justify-content-end mb-4 pb-2">
             <div className="d-flex align-items-center gap-2">
               <span className="badge rounded-pill bg-light text-dark border px-3 py-2 fw-semibold" style={{ fontSize: "0.75rem", letterSpacing: "0.02em" }}>
                 <i className="bi bi-shield-lock-fill text-primary me-1" style={{ color: "#2563eb" }} /> Enterprise SaaS Portal
@@ -304,10 +293,7 @@ export default function LoginPage() {
             </form>
           </div>
 
-          {/* Footer */}
-          <div style={{ borderTop: "1px solid #f1f5f9", paddingTop: "1rem", marginTop: "auto", color: "#64748b", fontSize: "0.78rem" }}>
-            © {new Date().getFullYear()} Mirai Cloud IT Services. All rights reserved.
-          </div>
+
 
         </div>
 
