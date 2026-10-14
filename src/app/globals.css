@@ -113,6 +113,20 @@ body {
    ANVAYA360 - Marketing & Core Application Styling
    ========================================================================== */
 
+/* Responsive Wide Screen Container Scaling (Screens >= 1400px and 22"+ Monitors)
+   Maintains the EXACT same side gaps (40px margins and standard gutters) on screens above 1400px */
+@media (min-width: 1400px) {
+  .marketing-page .container,
+  .mkt-navbar-fixed .container {
+    max-width: calc(100% - 80px) !important;
+    width: calc(100% - 80px) !important;
+    padding-left: var(--bs-gutter-x, 0.75rem) !important;
+    padding-right: var(--bs-gutter-x, 0.75rem) !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
 /* Fixed Glass Navbar & Modern Underline Animation */
 .mkt-navbar-fixed {
   position: fixed;

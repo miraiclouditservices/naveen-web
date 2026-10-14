@@ -39,7 +39,7 @@ export default function Hero() {
               <h3
                 className="fw-extrabold text-dark mb-3"
                 style={{
-                  // fontSize: "clamp(2.2rem, 3.8vw, 3.2rem)",
+                  fontSize: "clamp(2rem, 2.5vw, 3.2rem)",
                   fontWeight: 800,
                   color: "#0f172a",
                   lineHeight: 1.18,
@@ -56,7 +56,7 @@ export default function Hero() {
                   fontSize: "1.08rem",
                   color: "#64748b",
                   lineHeight: 1.6,
-                  maxWidth: "540px"
+                  maxWidth: "620px"
                 }}
               >
                 We design, secure and manage the digital foundations that help organisations scale with confidence.
@@ -139,7 +139,7 @@ export default function Hero() {
                 style={{
                   borderRadius: "20px",
                   objectFit: "cover",
-                  height: "460px",
+                  height: "clamp(460px, 26vw, 540px)",
                   boxShadow: "0 20px 40px -15px rgba(0, 0, 0, 0.15)"
                 }}
               />
